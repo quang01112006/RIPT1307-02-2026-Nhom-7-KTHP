@@ -1,6 +1,6 @@
 import Footer from '@/components/Footer';
 import rules from '@/utils/rules';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import  { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message } from 'antd';
 import React, { useState } from 'react';
 import { history, useModel } from 'umi';
@@ -15,7 +15,7 @@ const Login: React.FC = () => {
 		setSubmitting(true);
 		try {
 			// TẠM THỜI MOCK LOGIN: Cứ gõ đại tài khoản mật khẩu là cho qua
-			// Sau này bạn sẽ thay đoạn này bằng hàm gọi API sang NestJS
+			// Sau này thay đoạn này bằng hàm gọi API sang NestJS
 			if (values.login && values.password) {
 				const fakeToken = 'day_la_token_gia_cho_den_khi_co_backend';
 				localStorage.setItem('token', fakeToken);

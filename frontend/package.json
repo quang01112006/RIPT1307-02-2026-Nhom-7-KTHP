@@ -36,7 +36,6 @@
     "test:component": "umi test ./src/components",
     "serve": "umi-serve",
     "tsc": "tsc --noEmit",
-
     "sentry:sourcemaps": ""
   },
   "lint-staged": {
