@@ -1,4 +1,4 @@
-﻿export default [
+export default [
 	{
 		path: '/user',
 		layout: false,
@@ -8,6 +8,24 @@
 				layout: false,
 				name: 'login',
 				component: './user/Login',
+			},
+			{
+				path: '/user/register',
+				layout: false,
+				name: 'register',
+				component: './user/Register',
+			},
+			{
+				path: '/user/forgot-password',
+				layout: false,
+				name: 'forgot-password',
+				component: './user/ForgotPassword',
+			},
+			{
+				path: '/user/reset-password',
+				layout: false,
+				name: 'reset-password',
+				component: './user/ResetPassword',
 			},
 			{
 				path: '/user',
