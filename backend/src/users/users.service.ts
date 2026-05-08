@@ -10,11 +10,15 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { password, email } = createUserDto;
+    const { password, email, code } = createUserDto;
 
-    const isEmailExist = await this.userModel.findOne({ email });
-    if (isEmailExist) {
-      throw new BadRequestException(`Email ${email} đã tồn tại trên hệ thống!`);
+    const isExist = await this.userModel.findOne({
+      $or: [{ email: email.toLowerCase() }, { code }],
+    });
+    if (isExist) {
+      const field =
+        isExist.email === email.toLowerCase() ? 'Email' : 'Mã SV/GV';
+      throw new BadRequestException(`${field} đã tồn tại trên hệ thống!`);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -29,5 +33,13 @@ export class UsersService {
       fullName: newUser.fullName,
       code: newUser.code,
     };
+  }
+
+  async findOneByLoginTerm(term: string) {
+    return this.userModel
+      .findOne({
+        $or: [{ email: term.toLocaleLowerCase() }, { code: term }],
+      })
+      .select('+password');
   }
 }
