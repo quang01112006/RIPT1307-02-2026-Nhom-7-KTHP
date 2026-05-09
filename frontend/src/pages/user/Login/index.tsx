@@ -1,6 +1,7 @@
 import Footer from '@/components/Footer';
+import { login } from '@/services/base/api';
 import rules from '@/utils/rules';
-import  { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message } from 'antd';
 import React, { useState } from 'react';
 import { history, useModel } from 'umi';
@@ -14,22 +15,25 @@ const Login: React.FC = () => {
 	const handleSubmit = async (values: { login: string; password: string }) => {
 		setSubmitting(true);
 		try {
-			// TẠM THỜI MOCK LOGIN: Cứ gõ đại tài khoản mật khẩu là cho qua
-			// Sau này thay đoạn này bằng hàm gọi API sang NestJS
-			if (values.login && values.password) {
-				const fakeToken = 'day_la_token_gia_cho_den_khi_co_backend';
-				localStorage.setItem('token', fakeToken);
+			const response = await login({
+				identifier: values.login,
+				password: values.password,
+			});
+			const resData = response.data;
 
-				setInitialState({
-					...initialState,
-					currentUser: { name: values.login, role: 'admin' } as any,
-				});
-
+			if (resData?.access_token) {
 				message.success('Đăng nhập thành công!');
-				history.replace('/dashboard');
+
+				localStorage.setItem('token', resData.access_token);
+				setInitialState((s) => ({
+					...s,
+					currentUser: resData.user,
+				}));
+				history.push('/dashboard');
 			}
-		} catch (error) {
-			message.error('Đăng nhập thất bại');
+		} catch (error: any) {
+			const errorMsg = error?.response?.data?.message || 'Đăng nhập thất bại!';
+			message.error(errorMsg);
 		}
 		setSubmitting(false);
 	};
