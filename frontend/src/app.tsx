@@ -17,7 +17,6 @@ export const initialStateConfig = {
 };
 
 export async function getInitialState(): Promise<IInitialState> {
-	// Lấy token từ localStorage (Dấu hiệu nhận biết đã đăng nhập)
 	const token = localStorage.getItem('token');
 
 	const whiteList = ['/user/login', '/user/register', '/user/forgot-password', '/user/reset-password'];
