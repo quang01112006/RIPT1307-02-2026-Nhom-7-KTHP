@@ -12,9 +12,13 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const { password, email, code } = createUserDto;
 
-    const isExist = await this.userModel.findOne({
-      $or: [{ email: email.toLowerCase() }, { code }],
-    });
+    const orConditions: any[] = [{ email: email.toLowerCase() }];
+    if (code) {
+      orConditions.push({ code });
+    }
+
+    const isExist = await this.userModel.findOne({ $or: orConditions });
+
     if (isExist) {
       const field =
         isExist.email === email.toLowerCase() ? 'Email' : 'Mã SV/GV';
