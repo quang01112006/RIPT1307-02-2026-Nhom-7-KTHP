@@ -38,7 +38,10 @@ export class UsersService {
   async findOneByLoginTerm(term: string) {
     return this.userModel
       .findOne({
-        $or: [{ email: term.toLocaleLowerCase() }, { code: term }],
+        $or: [
+          { email: { $regex: new RegExp(`^${term}$`, 'i') } },
+          { code: { $regex: new RegExp(`^${term}$`, 'i') } },
+        ],
       })
       .select('+password');
   }
