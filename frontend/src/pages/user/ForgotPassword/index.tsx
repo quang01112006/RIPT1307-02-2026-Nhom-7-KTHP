@@ -65,7 +65,7 @@ const ForgotPasswordPage: React.FC = () => {
             </Steps>
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {currentStep === 0 ? (
               <motion.div
                 key="step1"
