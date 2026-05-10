@@ -38,4 +38,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   faculty?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherCode?: string; // mã bí mật để xác minh acc GV
 }
