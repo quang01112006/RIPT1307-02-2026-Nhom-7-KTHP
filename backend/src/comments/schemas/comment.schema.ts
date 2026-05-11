@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from '../../users/schemas/user.schema';
 import { Post } from '../../posts/schemas/post.schema';
+import { User } from '../../users/schemas/user.schema';
 
 export type CommentDocument = HydratedDocument<Comment>;
 
@@ -16,11 +16,26 @@ export class Comment {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true })
   post: Post;
 
-  @Prop({ default: 0 })
-  upvotes: number;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: null })
+  parent: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ default: 0 })
-  downvotes: number;
+  @Prop({ type: String, enum: ['ANSWER', 'COMMENT'], default: 'COMMENT' })
+  type: string;
+
+  @Prop({ default: false })
+  isAccepted: boolean;
+
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  upvotedBy: mongoose.Types.ObjectId[];
+
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  downvotedBy: mongoose.Types.ObjectId[];
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

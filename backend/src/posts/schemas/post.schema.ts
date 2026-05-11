@@ -21,11 +21,20 @@ export class Post {
   @Prop({ default: 0 })
   views: number;
 
-  @Prop({ default: 0 })
-  upvotes: number;
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  upvotedBy: User[];
 
-  @Prop({ default: 0 })
-  downvotes: number;
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  downvotedBy: mongoose.Types.ObjectId[];
+
+  @Prop({ default: false })
+  isResolved: boolean;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
