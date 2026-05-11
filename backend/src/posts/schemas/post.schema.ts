@@ -35,6 +35,19 @@ export class Post {
 
   @Prop({ default: false })
   isResolved: boolean;
+
+  @Prop({
+    type: [
+      {
+        url: { type: String, required: true },
+        name: { type: String },
+        fileType: { type: String },
+        size: { type: Number },
+      },
+    ],
+    default: [],
+  })
+  files: { url: string; name: string; fileType: string; size: number }[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
