@@ -1,26 +1,58 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Comment, CommentDocument } from './schemas/comment.schema';
 
 @Injectable()
 export class CommentsService {
-  create(createCommentDto: CreateCommentDto) {
-    return 'This action adds a new comment';
+  constructor(
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+  ) {}
+
+  async create(createCommentDto: any, userId: string) {
+    const createdComment = new this.commentModel({
+      ...createCommentDto,
+      author: userId,
+    });
+
+    const result = await createdComment.save();
+    return result.populate('author', 'fullName code role');
   }
 
-  findAll() {
-    return `This action returns all comments`;
+  async findByPost(postId: string) {
+    return this.commentModel
+      .find({ post: postId } as any)
+      .populate('author', 'fullName code role')
+      .sort({ createdAt: 1 }) // Bình luận cũ trước, mới sau
+      .exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
+  async remove(id: string, userId: string, isAdmin: boolean) {
+    const comment = await this.commentModel.findById(id);
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+
+    if (!isAdmin && String(comment.author as any) !== String(userId)) {
+      throw new ForbiddenException('Bạn không có quyền xóa bình luận này');
+    }
+
+    return this.commentModel.findByIdAndDelete(id).exec();
   }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
-  }
+  async update(id: string, content: string, userId: string) {
+    const comment = await this.commentModel.findById(id);
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
 
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
+    if (String(comment.author as any) !== String(userId)) {
+      throw new ForbiddenException('Bạn không có quyền sửa bình luận này');
+    }
+
+    return this.commentModel
+      .findByIdAndUpdate(id, { content }, { new: true })
+      .populate('author', 'fullName code role')
+      .exec();
   }
 }

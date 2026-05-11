@@ -1,26 +1,106 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { Post, PostDocument } from './schemas/post.schema';
+
+interface PostQuery {
+  search?: string;
+  tag?: string;
+  page?: number;
+  limit?: number;
+}
 
 @Injectable()
 export class PostsService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+
+  async create(createPostDto: CreatePostDto, userId: string) {
+    const createdPost = new this.postModel({
+      ...createPostDto,
+      author: userId,
+    });
+    return createdPost.save();
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findAll(query: PostQuery) {
+    const { search, tag, page = 1, limit = 10 } = query;
+    const filter: any = {};
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (tag) {
+      filter.tags = tag;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .populate('author', 'fullName email code role')
+        .sort({ createdAt: -1 })
+        .limit(Number(limit))
+        .skip(skip)
+        .exec(),
+      this.postModel.countDocuments(filter),
+    ]);
+
+    return {
+      data,
+      total,
+      page: Number(page),
+      lastPage: Math.ceil(total / limit),
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: string) {
+    const post = await this.postModel
+      .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
+      .populate('author', 'fullName code role')
+      .exec();
+
+    if (!post) throw new NotFoundException('Không tìm thấy bài viết');
+    return post;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(
+    id: string,
+    updatePostDto: Record<string, any>,
+    userId: string,
+    isAdmin: boolean,
+  ) {
+    const post = await this.postModel.findById(id);
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    if (!isAdmin && String(post.author as any) !== String(userId)) {
+      throw new ForbiddenException('Bạn không có quyền sửa bài viết này');
+    }
+
+    const { title, content, tags, files } = updatePostDto;
+
+    return this.postModel
+      .findByIdAndUpdate(id, { title, content, tags, files }, { new: true })
+      .exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: string, userId: string, isAdmin: boolean) {
+    const post = await this.postModel.findById(id);
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    if (!isAdmin && String(post.author as any) !== String(userId)) {
+      throw new ForbiddenException('Bạn không có quyền xóa bài viết này');
+    }
+
+    return this.postModel.findByIdAndDelete(id).exec();
   }
 }
