@@ -46,4 +46,14 @@ export class CommentsController {
   ) {
     return this.commentsService.update(id, content, req.user._id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/vote')
+  toggleVote(
+    @Param('id') id: string,
+    @Body('type') type: 'up' | 'down',
+    @Request() req: any,
+  ) {
+    return this.commentsService.toggleVote(id, req.user._id as string, type);
+  }
 }

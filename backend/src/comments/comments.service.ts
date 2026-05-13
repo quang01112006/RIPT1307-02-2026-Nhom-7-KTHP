@@ -55,4 +55,34 @@ export class CommentsService {
       .populate('author', 'fullName code role')
       .exec();
   }
+
+  async toggleVote(commentId: string, userId: string, type: 'up' | 'down') {
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+
+    const upvotedIndex = comment.upvotedBy.findIndex(
+      (id) => String(id) === userId,
+    );
+    const downvotedIndex = comment.downvotedBy.findIndex(
+      (id) => String(id) === userId,
+    );
+
+    if (type === 'up') {
+      if (upvotedIndex > -1) {
+        comment.upvotedBy.splice(upvotedIndex, 1);
+      } else {
+        comment.upvotedBy.push(userId as any);
+        if (downvotedIndex > -1) comment.downvotedBy.splice(downvotedIndex, 1);
+      }
+    } else {
+      if (downvotedIndex > -1) {
+        comment.downvotedBy.splice(downvotedIndex, 1);
+      } else {
+        comment.downvotedBy.push(userId as any);
+        if (upvotedIndex > -1) comment.upvotedBy.splice(upvotedIndex, 1);
+      }
+    }
+
+    return comment.save();
+  }
 }

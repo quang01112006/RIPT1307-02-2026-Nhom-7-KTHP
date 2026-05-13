@@ -103,4 +103,34 @@ export class PostsService {
 
     return this.postModel.findByIdAndDelete(id).exec();
   }
+
+  async toggleVote(postId: string, userId: string, type: 'up' | 'down') {
+    const post = await this.postModel.findById(postId);
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    const upvotedIndex = post.upvotedBy.findIndex(
+      (id) => String(id) === userId,
+    );
+    const downvotedIndex = post.downvotedBy.findIndex(
+      (id) => String(id) === userId,
+    );
+
+    if (type === 'up') {
+      if (upvotedIndex > -1) {
+        post.upvotedBy.splice(upvotedIndex, 1);
+      } else {
+        post.upvotedBy.push(userId as any);
+        if (downvotedIndex > -1) post.downvotedBy.splice(downvotedIndex, 1);
+      }
+    } else {
+      if (downvotedIndex > -1) {
+        post.downvotedBy.splice(downvotedIndex, 1);
+      } else {
+        post.downvotedBy.push(userId as any);
+        if (upvotedIndex > -1) post.upvotedBy.splice(upvotedIndex, 1);
+      }
+    }
+
+    return post.save();
+  }
 }

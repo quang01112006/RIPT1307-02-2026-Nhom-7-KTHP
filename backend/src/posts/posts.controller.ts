@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Body,
   Controller,
@@ -52,5 +54,15 @@ export class PostsController {
   remove(@Param('id') id: string, @Request() req: any) {
     const isAdmin = req.user.role === 'admin';
     return this.postsService.remove(id, req.user._id, isAdmin);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/vote')
+  toggleVote(
+    @Param('id') id: string,
+    @Body('type') type: 'up' | 'down',
+    @Request() req: any,
+  ) {
+    return this.postsService.toggleVote(id, req.user._id, type);
   }
 }
