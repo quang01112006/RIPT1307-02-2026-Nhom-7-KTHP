@@ -48,11 +48,18 @@ export class CommentsService {
   }
 
   async findByPost(postId: string) {
-    return this.commentModel
-      .find({ post: postId } as any)
-      .populate('author', 'fullName code role')
-      .sort({ createdAt: 1 }) // Bình luận cũ trước, mới sau
+    const data = await this.commentModel
+      .find({ post: postId as any })
+      .populate('author', 'fullName email code role')
+      .sort({ createdAt: -1 })
       .exec();
+
+    return {
+      data: {
+        result: data,
+        total: data.length,
+      },
+    };
   }
 
   async remove(id: string, userId: string, isAdmin: boolean) {

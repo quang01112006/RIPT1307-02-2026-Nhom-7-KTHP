@@ -5,8 +5,8 @@ import {
   ForbiddenException,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -33,7 +33,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('page')
   findAll(@Request() req: RequestWithUser) {
     if (req.user.role !== 'admin')
       throw new ForbiddenException('Thao tác không được phép');
@@ -41,7 +41,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id/toggle-active')
+  @Put(':id/toggle-active')
   toggleActive(@Param('id') id: string, @Request() req: RequestWithUser) {
     if (req.user.role !== 'admin')
       throw new ForbiddenException('Thao tác không được phép');
@@ -57,7 +57,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: string,
     @Body() updateUserDto: any,
