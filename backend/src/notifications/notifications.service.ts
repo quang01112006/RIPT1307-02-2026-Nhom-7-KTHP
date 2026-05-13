@@ -18,11 +18,16 @@ export class NotificationsService {
   }
 
   async findByUser(userId: string) {
-    return this.notificationModel
-      .find({ recipient: userId as any })
+    const result = await this.notificationModel
+      .find({ userId: userId as any })
       .sort({ createdAt: -1 })
-      .populate('sender', 'fullName avatar')
       .exec();
+    return {
+      data: {
+        result,
+        total: result.length,
+      },
+    };
   }
 
   async markAsRead(id: string) {

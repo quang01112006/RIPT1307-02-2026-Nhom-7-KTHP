@@ -56,10 +56,10 @@ export class PostsService {
     ]);
 
     return {
-      data,
-      total,
-      page: Number(page),
-      lastPage: Math.ceil(total / limit),
+      data: {
+        result: data,
+        total: total,
+      },
     };
   }
 

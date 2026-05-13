@@ -6,8 +6,8 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
   Query,
   Request,
   UseGuards,
@@ -28,7 +28,7 @@ export class PostsController {
     return this.postsService.create(createPostDto, req.user._id);
   }
 
-  @Get()
+  @Get('page')
   findAll(@Query() query: any) {
     return this.postsService.findAll(query);
   }
@@ -39,7 +39,7 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -57,7 +57,7 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id/vote')
+  @Put(':id/vote')
   toggleVote(
     @Param('id') id: string,
     @Body('type') type: 'up' | 'down',

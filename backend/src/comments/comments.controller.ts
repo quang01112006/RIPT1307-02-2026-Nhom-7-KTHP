@@ -6,8 +6,8 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -24,7 +24,7 @@ export class CommentsController {
     return this.commentsService.create(createCommentDto, req.user._id);
   }
 
-  @Get('post/:postId')
+  @Get('post/:postId/page')
   findAllByPost(@Param('postId') postId: string) {
     return this.commentsService.findByPost(postId);
   }
@@ -38,7 +38,7 @@ export class CommentsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: string,
     @Body('content') content: string,
@@ -48,7 +48,7 @@ export class CommentsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id/vote')
+  @Put(':id/vote')
   toggleVote(
     @Param('id') id: string,
     @Body('type') type: 'up' | 'down',

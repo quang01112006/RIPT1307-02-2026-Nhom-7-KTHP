@@ -67,7 +67,13 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.userModel.find().select('-password').exec();
+    const result = await this.userModel.find().select('-password').exec();
+    return {
+      data: {
+        result,
+        total: result.length,
+      },
+    };
   }
 
   async toggleActive(id: string) {

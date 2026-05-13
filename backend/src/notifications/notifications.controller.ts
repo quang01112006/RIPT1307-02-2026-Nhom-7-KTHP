@@ -5,7 +5,7 @@ import { NotificationsService } from './notifications.service';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Get()
+  @Get('page')
   getMyNotifications(@Request() req: any) {
     return this.notificationsService.findByUser(req.user._id);
   }
