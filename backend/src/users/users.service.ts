@@ -65,4 +65,38 @@ export class UsersService {
       })
       .select('+password');
   }
+
+  async findAll() {
+    return this.userModel.find().select('-password').exec();
+  }
+
+  async toggleActive(id: string) {
+    const user = await this.userModel.findById(id);
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    user.isActive = !user.isActive;
+    return user.save();
+  }
+
+  async remove(id: string) {
+    return this.userModel.findByIdAndDelete(id).exec();
+  }
+
+  async update(id: string, updateUserDto: any) {
+    const { password, ...updateData } = updateUserDto as Record<string, any>;
+
+    const user = await this.userModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .select('-password')
+      .exec();
+
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+    return user;
+  }
+
+  async findOne(id: string) {
+    const user = await this.userModel.findById(id).select('-password').exec();
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+    return user;
+  }
 }

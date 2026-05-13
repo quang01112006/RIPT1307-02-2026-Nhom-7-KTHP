@@ -34,5 +34,8 @@ export class User {
 
   @Prop({ unique: true, trim: true, sparse: true })
   code?: string; // Mã sv hoặc mã gv
+
+  @Prop()
+  avatar: string;
 }
 export const UserSchema = SchemaFactory.createForClass(User);
