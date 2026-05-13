@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   ForbiddenException,
   Injectable,
@@ -5,12 +7,16 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { NotificationsService } from 'src/notifications/notifications.service';
+import { PostsService } from 'src/posts/posts.service';
 import { Comment, CommentDocument } from './schemas/comment.schema';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    private notificationsService: NotificationsService,
+    private postsService: PostsService,
   ) {}
 
   async create(createCommentDto: any, userId: string) {
@@ -20,6 +26,24 @@ export class CommentsService {
     });
 
     const result = await createdComment.save();
+
+    try {
+      const post = await this.postsService.findOne(createCommentDto.post);
+      if (String((post.author as any)._id) !== String(userId)) {
+        await this.notificationsService.create({
+          recipient: (post.author as any)._id,
+          sender: userId,
+          type: 'REPLY',
+          targetId: post._id,
+          targetType: 'Post',
+          title: 'Bình luận mới',
+          message: `Đã có người trả lời bài viết "${post.title}" của bạn.`,
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi tạo thông báo:', error);
+    }
+
     return result.populate('author', 'fullName code role');
   }
 
