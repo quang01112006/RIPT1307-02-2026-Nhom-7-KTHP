@@ -1,4 +1,7 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+
+export type TagDocument = HydratedDocument<Tag>;
 
 @Schema({ timestamps: true })
 export class Tag {
@@ -11,3 +14,5 @@ export class Tag {
   @Prop({ default: 0 })
   postCount: number;
 }
+
+export const TagSchema = SchemaFactory.createForClass(Tag);
