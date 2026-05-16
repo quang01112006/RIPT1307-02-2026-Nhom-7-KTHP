@@ -38,33 +38,44 @@ export default [
 	// DEFAULT MENU
 	{
 		path: '/dashboard',
-		name: 'Dashboard',
+		name: 'Trang chủ',
 		component: './TrangChu',
 		icon: 'HomeOutlined',
-	},
-	{
-		path: '/gioi-thieu',
-		name: 'About',
-		component: './TienIch/GioiThieu',
-		hideInMenu: true,
+		access: 'isUser',
 	},
 
-	// DANH MUC HE THONG
-	// {
-	// 	name: 'DanhMuc',
-	// 	path: '/danh-muc',
-	// 	icon: 'copy',
-	// 	routes: [
-	// 		{
-	// 			name: 'ChucVu',
-	// 			path: 'chuc-vu',
-	// 			component: './DanhMuc/ChucVu',
-	// 		},
-	// 	],
-	// },
+	{
+		path: '/admin/dashboard',
+		name: 'Trang chủ',
+		icon: 'DashboardOutlined',
+		access: 'isAdmin',
+		component: './Admin/Dashboard',
+	},
+	{
+		path: '/admin/posts',
+		name: 'Quản lý bài viết',
+		icon: '',
+		access: 'isAdmin',
+		component: './Admin/QuanLyBaiViet',
+	},
+	{
+		path: '/admin/tags',
+		name: 'Quản lý Tag',
+		icon: '',
+		access: 'isAdmin',
+		component: './Admin/QuanLyTag',
+	},
+	{
+		path: '/admin/users',
+		name: 'Quản lý người dùng',
+		icon: 'UserOutlined',
+		access: 'isAdmin',
+		component: './Admin/QuanLyUser',
+	},
 
 	{
 		path: '/',
+		redirect: 'dashboard',
 	},
 	{
 		path: '/403',

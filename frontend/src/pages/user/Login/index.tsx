@@ -9,7 +9,7 @@ import styles from './index.less';
 
 const Login: React.FC = () => {
 	const [submitting, setSubmitting] = useState(false);
-	const { initialState, setInitialState } = useModel('@@initialState');
+	const { initialState, setInitialState, refresh } = useModel('@@initialState');
 	const [form] = Form.useForm();
 
 	const handleSubmit = async (values: { login: string; password: string }) => {
@@ -25,11 +25,14 @@ const Login: React.FC = () => {
 				message.success('Đăng nhập thành công!');
 
 				localStorage.setItem('token', resData.access_token);
-				setInitialState((s) => ({
-					...s,
-					currentUser: resData.user,
-				}));
-				history.push('/dashboard');
+				await refresh();
+				const role = resData.user?.role;
+
+				if (role === 'admin') {
+					history.push('/admin/dashboard');
+				} else {
+					history.push('/dashboard');
+				}
 			}
 		} catch (error: any) {
 			const errorMsg = error?.response?.data?.message || 'Đăng nhập thất bại!';
@@ -53,15 +56,11 @@ const Login: React.FC = () => {
 					<h2 style={{ textAlign: 'center', marginBottom: 24 }}>ĐĂNG NHẬP</h2>
 					<Form form={form} onFinish={handleSubmit} layout='vertical'>
 						<Form.Item label='' name='login' rules={[...rules.required]}>
-							<Input
-								placeholder='Nhập tên đăng nhập (gõ đại)'
-								prefix={<UserOutlined className={styles.prefixIcon} />}
-								size='large'
-							/>
+							<Input placeholder='dev@gmail.com' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
 						</Form.Item>
 						<Form.Item label='' name='password' rules={[...rules.required]}>
 							<Input.Password
-								placeholder='Nhập mật khẩu (gõ đại)'
+								placeholder='dev'
 								prefix={<LockOutlined className={styles.prefixIcon} />}
 								size='large'
 							/>

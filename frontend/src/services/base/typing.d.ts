@@ -1,4 +1,12 @@
 import { ERole } from './constant';
+import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
+
+export interface IInitialState {
+	settings?: Partial<LayoutSettings>;
+	currentUser?: Login.IUser;
+	permissionLoading?: boolean;
+	authorizedPermissions?: any[];
+}
 
 declare module Login {
 	export interface IUser {
@@ -16,12 +24,6 @@ declare module Login {
 	export interface ILoginResponse {
 		access_token: string;
 		user: IUser;
-	}
-
-	export interface IInitialState {
-		settings?: Partial<LayoutSettings>;
-		currentUser?: Login.IUser;
-		permissionLoading?: boolean;
 	}
 
 	export interface IFile {
