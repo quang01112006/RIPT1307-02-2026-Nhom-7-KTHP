@@ -8,15 +8,7 @@ export interface Response<T> {
 
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T> | any> {
-    const request = context.switchToHttp().getRequest();
-    const url = request?.url || '';
-
-    // Bỏ qua bọc { data } cho các API đặc thù (như Login, GetMe) để không làm hỏng code Frontend cũ
-    if (url.includes('/auth/login') || url.includes('/users/me') || url.includes('/users/register')) {
-      return next.handle();
-    }
-
+  intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
     return next.handle().pipe(
       map(data => {
         // Nếu kết quả bị rỗng
