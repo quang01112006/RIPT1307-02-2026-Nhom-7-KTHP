@@ -19,7 +19,7 @@ const Login: React.FC = () => {
 				identifier: values.login,
 				password: values.password,
 			});
-			const resData = response.data;
+			const resData = response.data?.data || response.data;
 
 			if (resData?.access_token) {
 				message.success('Đăng nhập thành công!');
@@ -59,11 +59,7 @@ const Login: React.FC = () => {
 							<Input placeholder='dev@gmail.com' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
 						</Form.Item>
 						<Form.Item label='' name='password' rules={[...rules.required]}>
-							<Input.Password
-								placeholder='dev'
-								prefix={<LockOutlined className={styles.prefixIcon} />}
-								size='large'
-							/>
+							<Input.Password placeholder='dev' prefix={<LockOutlined className={styles.prefixIcon} />} size='large' />
 						</Form.Item>
 						<Button type='primary' block size='large' loading={submitting} htmlType='submit'>
 							Đăng nhập
