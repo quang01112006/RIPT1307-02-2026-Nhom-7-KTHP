@@ -37,7 +37,7 @@ export async function getInitialState(): Promise<IInitialState> {
 
 	try {
 		const response: any = await getMe();
-		const userData = response.data || response;
+		const userData = response.data?.data || response.data || response;
 		return {
 			permissionLoading: false,
 			currentUser: userData,
