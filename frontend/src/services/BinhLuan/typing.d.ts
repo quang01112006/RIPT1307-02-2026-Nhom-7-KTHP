@@ -8,6 +8,9 @@ declare module BinhLuan {
 			avatar?: string;
 		};
 		post: string;
+		parent?: string;
+		type?: 'ANSWER' | 'COMMENT';
+		isAccepted?: boolean;
 		upvotedBy: string[];
 		downvotedBy: string[];
 		createdAt: string;

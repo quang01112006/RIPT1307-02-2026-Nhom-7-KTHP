@@ -602,3 +602,14 @@ export const createTextLinks = (text: string, targetBlank: boolean = true) => {
 		},
 	);
 };
+
+// hàm tạo màu cố định cho các tag
+export function getTagColor(tag: string) {
+	const colors = ['blue', 'purple', 'orange', 'green', 'cyan', 'magenta', 'gold', 'lime', 'geekblue', 'volcano'];
+	let hash = 0;
+	for (let i = 0; i < tag.length; i++) {
+		hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+	}
+	const index = Math.abs(hash) % colors.length;
+	return colors[index];
+}
