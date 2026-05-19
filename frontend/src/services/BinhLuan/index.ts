@@ -6,5 +6,5 @@ export async function getCommentsByPost(postId: string) {
 }
 
 export async function toggleVoteComment(id: string, type: 'up' | 'down') {
-	return axios.patch(`${ip3}/comments/${id}/vote`, { type });
+	return axios.put(`${ip3}/comments/${id}/vote`, { type });
 }
