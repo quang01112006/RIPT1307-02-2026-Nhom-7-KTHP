@@ -43,6 +43,12 @@ export default [
 		icon: 'HomeOutlined',
 		access: 'isUser',
 	},
+	{
+		path: '/question/:id',
+		name: 'Chi tiết câu hỏi',
+		component: './ChiTietBaiViet',
+		hideInMenu: true,
+	},
 
 	{
 		path: '/admin/dashboard',

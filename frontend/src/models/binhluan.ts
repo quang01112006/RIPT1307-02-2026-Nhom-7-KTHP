@@ -21,7 +21,7 @@ export default () => {
 		}
 	};
 
-	const toggleVoteCommentModel = async (id: string, type: 'up' | 'down', postId: string) => {
+	const voteCommentModel = async (id: string, type: 'up' | 'down', postId: string) => {
 		try {
 			await toggleVoteComment(id, type);
 			getCommentsByPostModel(postId);
@@ -29,9 +29,10 @@ export default () => {
 			message.error('Lỗi khi bình chọn');
 		}
 	};
+
 	return {
 		...objInit,
 		getCommentsByPostModel,
-		toggleVoteCommentModel,
+		voteCommentModel,
 	};
 };
