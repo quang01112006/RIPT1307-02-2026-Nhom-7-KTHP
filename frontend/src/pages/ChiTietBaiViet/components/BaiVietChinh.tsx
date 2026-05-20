@@ -1,8 +1,8 @@
+import { getTagColor } from '@/utils/utils';
 import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Space, Tag, Typography } from 'antd';
+import { Avatar, Button, Card, Divider, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
 import React from 'react';
-import { getTagColor } from '@/utils/utils';
 import styles from '../index.less';
 
 const { Text, Title } = Typography;
@@ -13,10 +13,64 @@ interface BaiVietChinhProps {
 	hasUpvoted: boolean;
 	hasDownvoted: boolean;
 	onVote: (type: 'up' | 'down') => void;
+	onCommentClick: () => void;
 }
 
-const BaiVietChinh: React.FC<BaiVietChinhProps> = ({ post, postScore, hasUpvoted, hasDownvoted, onVote }) => {
+const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
+	post,
+	postScore,
+	hasUpvoted,
+	hasDownvoted,
+	onVote,
+	onCommentClick,
+}) => {
 	if (!post) return null;
+
+	const fallbackCopyTextToClipboard = (text: string) => {
+		const textArea = document.createElement('textarea');
+		textArea.value = text;
+
+		// ẩn đi cho đỡ bị scroll
+		textArea.style.top = '0';
+		textArea.style.left = '0';
+		textArea.style.position = 'fixed';
+		textArea.style.opacity = '0';
+
+		document.body.appendChild(textArea);
+		textArea.focus();
+		textArea.select();
+
+		try {
+			const successful = document.execCommand('copy');
+			if (successful) {
+				message.success('Đã sao chép liên kết bài viết vào bộ nhớ tạm! ');
+			} else {
+				message.error('Không thể tự động sao chép liên kết');
+			}
+		} catch (err) {
+			message.error('Không thể tự động sao chép liên kết');
+		}
+
+		document.body.removeChild(textArea);
+	};
+
+	const handleShare = () => {
+		const shareUrl = window.location.href;
+
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			navigator.clipboard
+				.writeText(shareUrl)
+				.then(() => {
+					message.success('Đã sao chép liên kết bài viết vào bộ nhớ tạm!');
+				})
+				.catch(() => {
+					fallbackCopyTextToClipboard(shareUrl);
+				});
+		} else {
+			// dùng cờ cổ cho http vs đt chung wifi
+			fallbackCopyTextToClipboard(shareUrl);
+		}
+	};
 
 	return (
 		<Card hoverable bordered={false} style={{ height: 'auto' }} title={<Title level={3}>{post.title}</Title>}>
@@ -91,11 +145,11 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({ post, postScore, hasUpvoted
 						}}
 						onClick={() => onVote('down')}
 					/>
-					<Button icon={<CommentOutlined />} type='text'>
+					<Button icon={<CommentOutlined />} type='text' onClick={onCommentClick}>
 						Trả lời
 					</Button>
 
-					<Button icon={<ShareAltOutlined />} type='text'>
+					<Button icon={<ShareAltOutlined />} type='text' onClick={handleShare}>
 						Chia sẻ
 					</Button>
 				</Space>

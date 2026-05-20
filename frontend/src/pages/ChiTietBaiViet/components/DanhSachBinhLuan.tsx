@@ -1,4 +1,4 @@
-import { ClockCircleOutlined, DownOutlined, FireOutlined } from '@ant-design/icons';
+import { DownOutlined } from '@ant-design/icons';
 import { Button, Dropdown, Menu, Typography } from 'antd';
 import moment from 'moment';
 import React, { useState } from 'react';
@@ -12,6 +12,8 @@ interface DanhSachBinhLuanProps {
 	currentUserAvatar?: string;
 	onVote: (id: string, type: 'up' | 'down') => void;
 	onSubmitReply: (content: string, parentId: string) => Promise<void>;
+	onEdit: (id: string, content: string) => Promise<void>;
+	onDelete: (id: string) => Promise<void>;
 }
 
 const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
@@ -20,22 +22,35 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 	currentUserAvatar,
 	onVote,
 	onSubmitReply,
+	onEdit,
+	onDelete,
 }) => {
 	const [replyingId, setReplyingId] = useState<string | null>(null);
+	const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'votes'>('newest');
+
+	const handleSortClick = ({ key }: { key: string }) => {
+		setSortKey(key as 'newest' | 'oldest' | 'votes');
+	};
 
 	const sortMenu = (
-		<Menu defaultValue='newest' style={{ borderRadius: '8px' }}>
-			<Menu.Item key='newest' icon={<ClockCircleOutlined />}>
-				Mới nhất
-			</Menu.Item>
-			<Menu.Item key='oldest' icon={<ClockCircleOutlined />}>
-				Cũ nhất
-			</Menu.Item>
-			<Menu.Item key='votes' icon={<FireOutlined />}>
-				Nổi bật
-			</Menu.Item>
+		<Menu onClick={handleSortClick} selectedKeys={[sortKey]} style={{ borderRadius: '8px' }}>
+			<Menu.Item key='newest'>Mới nhất</Menu.Item>
+			<Menu.Item key='oldest'>Cũ nhất</Menu.Item>
+			<Menu.Item key='votes'>Nổi bật</Menu.Item>
 		</Menu>
 	);
+
+	const getSortLabel = () => {
+		switch (sortKey) {
+			case 'oldest':
+				return 'Cũ nhất';
+			case 'votes':
+				return 'Nổi bật';
+			case 'newest':
+			default:
+				return 'Mới nhất';
+		}
+	};
 
 	const getThreadComments = (rootId: string) => {
 		const results: BinhLuan.IRecord[] = [];
@@ -48,20 +63,39 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 			queue.push(...children.map((c) => c._id));
 		}
 
+		// Sắp xếp bình luận con theo thời gian tăng dần để mạch hội thoại tự nhiên nhất
 		return results.sort((a, b) => moment(a.createdAt).valueOf() - moment(b.createdAt).valueOf());
 	};
 
-	const parentComments = comments?.filter((c) => !c.parent) || [];
+	// Lọc và sắp xếp các bình luận cha theo tiêu chuẩn lựa chọn
+	const parentComments = (comments?.filter((c) => !c.parent) || []).sort((a, b) => {
+		if (sortKey === 'newest') {
+			return moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
+		}
+		if (sortKey === 'oldest') {
+			return moment(a.createdAt).valueOf() - moment(b.createdAt).valueOf();
+		}
+		if (sortKey === 'votes') {
+			const scoreA = (a.upvotedBy?.length || 0) - (a.downvotedBy?.length || 0);
+			const scoreB = (b.upvotedBy?.length || 0) - (b.downvotedBy?.length || 0);
+			if (scoreB !== scoreA) {
+				return scoreB - scoreA; // Số điểm vote lớn hơn lên trước
+			}
+			// Nếu điểm bằng nhau, ưu tiên bình luận mới nhất
+			return moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
+		}
+		return 0;
+	});
 
 	return (
 		<div>
 			<div style={{ display: 'flex', justifyContent: 'space-between', margin: '16px 0' }}>
 				<Title level={4}>{comments?.length || 0} câu trả lời</Title>
 				<div>
-					<span>Sắp xếp: </span>
+					<span style={{ color: '#8c8c8c' }}>Sắp xếp: </span>
 					<Dropdown overlay={sortMenu} trigger={['click']}>
-						<Button type='text' style={{ borderRadius: '8px' }}>
-							Mới nhất
+						<Button type='text' style={{ borderRadius: '8px', fontWeight: 500 }}>
+							{getSortLabel()}
 							<DownOutlined style={{ fontSize: '10px', marginLeft: '4px' }} />
 						</Button>
 					</Dropdown>
@@ -83,9 +117,11 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 							onSubmitReply={(content) => onSubmitReply(content, comment._id)}
 							replyingId={replyingId}
 							setReplyingId={setReplyingId}
+							onEdit={onEdit}
+							onDelete={onDelete}
 						/>
 
-						{/*====PHẦN BÌNH LUẬN CON ====*/}
+						{/*==== PHẦN BÌNH LUẬN CON ====*/}
 						{childComments.length > 0 && (
 							<div
 								style={{
@@ -113,6 +149,8 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 											onSubmitReply={(content) => onSubmitReply(content, child._id)}
 											replyingId={replyingId}
 											setReplyingId={setReplyingId}
+											onEdit={onEdit}
+											onDelete={onDelete}
 										/>
 									);
 								})}

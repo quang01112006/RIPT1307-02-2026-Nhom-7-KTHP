@@ -13,6 +13,7 @@ interface PostQuery {
   tag?: string;
   page?: number;
   limit?: number;
+  sort?: string;
 }
 
 @Injectable()
@@ -28,7 +29,7 @@ export class PostsService {
   }
 
   async findAll(query: PostQuery) {
-    const { search, tag, page = 1, limit = 10 } = query;
+    const { search, tag, page = 1, limit = 10, sort } = query;
     const filter: any = {};
 
     if (search) {
@@ -44,11 +45,19 @@ export class PostsService {
 
     const skip = (page - 1) * limit;
 
+    // sort theo query
+    const sortOption: any = {};
+    if (sort === 'views') {
+      sortOption.views = -1;
+    } else {
+      sortOption.createdAt = -1;
+    }
+
     const [data, total] = await Promise.all([
       this.postModel
         .find(filter)
         .populate('author', 'fullName email code role')
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .limit(Number(limit))
         .skip(skip)
         .exec(),
