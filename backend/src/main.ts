@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,9 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
+
+  // Tự động bọc { data } cho mọi API response để khớp với useInitModel của Frontend
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);
   console.log(`Application is running on ${await app.getUrl()}`);

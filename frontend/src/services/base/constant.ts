@@ -1,106 +1,3 @@
-import { type Login } from './typing';
-
-export enum EModuleKey {
-	CONNECT = 'cong-hoc-vien',
-	CONG_CAN_BO = 'cong-can-bo',
-	QLDT = 'quan-ly-dao-tao',
-	CORE = 'danh-muc-chung',
-	TCNS = 'to-chuc-nhan-su',
-	CTSV = 'cong-tac-sinh-vien',
-	VPS = 'van-phong-so',
-	TC = 'tai-chinh',
-	QLKH = 'quan-ly-khoa-hoc',
-	KT = 'khao-thi',
-	CSVC = 'co-so-vat-chat',
-}
-
-export const AppModules: Record<EModuleKey, Login.TModule> = {
-	[EModuleKey.CONNECT]: {
-		title: APP_CONFIG_TITLE_CONNECT,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}connect`,
-		url: APP_CONFIG_URL_CONNECT,
-		icon: EModuleKey.CONNECT + '.svg',
-	},
-	[EModuleKey.CONG_CAN_BO]: {
-		title: APP_CONFIG_TITLE_CAN_BO,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}connect`,
-		url: APP_CONFIG_URL_CAN_BO,
-		icon: EModuleKey.CONG_CAN_BO + '.svg',
-	},
-	[EModuleKey.CORE]: {
-		title: APP_CONFIG_TITLE_CORE,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}core`,
-		url: APP_CONFIG_URL_CORE,
-		icon: EModuleKey.CORE + '.svg',
-	},
-	[EModuleKey.QLDT]: {
-		title: APP_CONFIG_TITLE_DAO_TAO,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}qldt`,
-		url: APP_CONFIG_URL_DAO_TAO,
-		icon: EModuleKey.QLDT + '.svg',
-	},
-	[EModuleKey.TCNS]: {
-		title: APP_CONFIG_TITLE_NHAN_SU,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}tcns`,
-		url: APP_CONFIG_URL_NHAN_SU,
-		icon: EModuleKey.TCNS + '.svg',
-	},
-	[EModuleKey.CTSV]: {
-		title: APP_CONFIG_TITLE_CTSV,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}ctsv`,
-		url: APP_CONFIG_URL_CTSV,
-		icon: EModuleKey.CTSV + '.svg',
-	},
-	[EModuleKey.VPS]: {
-		title: APP_CONFIG_TITLE_VPS,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}vps`,
-		url: APP_CONFIG_URL_VPS,
-		icon: EModuleKey.VPS + '.svg',
-	},
-	[EModuleKey.QLKH]: {
-		title: APP_CONFIG_TITLE_QLKH,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}qlkh`,
-		url: APP_CONFIG_URL_QLKH,
-		icon: EModuleKey.QLKH + '.svg',
-	},
-	[EModuleKey.TC]: {
-		title: APP_CONFIG_TITLE_TAI_CHINH,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}tc`,
-		url: APP_CONFIG_URL_TAI_CHINH,
-		icon: EModuleKey.TC + '.svg',
-	},
-	[EModuleKey.KT]: {
-		title: APP_CONFIG_TITLE_KHAO_THI,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}kt`,
-		url: APP_CONFIG_URL_KHAO_THI,
-		icon: EModuleKey.KT + '.svg',
-	},
-	[EModuleKey.CSVC]: {
-		title: APP_CONFIG_TITLE_CSVC,
-		clientId: `${APP_CONFIG_PREFIX_OF_KEYCLOAK_CLIENT_ID}csvc`,
-		url: APP_CONFIG_URL_CSVC,
-		icon: EModuleKey.CSVC + '.svg',
-	},
-};
-
-export const moduleThuVien: Partial<Login.TModule> = {
-	title: APP_CONFIG_TITLE_THU_VIEN,
-	url: APP_CONFIG_URL_THU_VIEN,
-	icon: 'thu-vien.svg',
-};
-
-export const moduleQuanLyVanBan: Partial<Login.TModule> = {
-	title: APP_CONFIG_TITLE_QLVB,
-	url: APP_CONFIG_URL_QLVB,
-	icon: 'quan-ly-van-ban.svg',
-};
-
-export const moduleCongThongTin: Partial<Login.TModule> = {
-	title: APP_CONFIG_TITLE_LANDING,
-	url: APP_CONFIG_URL_LANDING,
-	icon: 'cong-thong-tin.svg',
-};
-
 /** Đường link landing page */
 export const landingUrl = APP_CONFIG_URL_LANDING;
 
@@ -147,3 +44,57 @@ export enum EStorageFile {
 	DATABASE = 'Database',
 	S3 = 'S3',
 }
+
+export enum ERole {
+	ADMIN = 'admin',
+	STUDENT = 'student',
+	TEACHER = 'teacher',
+}
+
+export enum EModuleKey {
+	CONNECT = 'CONNECT',
+	CORE = 'CORE',
+	QLDT = 'QLDT',
+	TCNS = 'TCNS',
+	CTSV = 'CTSV',
+	VPS = 'VPS',
+	TC = 'TC',
+	QLKH = 'QLKH',
+	KT = 'KT',
+	CSVC = 'CSVC',
+	CONG_CAN_BO = 'CONG_CAN_BO',
+}
+
+export interface IAppModule {
+	url: string;
+	title: string;
+	icon?: string;
+	clientId?: string;
+}
+
+export const AppModules: Record<string, IAppModule> = {
+	[EModuleKey.CONNECT]: { url: APP_CONFIG_URL_CONNECT ?? '/', title: 'Cổng thông tin' },
+	[EModuleKey.CORE]: { url: APP_CONFIG_URL_CORE ?? '/', title: 'Cổng chính' },
+	[EModuleKey.QLDT]: { url: APP_CONFIG_URL_DAO_TAO ?? '/', title: 'Quản lý đào tạo' },
+	[EModuleKey.TCNS]: { url: APP_CONFIG_URL_NHAN_SU ?? '/', title: 'Tài chính - Nhân sự' },
+	[EModuleKey.CTSV]: { url: APP_CONFIG_URL_CTSV ?? '/', title: 'Công tác sinh viên' },
+	[EModuleKey.VPS]: { url: APP_CONFIG_URL_VPS ?? '/', title: 'Văn phòng sở' },
+	[EModuleKey.TC]: { url: APP_CONFIG_URL_TAI_CHINH ?? '/', title: 'Tài chính' },
+	[EModuleKey.QLKH]: { url: APP_CONFIG_URL_QLKH ?? '/', title: 'Quản lý khoa' },
+	[EModuleKey.KT]: { url: APP_CONFIG_URL_KHAO_THI ?? '/', title: 'Khảo thí' },
+	[EModuleKey.CSVC]: { url: APP_CONFIG_URL_CSVC ?? '/', title: 'Cơ sở vật chất' },
+	[EModuleKey.CONG_CAN_BO]: { url: APP_CONFIG_URL_CAN_BO ?? '/', title: 'Cổng cán bộ' },
+};
+
+export const moduleCongThongTin: IAppModule = {
+	url: APP_CONFIG_URL_CONNECT ?? '/',
+	title: 'Cổng thông tin',
+};
+export const moduleQuanLyVanBan: IAppModule = {
+	url: APP_CONFIG_URL_QLVB ?? '/',
+	title: 'Quản lý văn bản',
+};
+export const moduleThuVien: IAppModule = {
+	url: APP_CONFIG_URL_THU_VIEN ?? '/',
+	title: 'Thư viện',
+};

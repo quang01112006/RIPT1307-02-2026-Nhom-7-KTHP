@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Typography, Card, Steps, message, Space, Divider } from 'antd';
+import { Form, Input, Button, Typography, Card, Steps, message, Divider } from 'antd';
 import { Mail, ChevronLeft, Send, ShieldCheck, Fingerprint, Timer, RefreshCcw, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

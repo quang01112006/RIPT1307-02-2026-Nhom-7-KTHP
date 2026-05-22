@@ -1,6 +1,5 @@
-import type { EVaiTroKhaoSat } from '@/services/TienIch/constant';
-import type { ENotificationSource, ESourceTypeNotification } from './constant';
-import { type EReceiverType } from './constant';
+import type { EVaiTroKhaoSat } from '@/services/ThongBao/constant';
+import type { ENotificationSource, ESourceTypeNotification, EReceiverType } from './constant';
 
 declare module ThongBao {
 	export interface IRecord {

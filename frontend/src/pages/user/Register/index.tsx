@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Input, Button, Typography, Card, Row, Col, Space, message, Checkbox } from 'antd';
-import { UserPlus, Mail, Lock, ShieldCheck, ArrowRight, CheckCircle, Sparkles, Phone } from 'lucide-react';
+import { UserPlus, Mail, Lock, ArrowRight, CheckCircle, Sparkles, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const { Title, Text, Paragraph } = Typography;

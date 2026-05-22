@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Typography, Card, message, Progress, Space, Alert, Divider } from 'antd';
-import { KeyRound, Lock, ShieldCheck, Save, CheckCircle2, Info, Eye, EyeOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { KeyRound, Lock, ShieldCheck, CheckCircle2, Info, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const { Title, Text, Paragraph } = Typography;
 

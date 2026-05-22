@@ -8,7 +8,7 @@ import OneSignal from 'react-onesignal';
 const OneSignalBounder = (props: { children: React.ReactNode }) => {
 	const [oneSignalId, setOneSignalId] = useState<string | null | undefined>();
 	const auth = useAuth();
-	const iframeSource = AppModules[oneSignalRole].url;
+	const iframeSource = AppModules[oneSignalRole]?.url;
 	// let iframe: HTMLIFrameElement | null = null;
 
 	const getUserIdOnesignal = async () => {
@@ -51,18 +51,6 @@ const OneSignalBounder = (props: { children: React.ReactNode }) => {
 						left=${left}
 						`,
 		);
-	};
-
-	/** Nhận message từ trang handle OneSignal */
-	const receiveMessage = (e: any) => {
-		// console.log(`received message: ${e.data} from ${iframeSource}`);
-		if (iframeSource?.includes(e.origin)) {
-			if (e.data === false) {
-				// console.log('user not subscribed to mainsite, lets prompt');
-				showPopup(`${iframeSource}notification/subscribe`);
-			} else if (e.data) setOneSignalId(e.data);
-			// if (iframe) iframe.remove();
-		}
 	};
 
 	useEffect(() => {
