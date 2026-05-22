@@ -82,3 +82,10 @@ export async function updateSetting(id: string, payload: { key: ESettingKey; val
 export async function createSetting(payload: { key: ESettingKey; value: any }, ip?: string) {
 	return axios.post(`${ip ?? ip3}/setting`, payload);
 }
+export async function login(payload: { identifier: string; password: string }) {
+	return axios.post(`${ip3}/auth/login`, payload);
+}
+
+export async function register(payload: any) {
+	return axios.post(`${ip3}/users/register`, payload);
+}

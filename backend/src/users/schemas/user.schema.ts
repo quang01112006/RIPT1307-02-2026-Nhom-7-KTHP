@@ -32,7 +32,7 @@ export class User {
   @Prop({ default: 0 })
   reputation: number; // Điểm uy tín (để làm tính năng Vote)
 
-  @Prop({ unique: true, trim: true, required: true })
-  code: string; // Mã sv hoặc mã gv
+  @Prop({ unique: true, trim: true, sparse: true })
+  code?: string; // Mã sv hoặc mã gv
 }
 export const UserSchema = SchemaFactory.createForClass(User);

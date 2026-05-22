@@ -17,11 +17,10 @@ export const initialStateConfig = {
 };
 
 export async function getInitialState(): Promise<IInitialState> {
-	// Lấy token từ localStorage (Dấu hiệu nhận biết đã đăng nhập)
 	const token = localStorage.getItem('token');
 
-	// Nếu chưa có token và không phải đang đứng ở trang login -> Đá về trang Login
-	if (!token && history.location.pathname !== '/user/login') {
+	const whiteList = ['/user/login', '/user/register', '/user/forgot-password', '/user/reset-password'];
+	if (!token && !whiteList.includes(history.location.pathname)) {
 		history.replace('/user/login');
 	}
 

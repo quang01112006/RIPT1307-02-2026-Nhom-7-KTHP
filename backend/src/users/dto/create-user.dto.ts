@@ -20,8 +20,8 @@ export class CreateUserDto {
     description: 'Mã sinh viên hoặc mã giảng viên',
   })
   @IsString()
-  @IsNotEmpty()
-  code: string;
+  @IsOptional()
+  code?: string;
 
   @ApiProperty({ example: 'ncq@gmail.com' })
   @IsEmail({}, { message: 'Email không đúng định dạng' })
@@ -38,4 +38,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   faculty?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherCode?: string; // mã bí mật để xác minh acc GV
 }
