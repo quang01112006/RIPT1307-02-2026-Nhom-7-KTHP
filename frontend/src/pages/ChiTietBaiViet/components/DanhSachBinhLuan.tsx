@@ -16,7 +16,7 @@ interface DanhSachBinhLuanProps {
 	onDelete: (id: string) => Promise<void>;
 }
 
-const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
+const DanhSachBinhLuan = ({
 	comments,
 	userId,
 	currentUserAvatar,
@@ -24,7 +24,7 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 	onSubmitReply,
 	onEdit,
 	onDelete,
-}) => {
+}: DanhSachBinhLuanProps) => {
 	const [replyingId, setReplyingId] = useState<string | null>(null);
 	const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'votes'>('newest');
 
@@ -63,11 +63,9 @@ const DanhSachBinhLuan: React.FC<DanhSachBinhLuanProps> = ({
 			queue.push(...children.map((c) => c._id));
 		}
 
-		// Sắp xếp bình luận con theo thời gian tăng dần để mạch hội thoại tự nhiên nhất
 		return results.sort((a, b) => moment(a.createdAt).valueOf() - moment(b.createdAt).valueOf());
 	};
 
-	// Lọc và sắp xếp các bình luận cha theo tiêu chuẩn lựa chọn
 	const parentComments = (comments?.filter((c) => !c.parent) || []).sort((a, b) => {
 		if (sortKey === 'newest') {
 			return moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
