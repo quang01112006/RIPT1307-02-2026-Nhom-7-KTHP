@@ -1,9 +1,8 @@
+import { getTagColor } from '@/utils/utils';
 import { FireOutlined, LinkOutlined, TagsOutlined } from '@ant-design/icons';
 import { Card, Space, Tag } from 'antd';
 import moment from 'moment';
-import React from 'react';
 import { Link } from 'umi';
-import { getTagColor } from '@/utils/utils';
 
 interface SidebarPhaiProps {
 	popularTags: string[];
@@ -11,11 +10,7 @@ interface SidebarPhaiProps {
 	relatedPosts: BaiViet.IRecord[];
 }
 
-const SidebarPhai: React.FC<SidebarPhaiProps> = ({
-	popularTags,
-	hotPosts,
-	relatedPosts,
-}) => {
+const SidebarPhai = ({ popularTags, hotPosts, relatedPosts }: SidebarPhaiProps) => {
 	return (
 		<Space direction='vertical' size={20} style={{ width: '100%' }}>
 			{/* tags nổi bật */}
@@ -30,9 +25,7 @@ const SidebarPhai: React.FC<SidebarPhaiProps> = ({
 				<div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '16px' }}>
 					<Space>
 						<TagsOutlined style={{ color: '#1890ff', fontSize: '16px' }} />
-						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>
-							Thẻ từ khóa nổi bật
-						</span>
+						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>Các tag phổ biển</span>
 					</Space>
 				</div>
 
@@ -57,9 +50,7 @@ const SidebarPhai: React.FC<SidebarPhaiProps> = ({
 							</Tag>
 						))
 					) : (
-						<span style={{ color: '#bfbfbf', fontStyle: 'italic', fontSize: '13px' }}>
-							Chưa có từ khóa nào.
-						</span>
+						<span style={{ color: '#bfbfbf', fontStyle: 'italic', fontSize: '13px' }}>Chưa có từ khóa nào.</span>
 					)}
 				</div>
 			</Card>
@@ -76,9 +67,7 @@ const SidebarPhai: React.FC<SidebarPhaiProps> = ({
 				<div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '16px' }}>
 					<Space>
 						<LinkOutlined style={{ color: '#52c41a', fontSize: '16px' }} />
-						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>
-							Câu hỏi cùng chủ đề
-						</span>
+						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>Câu hỏi cùng chủ đề</span>
 					</Space>
 				</div>
 
@@ -136,9 +125,7 @@ const SidebarPhai: React.FC<SidebarPhaiProps> = ({
 				<div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '16px' }}>
 					<Space>
 						<FireOutlined style={{ color: '#ff4d4f', fontSize: '16px' }} />
-						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>
-							Bài viết nổi bật
-						</span>
+						<span style={{ fontSize: '15px', fontWeight: 600, color: '#262626' }}>Bài viết nổi bật</span>
 					</Space>
 				</div>
 

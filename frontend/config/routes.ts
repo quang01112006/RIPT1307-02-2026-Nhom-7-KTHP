@@ -49,7 +49,13 @@ export default [
 		component: './ChiTietBaiViet',
 		hideInMenu: true,
 	},
+	{
+		path: '/ask',
+		name: 'Đặt câu hỏi',
+		component: './DatCauHoi',
+	},
 
+	// route admin
 	{
 		path: '/admin/dashboard',
 		name: 'Trang chủ',

@@ -20,6 +20,11 @@ export class TagsController {
     return this.tagsService.create(createTagDto);
   }
 
+  @Get('all')
+  findAllTags() {
+    return this.tagsService.findAllTags();
+  }
+
   @Get('page')
   findAll() {
     return this.tagsService.findAll();
