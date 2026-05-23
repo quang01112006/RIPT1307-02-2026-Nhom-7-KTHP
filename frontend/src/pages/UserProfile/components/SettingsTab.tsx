@@ -22,7 +22,7 @@ const SettingsTab = ({ user }: Props) => {
 	const [form] = Form.useForm();
 	const [selectedMenu, setSelectedMenu] = useState('edit-profile');
 	const [checkedDelete, setCheckedDelete] = useState(false);
-	const { fetchUser, putModel, deleteModel, formSubmiting } = useModel('users');
+	const { getByIdModel, putModel, deleteModel, formSubmiting } = useModel('users');
 	const { setInitialState } = useModel('@@initialState');
 
 	const handleDeleteProfile = async () => {
@@ -53,7 +53,7 @@ const SettingsTab = ({ user }: Props) => {
 					linkedin: values.linkedin,
 				},
 			};
-			await putModel(user._id, payload, () => fetchUser(user._id), undefined, false, 'Cập nhật hồ sơ thành công!');
+			await putModel(user._id, payload, () => getByIdModel(user._id), undefined, false, 'Cập nhật hồ sơ thành công!');
 		} catch (error) {
 			console.error('Lỗi khi cập nhật:', error);
 		}

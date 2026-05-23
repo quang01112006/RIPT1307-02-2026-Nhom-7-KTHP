@@ -2,10 +2,10 @@ import { Card, Spin, Tabs, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { useModel, useParams } from 'umi';
 
+import BookmarksTab from './components/BookmarksTab';
 import OverviewTab from './components/OverviewTab';
 import ProfileHeader from './components/ProfileHeader';
 import SettingsTab from './components/SettingsTab';
-import BookmarksTab from './components/BookmarksTab';
 import styles from './index.less';
 
 const { Text } = Typography;
