@@ -1,5 +1,7 @@
 import React from 'react';
 import { useModel } from 'umi';
+import { Badge, Button } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
 import AvatarDropdown from './AvatarDropdown';
 import styles from './index.less';
 
@@ -23,6 +25,15 @@ const GlobalHeaderRight: React.FC = () => {
 					<InfoCircleOutlined />
 				</a>
 			</Tooltip> */}
+
+			<div style={{ display: 'flex', alignItems: 'center', marginRight: '16px' }}>
+				<Badge count={0} size="small">
+					<BellOutlined 
+						className={styles.bellIconCustom} 
+						style={{ fontSize: '20px', cursor: 'pointer', transition: 'color 0.3s' }} 
+					/>
+				</Badge>
+			</div>
 
 			<AvatarDropdown menu />
 		</div>

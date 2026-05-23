@@ -262,6 +262,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						<Button
 							className={styles.voteUpBtn}
 							type='text'
+							shape='circle'
 							icon={<ArrowUpOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 							style={{
 								width: isChild ? '24px' : '28px',
@@ -285,6 +286,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						<Button
 							className={styles.voteDownBtn}
 							type='text'
+							shape='circle'
 							icon={<ArrowDownOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 							style={{
 								width: isChild ? '24px' : '28px',
@@ -299,6 +301,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 
 					<Button
 						type='text'
+						className={styles.textBtnNoBg}
 						icon={<CommentOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 						style={{
 							color: '#595959',
@@ -306,8 +309,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 							alignItems: 'center',
 							height: isChild ? '24px' : '28px',
 							fontSize: isChild ? '12px' : '13px',
-							padding: isChild ? '0 6px' : '0 8px',
-							borderRadius: '4px',
+							padding: isChild ? '0 4px' : '0 6px',
 						}}
 						onClick={() => {
 							setReplyingId(isReplyFormOpen ? null : comment._id);

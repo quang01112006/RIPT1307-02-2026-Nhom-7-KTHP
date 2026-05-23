@@ -14,14 +14,14 @@ const { TabPane } = Tabs;
 const UserProfile = () => {
 	const { id } = useParams<{ id: string }>();
 	const { initialState } = useModel('@@initialState');
-	const { fetchUser, record: user, loading } = useModel('users');
+	const { getByIdModel, record: user, loading } = useModel('users');
 	const [activeTab, setActiveTab] = useState('profile');
 
 	const isMe = initialState?.currentUser?._id === id;
 
 	useEffect(() => {
 		if (id) {
-			fetchUser(id);
+			getByIdModel(id);
 		}
 	}, [id]);
 

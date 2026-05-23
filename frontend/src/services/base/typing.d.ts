@@ -17,6 +17,7 @@ declare module Login {
 		role: ERole;
 		avatar?: string;
 		isActive: boolean;
+		bookmarks?: string[];
 		createdAt: string;
 		updatedAt: string;
 	}
