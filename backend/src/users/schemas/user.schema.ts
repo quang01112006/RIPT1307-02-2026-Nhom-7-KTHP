@@ -46,5 +46,8 @@ export class User {
 
   @Prop({ type: [String], default: [] })
   skills: string[];
+
+  @Prop({ type: [{ type: String, ref: 'Post' }], default: [] })
+  bookmarks: string[];
 }
 export const UserSchema = SchemaFactory.createForClass(User);
