@@ -40,3 +40,7 @@ export async function getUserBookmarks(userId: string) {
 export async function toggleBookmark(userId: string, postId: string) {
 	return axios.post(`${ip3}/users/${userId}/bookmarks/${postId}`);
 }
+
+export async function getUserProfile(id: string) {
+	return axios.get(`${ip3}/users/${id}`);
+}
