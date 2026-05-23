@@ -37,5 +37,14 @@ export class User {
 
   @Prop()
   avatar: string;
+
+  @Prop({ default: '' })
+  bio: string;
+
+  @Prop({ type: Object, default: {} })
+  socials: Record<string, string>;
+
+  @Prop({ type: [String], default: [] })
+  skills: string[];
 }
 export const UserSchema = SchemaFactory.createForClass(User);
