@@ -54,6 +54,12 @@ export default [
 		name: 'Đặt câu hỏi',
 		component: './DatCauHoi',
 	},
+	{
+		path: '/profile/:id',
+		name: 'Hồ sơ cá nhân',
+		component: './UserProfile',
+		hideInMenu: true,
+	},
 
 	// route admin
 	{

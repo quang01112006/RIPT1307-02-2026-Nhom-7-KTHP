@@ -1,5 +1,5 @@
 import { getTagColor } from '@/utils/utils';
-import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled } from '@ant-design/icons';
 import { Avatar, Button, Card, Divider, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
 import React from 'react';
@@ -14,6 +14,8 @@ interface BaiVietChinhProps {
 	hasDownvoted: boolean;
 	onVote: (type: 'up' | 'down') => void;
 	onCommentClick: () => void;
+	isBookmarked?: boolean;
+	onBookmarkClick?: () => void;
 }
 
 const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
@@ -23,6 +25,8 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	hasDownvoted,
 	onVote,
 	onCommentClick,
+	isBookmarked,
+	onBookmarkClick
 }) => {
 	if (!post) return null;
 
@@ -151,6 +155,27 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 
 					<Button icon={<ShareAltOutlined />} type='text' onClick={handleShare}>
 						Chia sẻ
+					</Button>
+					
+					<Button 
+						icon={
+							<span className="anticon" style={{ fontSize: '16px' }}>
+								{isBookmarked ? (
+									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="#1890ff">
+										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
+									</svg>
+								) : (
+									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
+										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"></path>
+									</svg>
+								)}
+							</span>
+						} 
+						type='text' 
+						onClick={onBookmarkClick}
+						style={{ color: isBookmarked ? '#1890ff' : undefined }}
+					>
+						{isBookmarked ? 'Đã lưu' : 'Lưu bài'}
 					</Button>
 				</Space>
 			</div>

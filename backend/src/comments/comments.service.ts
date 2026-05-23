@@ -44,13 +44,29 @@ export class CommentsService {
       console.error('Lỗi tạo thông báo:', error);
     }
 
-    return result.populate('author', 'fullName code role');
+    return result.populate('author', 'fullName code role avatar');
   }
 
   async findByPost(postId: string) {
     const data = await this.commentModel
       .find({ post: postId as any })
-      .populate('author', 'fullName email code role')
+      .populate('author', 'fullName email code role avatar')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return {
+      data: {
+        result: data,
+        total: data.length,
+      },
+    };
+  }
+
+  async findByAuthor(authorId: string) {
+    const data = await this.commentModel
+      .find({ author: authorId as any, type: 'ANSWER' })
+      .populate('author', 'fullName email code role avatar')
+      .populate('post', 'title') // Lấy thêm tiêu đề bài viết
       .sort({ createdAt: -1 })
       .exec();
 

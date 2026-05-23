@@ -12,6 +12,7 @@ import moment from 'moment';
 import React, { useState } from 'react';
 import ReplyForm from './ReplyForm';
 import styles from '../index.less';
+import { Link } from 'umi';
 
 const { Text } = Typography;
 
@@ -154,15 +155,19 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						flexWrap: 'wrap',
 					}}
 				>
-					<Avatar
-						src={comment.author?.avatar}
-						icon={<UserOutlined />}
-						size={isChild ? 'small' : undefined}
-						style={{ width: isChild ? '24px' : '32px', height: isChild ? '24px' : '32px' }}
-					/>
-					<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined }}>
-						{comment.author?.fullName || 'Ẩn danh'}
-					</Text>
+					<Link to={`/profile/${comment.author?._id}`}>
+						<Avatar
+							src={comment.author?.avatar}
+							icon={<UserOutlined />}
+							size={isChild ? 'small' : undefined}
+							style={{ width: isChild ? '24px' : '32px', height: isChild ? '24px' : '32px', cursor: 'pointer' }}
+						/>
+					</Link>
+					<Link to={`/profile/${comment.author?._id}`}>
+						<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}>
+							{comment.author?.fullName || 'Ẩn danh'}
+						</Text>
+					</Link>
 
 					{/* tag mention khi rep cmt con */}
 					{isChild && isReplyToChild && directParent && (

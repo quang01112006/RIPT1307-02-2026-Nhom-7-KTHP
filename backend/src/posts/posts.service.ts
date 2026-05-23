@@ -11,6 +11,7 @@ import { Post, PostDocument } from './schemas/post.schema';
 interface PostQuery {
   search?: string;
   tag?: string;
+  author?: string;
   page?: number;
   limit?: number;
   sort?: string;
@@ -29,7 +30,7 @@ export class PostsService {
   }
 
   async findAll(query: PostQuery) {
-    const { search, tag, page = 1, limit = 10, sort } = query;
+    const { search, tag, author, page = 1, limit = 10, sort } = query;
     const filter: any = {};
 
     if (search) {
@@ -41,6 +42,10 @@ export class PostsService {
 
     if (tag) {
       filter.tags = tag;
+    }
+
+    if (author) {
+      filter.author = author;
     }
 
     const skip = (page - 1) * limit;

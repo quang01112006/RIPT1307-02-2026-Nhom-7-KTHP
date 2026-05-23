@@ -24,3 +24,23 @@ export async function toggleUserActive(id: string) {
 export async function getUserProfile(id: string) {
 	return axios.get(`${ip3}/users/${id}`);
 }
+
+export async function getUserPosts(authorId: string) {
+	return axios.get(`${ip3}/posts/page`, { params: { author: authorId } });
+}
+
+export async function getUserComments(authorId: string) {
+	return axios.get(`${ip3}/comments/author/${authorId}/page`);
+}
+
+export async function getUserBookmarks(userId: string) {
+	return axios.get(`${ip3}/users/${userId}/bookmarks`);
+}
+
+export async function toggleBookmark(userId: string, postId: string) {
+	return axios.post(`${ip3}/users/${userId}/bookmarks/${postId}`);
+}
+
+export async function getUserProfile(id: string) {
+	return axios.get(`${ip3}/users/${id}`);
+}

@@ -29,6 +29,11 @@ export class CommentsController {
     return this.commentsService.findByPost(postId);
   }
 
+  @Get('author/:authorId/page')
+  findAllByAuthor(@Param('authorId') authorId: string) {
+    return this.commentsService.findByAuthor(authorId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: any) {
