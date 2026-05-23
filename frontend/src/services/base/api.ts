@@ -15,18 +15,12 @@ export async function getMe(): Promise<Login.IUser> {
 	return axios.get(`${ip3}/users/me`);
 }
 
-export async function updateMe(id: string, payload: { fullName?: string; avatar?: string }) {
-	return axios.patch(`${ip3}/users/${id}`, payload);
-}
 
-export async function deleteUser(id: string) {
-	return axios.delete(`${ip3}/users/${id}`);
-}
-
-export async function getAllUser() {
-	return axios.get(`${ip3}/users`);
-}
 
 export async function toggleUserActive(id: string) {
 	return axios.patch(`${ip3}/users/${id}/toggle-active`);
+}
+
+export async function getUserProfile(id: string) {
+	return axios.get(`${ip3}/users/${id}`);
 }
