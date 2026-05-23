@@ -1,6 +1,6 @@
 import useInitModel from '@/hooks/useInitModel';
 import { ip3 } from '@/utils/ip';
-import { getUserProfile } from '@/services/base/api';
+import { getUserProfile, toggleBookmark } from '@/services/base/api';
 import { message } from 'antd';
 import { history } from 'umi';
 
@@ -21,8 +21,20 @@ export default () => {
 		}
 	};
 
+	const toggleBookmarkModel = async (userId: string, postId: string, isCurrentlyBookmarked: boolean) => {
+		try {
+			await toggleBookmark(userId, postId);
+			message.success(!isCurrentlyBookmarked ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết!');
+			return true; // Thành công
+		} catch (error) {
+			message.error('Có lỗi xảy ra khi lưu bài viết!');
+			return false; // Thất bại
+		}
+	};
+
 	return {
 		...objInit,
 		fetchUser,
+		toggleBookmarkModel,
 	};
 };
