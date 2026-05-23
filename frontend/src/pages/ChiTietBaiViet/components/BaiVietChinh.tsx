@@ -125,10 +125,9 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					<Button
 						className={styles.voteUpBtn}
 						type='text'
+						shape='circle'
 						icon={<ArrowUpOutlined />}
 						style={{
-							height: 'auto',
-							padding: '4px',
 							color: hasUpvoted ? '#1890ff' : undefined,
 							backgroundColor: hasUpvoted ? 'rgba(24, 144, 255, 0.08)' : undefined,
 						}}
@@ -139,21 +138,20 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					</Text>
 					<Button
 						type='text'
+						shape='circle'
 						className={styles.voteDownBtn}
 						icon={<ArrowDownOutlined />}
 						style={{
-							height: 'auto',
-							padding: '4px',
 							color: hasDownvoted ? '#ff4d4f' : undefined,
 							backgroundColor: hasDownvoted ? 'rgba(255, 77, 79, 0.08)' : undefined,
 						}}
 						onClick={() => onVote('down')}
 					/>
-					<Button icon={<CommentOutlined />} type='text' onClick={onCommentClick}>
+					<Button icon={<CommentOutlined />} type='text' className={styles.textBtnNoBg} onClick={onCommentClick}>
 						Trả lời
 					</Button>
 
-					<Button icon={<ShareAltOutlined />} type='text' onClick={handleShare}>
+					<Button icon={<ShareAltOutlined />} type='text' className={styles.textBtnNoBg} onClick={handleShare}>
 						Chia sẻ
 					</Button>
 					
@@ -172,6 +170,7 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 							</span>
 						} 
 						type='text' 
+						className={styles.textBtnNoBg}
 						onClick={onBookmarkClick}
 						style={{ color: isBookmarked ? '#1890ff' : undefined }}
 					>
