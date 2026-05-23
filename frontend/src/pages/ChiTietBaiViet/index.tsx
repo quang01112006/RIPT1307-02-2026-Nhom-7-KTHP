@@ -1,4 +1,4 @@
-import { Col, Row } from 'antd';
+import { Col, Row, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { useModel, useParams } from 'umi';
 import axios from '@/utils/axios';
@@ -24,6 +24,7 @@ const ChiTietBaiViet = () => {
 	const [hotPosts, setHotPosts] = useState<BaiViet.IRecord[]>([]);
 	const [relatedPosts, setRelatedPosts] = useState<BaiViet.IRecord[]>([]);
 	const [popularTags, setPopularTags] = useState<string[]>([]);
+	const [isBookmarked, setIsBookmarked] = useState(false);
 
 	useEffect(() => {
 		if (id) {
@@ -31,6 +32,27 @@ const ChiTietBaiViet = () => {
 			getComments(id);
 		}
 	}, [id]);
+
+	const { toggleBookmarkModel } = useModel('users');
+
+	useEffect(() => {
+		if (initialState?.currentUser?.bookmarks?.includes(id as string)) {
+			setIsBookmarked(true);
+		} else {
+			setIsBookmarked(false);
+		}
+	}, [initialState?.currentUser, id]);
+
+	const handleBookmarkClick = async () => {
+		if (!initialState?.currentUser) {
+			message.warning('Vui lòng đăng nhập để lưu bài viết!');
+			return;
+		}
+		const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
+		if (success) {
+			setIsBookmarked(!isBookmarked);
+		}
+	};
 
 	useEffect(() => {
 		if (!id) return;
@@ -168,6 +190,8 @@ const ChiTietBaiViet = () => {
 						hasDownvoted={hasDownvoted}
 						onVote={handleVotePost}
 						onCommentClick={handleScrollToAnswerForm}
+						isBookmarked={isBookmarked}
+						onBookmarkClick={handleBookmarkClick}
 					/>
 
 					<DanhSachBinhLuan
