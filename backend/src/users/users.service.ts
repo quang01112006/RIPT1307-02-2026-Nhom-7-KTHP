@@ -116,21 +116,23 @@ export class UsersService {
     } else {
       user.bookmarks.push(postId);
     }
-    
+
     await user.save();
     return user.bookmarks;
   }
 
   async getBookmarks(userId: string) {
-    const user = await this.userModel.findById(userId).populate('bookmarks').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate('bookmarks')
+      .exec();
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
-    
-    // Convert array of populated bookmarks to match standard API response format
+
     return {
       data: {
         result: user.bookmarks,
-        total: user.bookmarks.length
-      }
+        total: user.bookmarks.length,
+      },
     };
   }
 }
