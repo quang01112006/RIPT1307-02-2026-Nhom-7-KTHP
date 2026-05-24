@@ -7,6 +7,8 @@ import {
   NotificationSchema,
 } from './schemas/notification.schema';
 
+import { NotificationsGateway } from './notifications.gateway';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -14,7 +16,7 @@ import {
     ]),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService],
-  exports: [NotificationsService],
+  providers: [NotificationsService, NotificationsGateway],
+  exports: [NotificationsService, NotificationsGateway],
 })
 export class NotificationsModule {}

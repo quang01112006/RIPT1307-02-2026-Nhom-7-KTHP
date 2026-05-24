@@ -17,9 +17,14 @@ interface PostQuery {
   sort?: string;
 }
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(createPostDto: CreatePostDto, userId: string) {
     const createdPost = new this.postModel({
@@ -135,6 +140,21 @@ export class PostsService {
       } else {
         post.upvotedBy.push(userId as any);
         if (downvotedIndex > -1) post.downvotedBy.splice(downvotedIndex, 1);
+
+        if (String(post.author) !== String(userId)) {
+          this.notificationsService
+            .create({
+              recipient: post.author,
+              sender: userId,
+              type: 'UPVOTE',
+              targetId: post._id,
+              targetType: 'Post',
+              title: 'Lượt thích mới',
+              message: `Một người vừa thích câu hỏi "${post.title}" của bạn.`,
+              link: `/question/${post._id}`,
+            })
+            .catch((err) => console.error('Lỗi tạo thông báo upvote:', err));
+        }
       }
     } else {
       if (downvotedIndex > -1) {
