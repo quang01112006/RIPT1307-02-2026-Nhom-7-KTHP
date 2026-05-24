@@ -66,14 +66,14 @@ export default [
 	{
 		path: '/admin/posts',
 		name: 'Quản lý bài viết',
-		icon: '',
+		icon: 'FileTextOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyBaiViet',
 	},
 	{
 		path: '/admin/tags',
 		name: 'Quản lý Tag',
-		icon: '',
+		icon: 'TagsOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyTag',
 	},
