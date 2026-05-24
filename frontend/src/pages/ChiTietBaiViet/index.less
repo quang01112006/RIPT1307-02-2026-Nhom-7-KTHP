@@ -1,0 +1,87 @@
+.postContent {
+	color: #262626;
+	font-size: 16px;
+	line-height: 1.7;
+
+	:global {
+		pre {
+			margin: 16px 0;
+			padding: 16px !important;
+			overflow-x: auto;
+			font-family: 'Courier New', Courier, monospace !important;
+			background-color: #f5f7fa !important;
+			border: 1px solid #e8e8e8 !important;
+			border-radius: 8px !important;
+		}
+
+		code {
+			padding: 0 !important;
+			color: #1a1a1a !important;
+			font-family: inherit !important;
+			background-color: transparent !important;
+		}
+
+		p {
+			margin-bottom: 12px;
+		}
+
+		img {
+			display: block;
+			width: auto;
+			max-width: 100%;
+			height: auto;
+			max-height: 130px;
+			margin: 12px 0;
+			object-fit: contain;
+			border-radius: 8px;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+			@media (min-width: 576px) {
+				max-width: 280px;
+			}
+		}
+	}
+}
+
+.voteUpBtn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	color: #8c8c8c !important;
+	border-radius: 50% !important;
+	transition: all 0.2s ease-in-out;
+
+	&:hover {
+		color: #1890ff !important;
+		background-color: transparent !important;
+	}
+}
+
+.voteDownBtn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	color: #8c8c8c !important;
+	border-radius: 50% !important;
+	transition: all 0.2s ease-in-out;
+
+	&:hover {
+		color: #ff4d4f !important;
+		background-color: transparent !important;
+	}
+}
+
+.textBtnNoBg {
+	color: #595959 !important;
+	transition: all 0.2s ease-in-out;
+	background-color: transparent !important;
+
+	&:hover {
+		background-color: transparent !important;
+		color: #1890ff !important;
+	}
+}

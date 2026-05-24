@@ -1,6 +1,7 @@
 import Footer from '@/components/Footer';
+import { login } from '@/services/base/api';
 import rules from '@/utils/rules';
-import  { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Form, Input, message } from 'antd';
 import React, { useState } from 'react';
 import { history, useModel } from 'umi';
@@ -8,28 +9,34 @@ import styles from './index.less';
 
 const Login: React.FC = () => {
 	const [submitting, setSubmitting] = useState(false);
-	const { initialState, setInitialState } = useModel('@@initialState');
+	const { initialState, setInitialState, refresh } = useModel('@@initialState');
 	const [form] = Form.useForm();
 
 	const handleSubmit = async (values: { login: string; password: string }) => {
 		setSubmitting(true);
 		try {
-			// TẠM THỜI MOCK LOGIN: Cứ gõ đại tài khoản mật khẩu là cho qua
-			// Sau này thay đoạn này bằng hàm gọi API sang NestJS
-			if (values.login && values.password) {
-				const fakeToken = 'day_la_token_gia_cho_den_khi_co_backend';
-				localStorage.setItem('token', fakeToken);
+			const response = await login({
+				identifier: values.login,
+				password: values.password,
+			});
+			const resData = response.data?.data || response.data;
 
-				setInitialState({
-					...initialState,
-					currentUser: { name: values.login, role: 'admin' } as any,
-				});
-
+			if (resData?.access_token) {
 				message.success('Đăng nhập thành công!');
-				history.replace('/dashboard');
+
+				localStorage.setItem('token', resData.access_token);
+				await refresh();
+				const role = resData.user?.role;
+
+				if (role === 'admin') {
+					history.push('/admin/dashboard');
+				} else {
+					history.push('/dashboard');
+				}
 			}
-		} catch (error) {
-			message.error('Đăng nhập thất bại');
+		} catch (error: any) {
+			const errorMsg = error?.response?.data?.message || 'Đăng nhập thất bại!';
+			message.error(errorMsg);
 		}
 		setSubmitting(false);
 	};
@@ -49,18 +56,10 @@ const Login: React.FC = () => {
 					<h2 style={{ textAlign: 'center', marginBottom: 24 }}>ĐĂNG NHẬP</h2>
 					<Form form={form} onFinish={handleSubmit} layout='vertical'>
 						<Form.Item label='' name='login' rules={[...rules.required]}>
-							<Input
-								placeholder='Nhập tên đăng nhập (gõ đại)'
-								prefix={<UserOutlined className={styles.prefixIcon} />}
-								size='large'
-							/>
+							<Input placeholder='dev@gmail.com' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
 						</Form.Item>
 						<Form.Item label='' name='password' rules={[...rules.required]}>
-							<Input.Password
-								placeholder='Nhập mật khẩu (gõ đại)'
-								prefix={<LockOutlined className={styles.prefixIcon} />}
-								size='large'
-							/>
+							<Input.Password placeholder='dev' prefix={<LockOutlined className={styles.prefixIcon} />} size='large' />
 						</Form.Item>
 						<Button type='primary' block size='large' loading={submitting} htmlType='submit'>
 							Đăng nhập

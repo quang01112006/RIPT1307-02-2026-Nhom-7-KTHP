@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   MinLength,
@@ -20,8 +22,8 @@ export class CreateUserDto {
     description: 'Mã sinh viên hoặc mã giảng viên',
   })
   @IsString()
-  @IsNotEmpty()
-  code: string;
+  @IsOptional()
+  code?: string;
 
   @ApiProperty({ example: 'ncq@gmail.com' })
   @IsEmail({}, { message: 'Email không đúng định dạng' })
@@ -38,4 +40,31 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   faculty?: string;
+
+  @IsOptional()
+  @IsString()
+  teacherCode?: string; // mã bí mật để xác minh acc GV
+
+  @ApiProperty({ required: false, example: 'Just an NPC' })
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @ApiProperty({
+    required: false,
+    example: { github: 'https://github.com', facebook: 'https://fb.com' },
+  })
+  @IsOptional()
+  @IsObject()
+  socials?: Record<string, string>;
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    example: ['ReactJS', 'NodeJS'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  skills?: string[];
 }

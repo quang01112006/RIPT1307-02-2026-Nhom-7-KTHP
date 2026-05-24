@@ -38,33 +38,62 @@ export default [
 	// DEFAULT MENU
 	{
 		path: '/dashboard',
-		name: 'Dashboard',
+		name: 'Trang chủ',
 		component: './TrangChu',
 		icon: 'HomeOutlined',
+		access: 'isUser',
 	},
 	{
-		path: '/gioi-thieu',
-		name: 'About',
-		component: './TienIch/GioiThieu',
+		path: '/question/:id',
+		name: 'Chi tiết câu hỏi',
+		component: './ChiTietBaiViet',
+		hideInMenu: true,
+	},
+	{
+		path: '/ask',
+		name: 'Đặt câu hỏi',
+		component: './DatCauHoi',
+	},
+	{
+		path: '/profile/:id',
+		name: 'Hồ sơ cá nhân',
+		component: './UserProfile',
 		hideInMenu: true,
 	},
 
-	// DANH MUC HE THONG
-	// {
-	// 	name: 'DanhMuc',
-	// 	path: '/danh-muc',
-	// 	icon: 'copy',
-	// 	routes: [
-	// 		{
-	// 			name: 'ChucVu',
-	// 			path: 'chuc-vu',
-	// 			component: './DanhMuc/ChucVu',
-	// 		},
-	// 	],
-	// },
+	// route admin
+	{
+		path: '/admin/dashboard',
+		name: 'Trang chủ',
+		icon: 'DashboardOutlined',
+		access: 'isAdmin',
+		component: './Admin/Dashboard',
+	},
+	{
+		path: '/admin/posts',
+		name: 'Quản lý bài viết',
+		icon: '',
+		access: 'isAdmin',
+		component: './Admin/QuanLyBaiViet',
+	},
+	{
+		path: '/admin/tags',
+		name: 'Quản lý Tag',
+		icon: '',
+		access: 'isAdmin',
+		component: './Admin/QuanLyTag',
+	},
+	{
+		path: '/admin/users',
+		name: 'Quản lý người dùng',
+		icon: 'UserOutlined',
+		access: 'isAdmin',
+		component: './Admin/QuanLyUser',
+	},
 
 	{
 		path: '/',
+		redirect: 'dashboard',
 	},
 	{
 		path: '/403',
