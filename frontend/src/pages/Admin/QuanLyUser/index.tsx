@@ -3,7 +3,6 @@ import {
 	EditOutlined,
 	EyeOutlined,
 	MenuOutlined,
-	PhoneOutlined,
 	PlusOutlined,
 	SearchOutlined,
 	UserOutlined,
@@ -18,6 +17,7 @@ import {
 	Input,
 	Menu,
 	Modal,
+	Popover,
 	Popconfirm,
 	Row,
 	Select,
@@ -40,9 +40,22 @@ const { Text, Title } = Typography;
 
 const QuanLyUser: React.FC = () => {
 	const { danhSach, getModel, deleteModel, putModel, loading, page, limit, total, setPage, setLimit } = useModel('users');
+	const { initialState } = useModel('@@initialState');
 	const [form] = Form.useForm();
 
 	const [searchText, setSearchText] = useState<string>('');
+
+	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setSearchText(value);
+		setPage(1);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
+	};
 	const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState<boolean>(false);
 	const [currentUserDetail, setCurrentUserDetail] = useState<any>(null);
@@ -60,6 +73,11 @@ const QuanLyUser: React.FC = () => {
 	};
 
 	const handleStatusChange = async (checked: boolean, record: any) => {
+		if (record._id === initialState?.currentUser?._id) {
+			message.warning('Bạn không thể tự khóa tài khoản của chính mình!');
+			return;
+		}
+
 		try {
 			await putModel(record._id, { isActive: checked });
 			message.success(`Đã ${checked ? 'kích hoạt' : 'khóa'} tài khoản ${record.fullName || record.email}`);
@@ -69,11 +87,11 @@ const QuanLyUser: React.FC = () => {
 		}
 	};
 
-	const handleRoleChange = async (record: any) => {
-		const newRole = record.role === 'admin' ? 'teacher' : record.role === 'teacher' ? 'student' : 'admin';
+	const handleRoleChange = async (record: any, newRole?: string) => {
+		const targetRole = newRole ?? (record.role === 'admin' ? 'teacher' : record.role === 'teacher' ? 'student' : 'admin');
 		try {
-			await putModel(record._id, { role: newRole });
-			message.success(`Đã cập nhật vai trò ${newRole} cho ${record.fullName || record.email}`);
+			await putModel(record._id, { role: targetRole });
+			message.success(`Đã cập nhật vai trò ${targetRole} cho ${record.fullName || record.email}`);
 			refreshData();
 		} catch (error) {
 			message.error('Đổi vai trò thất bại');
@@ -112,11 +130,49 @@ const QuanLyUser: React.FC = () => {
 		loadUserDetail(user);
 	};
 
+	const getColumnSearchProps = (dataIndex: string, title: string) => ({
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+			<div style={{ padding: 8 }}>
+				<Input
+					placeholder={`Tìm ${title}`}
+					value={selectedKeys[0]}
+					onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+					onPressEnter={() => confirm()}
+					style={{ marginBottom: 8, display: 'block' }}
+				/>
+				<Space>
+					<Button
+						type="primary"
+						onClick={() => confirm()}
+						icon={<SearchOutlined />}
+						size="small"
+						style={{ width: 90 }}
+					>
+						Tìm
+					</Button>
+					<Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+						Xóa
+					</Button>
+				</Space>
+			</div>
+		),
+		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+		onFilter: (value: any, record: any) => record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
+	});
+
 	const columns = [
+		{
+			title: 'STT',
+			key: 'index',
+			width: 60,
+			align: 'center' as const,
+			render: (_: any, __: any, index: number) => (page - 1) * limit + index + 1,
+		},
 		{
 			title: 'Mã',
 			dataIndex: 'code',
 			key: 'code',
+			...getColumnSearchProps('code', 'mã'),
 			width: 120,
 			sorter: (a: any, b: any) => (a.code || '').localeCompare(b.code || ''),
 		},
@@ -124,6 +180,7 @@ const QuanLyUser: React.FC = () => {
 			title: 'Tên người dùng',
 			dataIndex: 'fullName',
 			key: 'fullName',
+			...getColumnSearchProps('fullName', 'tên'),
 			sorter: (a: any, b: any) => (a.fullName || '').localeCompare(b.fullName || ''),
 			render: (_: string, record: any) => (
 				<a onClick={() => showUserDetail(record)}>
@@ -140,19 +197,9 @@ const QuanLyUser: React.FC = () => {
 			title: 'Email',
 			dataIndex: 'email',
 			key: 'email',
+			...getColumnSearchProps('email', 'email'),
 			width: 200,
 			sorter: (a: any, b: any) => (a.email || '').localeCompare(b.email || ''),
-		},
-		{
-			title: 'Số điện thoại',
-			dataIndex: 'soDienThoai',
-			key: 'soDienThoai',
-			render: (text: string) => text ? (
-				<Space>
-					<PhoneOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
-					{text}
-				</Space>
-			) : '---',
 		},
 		{
 			title: 'Vai trò',
@@ -160,13 +207,13 @@ const QuanLyUser: React.FC = () => {
 			key: 'role',
 			filters: [
 				{ text: 'Admin', value: 'admin' },
-				{ text: 'Student', value: 'student' },
-				{ text: 'Teacher', value: 'teacher' },
+				{ text: 'Sinh viên', value: 'student' },
+				{ text: 'Giảng viên', value: 'teacher' },
 			],
 			onFilter: (value: any, record: any) => record.role === value,
 			render: (role: string) => (
 				<Tag color={role === 'admin' ? 'volcano' : 'blue'} style={{ borderRadius: '4px' }}>
-					{(role || 'student').toUpperCase()}
+					{role === 'admin' ? 'ADMIN' : role === 'teacher' ? 'GIẢNG VIÊN' : 'SINH VIÊN'}
 				</Tag>
 			),
 		},
@@ -184,9 +231,19 @@ const QuanLyUser: React.FC = () => {
 			key: 'isActive',
 			align: 'center' as const,
 			render: (isActive: boolean, record: any) => (
-				<Tooltip title={isActive ? "Đang hoạt động" : "Bị khóa"}>
-					<Switch checked={isActive} onChange={(checked) => handleStatusChange(checked, record)} size="small" />
-				</Tooltip>
+				<Space>
+					<Tooltip title={record._id === initialState?.currentUser?._id ? "Không thể tự khóa tài khoản" : (isActive ? "Đang hoạt động" : "Bị khóa")}>
+						<Switch 
+							checked={isActive} 
+							onChange={(checked) => handleStatusChange(checked, record)} 
+							size="small" 
+							disabled={record._id === initialState?.currentUser?._id}
+						/>
+					</Tooltip>
+					<Text type={isActive ? 'success' : 'danger'} style={{ fontSize: '13px', minWidth: '95px', textAlign: 'left' }}>
+						{isActive ? 'Đang hoạt động' : 'Bị khóa'}
+					</Text>
+				</Space>
 			),
 		},
 		{
@@ -194,61 +251,72 @@ const QuanLyUser: React.FC = () => {
 			key: 'action',
 			align: 'center' as const,
 			render: (_: any, record: any) => (
-				<Space size="middle">
-					<Tooltip title="Xem chi tiết">
-						<Button 
-							type="text" 
-							icon={<EyeOutlined style={{ color: '#0074cc' }} />} 
-							onClick={() => showUserDetail(record)} 
-						/>
-					</Tooltip>
-					<Dropdown
-						overlay={
-							<Menu>
-								<Menu.SubMenu key="role-sub" title="Đổi vai trò" icon={<EditOutlined style={{ color: '#faad14' }} />}>
-									<Menu.Item key="role-admin" disabled={record.role === 'admin'} onClick={() => handleRoleChange(record, 'admin')}>Admin</Menu.Item>
-									<Menu.Item key="role-teacher" disabled={record.role === 'teacher'} onClick={() => handleRoleChange(record, 'teacher')}>Teacher</Menu.Item>
-									<Menu.Item key="role-student" disabled={record.role === 'student'} onClick={() => handleRoleChange(record, 'student')}>Student</Menu.Item>
-								</Menu.SubMenu>
-								<Menu.Divider />
-								<Menu.Item key="delete" danger icon={<DeleteOutlined />} onClick={(e) => e.domEvent.stopPropagation()}>
-									<Popconfirm 
-										title={`Xóa người dùng ${record.fullName || record.email || 'này'}?`} 
-										onConfirm={async () => { await deleteModel(record._id); refreshData(); }}
-									>
-										<span style={{ display: 'block', width: '100%' }}>Xóa người dùng</span>
-									</Popconfirm>
-								</Menu.Item>
-							</Menu>
-						}
-						trigger={['hover']}
-					>
-						<Tooltip title="Thao tác khác">
-							<Button type="text" icon={<MenuOutlined />} />
-						</Tooltip>
-					</Dropdown>
-				</Space>
+				<Popover
+					content={
+						<Space size="middle">
+							<Tooltip title="Xem chi tiết">
+								<Button type="text" icon={<EyeOutlined style={{ color: '#0074cc' }} />} onClick={() => showUserDetail(record)} />
+							</Tooltip>
+							<Dropdown
+								overlay={
+									<Menu>
+										<Menu.Item key="admin" disabled={record.role === 'admin'} onClick={() => handleRoleChange(record, 'admin')}>Admin</Menu.Item>
+										<Menu.Item key="teacher" disabled={record.role === 'teacher'} onClick={() => handleRoleChange(record, 'teacher')}>Giảng viên</Menu.Item>
+										<Menu.Item key="student" disabled={record.role === 'student'} onClick={() => handleRoleChange(record, 'student')}>Sinh viên</Menu.Item>
+									</Menu>
+								}
+							>
+								<Tooltip title="Đổi vai trò">
+									<Button type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} />
+								</Tooltip>
+							</Dropdown>
+							<Popconfirm 
+								title={`Xóa ${record.fullName || 'người dùng này'}?`} 
+								onConfirm={async () => { if (record.role !== 'admin') { await deleteModel(record._id); refreshData(); } }}
+							>
+								<Tooltip title={record.role === 'admin' ? "Không thể xóa tài khoản Admin" : "Xóa"}>
+									<Button type="text" danger icon={<DeleteOutlined />} disabled={record.role === 'admin'} />
+								</Tooltip>
+							</Popconfirm>
+						</Space>
+					}
+					placement="left"
+					trigger="click"
+				>
+					<Button type="text" icon={<MenuOutlined />} />
+				</Popover>
 			),
 		},
 	];
 
-	const filteredData = danhSach?.filter((u: any) =>
-		(u.fullName || '').toLowerCase().includes(searchText.toLowerCase()) ||
-		u.email?.toLowerCase().includes(searchText.toLowerCase()) ||
-		u.code?.toLowerCase().includes(searchText.toLowerCase())
-	) || [];
+	const filteredData = React.useMemo(() => {
+		const dataSource = danhSach || [];
+		if (!searchText) return dataSource;
+		const lowerSearch = searchText.toLowerCase();
+		return dataSource.filter((u: any) =>
+			(u.fullName || '').toLowerCase().includes(lowerSearch) ||
+			u.email?.toLowerCase().includes(lowerSearch) ||
+			u.code?.toLowerCase().includes(lowerSearch),
+		);
+	}, [danhSach, searchText]);
 
 	return (
 		<div style={{ padding: '24px' }}>
 			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' }}>
 				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-					<Title level={3} style={{ margin: 0, fontWeight: 400 }}>Người dùng</Title>
+					<div style={{ borderLeft: '4px solid #0095ff', paddingLeft: '16px' }}>
+						<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+							<UserOutlined style={{ color: '#0095ff' }} />
+							Quản lý người dùng
+						</Title>
+						<Text type="secondary" style={{ fontSize: '13px' }}>Cấu trúc bảng hiện tại: {columns.length} cột dữ liệu</Text>
+					</div>
 					<Space>
 						<Input
 							placeholder="Tìm tên hoặc email..."
 							prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 							value={searchText}
-							onChange={(e) => setSearchText(e.target.value)}
+							onChange={handleSearchTextChange}
 							style={{ width: 300, borderRadius: '4px' }}
 							allowClear
 						/>
@@ -276,7 +344,7 @@ const QuanLyUser: React.FC = () => {
 					</Col>
 					<Col span={8}>
 						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Admin/Teacher" value={adminCount} />
+							<Statistic title="Admin" value={adminCount} />
 						</Card>
 					</Col>
 				</Row>
@@ -289,15 +357,16 @@ const QuanLyUser: React.FC = () => {
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: total,
+						total: searchText ? filteredData.length : total,
 						showSizeChanger: false,
 						showQuickJumper: true,
-						locale: { jump_to: 'Đến trang bao nhiêu', page: '' },
-						showTotal: (total) => `Tổng cộng ${total} người dùng`,
+						locale: { jump_to: 'Đến trang', page: '' },
 						onChange: (p, s) => {
 							setPage(p);
 							setLimit(s);
-							getModel(undefined, undefined, undefined, p, s);
+							if (!searchText) {
+								getModel(undefined, undefined, undefined, p, s);
+							}
 						},
 					}}
 					size="middle"
@@ -322,7 +391,7 @@ const QuanLyUser: React.FC = () => {
 					<Form.Item name="password" label="Mật khẩu" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}>
 						<Input.Password placeholder="Nhập mật khẩu mặc định" />
 					</Form.Item>
-					<Form.Item name="code" label="Mã người dùng" rules={[{ required: true, message: 'Vui lòng nhập mã người dùng!' }]}>
+					<Form.Item name="code" label="Mã sinh viên/giảng viên" rules={[{ required: true, message: 'Vui lòng nhập mã sinh viên/giảng viên!' }]}>
 						<Input placeholder="SV001 hoặc GV001" />
 					</Form.Item>
 					<Form.Item name="faculty" label="Khoa">
@@ -347,8 +416,8 @@ const QuanLyUser: React.FC = () => {
 					<Form.Item name="role" label="Vai trò" initialValue="student">
 						<Select options={[
 							{ label: 'Admin', value: 'admin' },
-							{ label: 'Teacher', value: 'teacher' },
-							{ label: 'Student', value: 'student' },
+							{ label: 'Giảng viên', value: 'teacher' },
+							{ label: 'Sinh viên', value: 'student' },
 						]} />
 					</Form.Item>
 				</Form>
@@ -365,8 +434,12 @@ const QuanLyUser: React.FC = () => {
 								<Descriptions bordered column={1} size="small">
 					<Descriptions.Item label="Họ và tên">{currentUserDetail?.fullName || '---'}</Descriptions.Item>
 					<Descriptions.Item label="Email">{currentUserDetail?.email || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Mã người dùng">{currentUserDetail?.code || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Vai trò">{(currentUserDetail?.role || 'student').toUpperCase()}</Descriptions.Item>
+					<Descriptions.Item label="Mã sinh viên/giảng viên">{currentUserDetail?.code || '---'}</Descriptions.Item>
+					<Descriptions.Item label="Vai trò">
+						{currentUserDetail?.role === 'admin' ? 'ADMIN' : 
+						 currentUserDetail?.role === 'teacher' ? 'GIẢNG VIÊN' : 
+						 'SINH VIÊN'}
+					</Descriptions.Item>
 					<Descriptions.Item label="Khoa">{currentUserDetail?.faculty || '---'}</Descriptions.Item>
 					<Descriptions.Item label="Điểm uy tín">{currentUserDetail?.reputation ?? 0}</Descriptions.Item>
 					<Descriptions.Item label="Giới thiệu">{currentUserDetail?.bio || '---'}</Descriptions.Item>

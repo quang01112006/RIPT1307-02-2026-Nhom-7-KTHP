@@ -9,17 +9,19 @@ import styles from './index.less';
 
 const Login: React.FC = () => {
 	const [submitting, setSubmitting] = useState(false);
-	const { initialState, setInitialState, refresh } = useModel('@@initialState');
+	const [loginErrorMessage, setLoginErrorMessage] = useState('');
+	const { refresh } = useModel('@@initialState');
 	const [form] = Form.useForm();
 
 	const handleSubmit = async (values: { login: string; password: string }) => {
 		setSubmitting(true);
+		setLoginErrorMessage('');
 		try {
 			const response = await login({
 				identifier: values.login,
 				password: values.password,
 			});
-			const resData = response.data?.data || response.data;
+			const resData = (response as any)?.data?.data || (response as any)?.data || response;
 
 			if (resData?.access_token) {
 				message.success('Đăng nhập thành công!');
@@ -35,38 +37,56 @@ const Login: React.FC = () => {
 				}
 			}
 		} catch (error: any) {
-			const errorMsg = error?.response?.data?.message || 'Đăng nhập thất bại!';
-			message.error(errorMsg);
+			const errorMsg = error?.response?.data?.message || 'Thông tin đăng nhập không chính xác.';
+			setLoginErrorMessage(errorMsg);
+			message.error(
+				<div>
+					{errorMsg} {' '}
+					<a href="/user/forgot-password" style={{ color: '#fff', textDecoration: 'underline' }}>Quên mật khẩu?</a>
+				</div>,
+			);
 		}
 		setSubmitting(false);
 	};
 
 	return (
 		<div className={styles.container}>
-			<div className={styles.content}>
-				<div className={styles.top}>
-					<div className={styles.header}>
-						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-							<img alt='logo' className={styles.logo} src='/logo-full.svg' />
+			<div className={styles.canvas}>
+				<div className={styles.loginCard}>
+					<div className={styles.brand}>
+						<img src='/logo.png' alt='Logo' className={styles.brandLogo} />
+						<div className={styles.brandText}>
+							<div className={styles.brandName}>EduStack</div>
+							<div className={styles.brandTag}>Học tập thông minh, tự tin vươn cao</div>
+						</div>
+					</div>
+
+					<div className={styles.formWrapper}>
+						<div className={styles.headerBlock}>
+							<div className={styles.formBadge}>Đăng nhập</div>
+							<h2 className={styles.heading}>Chào mừng trở lại</h2>
+							<p className={styles.subheading}>Đăng nhập bằng email hoặc mã GV/SV để tiếp tục.</p>
+						</div>
+						<Form form={form} onFinish={handleSubmit} layout='vertical'>
+							<Form.Item label='' name='login' rules={[...rules.required]}>
+								<Input className='auth-input' placeholder='Nhập email hoặc mã GV/SV' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
+							</Form.Item>
+							<Form.Item label='' name='password' rules={[...rules.required]} validateStatus={loginErrorMessage ? 'error' : ''} help={loginErrorMessage ? <span>{loginErrorMessage} — <a href="/user/forgot-password">Quên mật khẩu?</a></span> : null}>
+								<Input.Password className='auth-input' placeholder='Mật khẩu' prefix={<LockOutlined className={styles.prefixIcon} />} size='large' />
+							</Form.Item>
+							<Button type='primary' block size='large' loading={submitting} htmlType='submit' className={styles.loginBtn}>
+								Đăng nhập
+							</Button>
+						</Form>
+
+						<div className={styles.bottomText}>
+							<span>Bạn chưa có tài khoản?</span>
+						<a href='/user/register'>Đăng ký ngay</a>
 						</div>
 					</div>
 				</div>
-
-				<div className={styles.main}>
-					<h2 style={{ textAlign: 'center', marginBottom: 24 }}>ĐĂNG NHẬP</h2>
-					<Form form={form} onFinish={handleSubmit} layout='vertical'>
-						<Form.Item label='' name='login' rules={[...rules.required]}>
-							<Input placeholder='dev@gmail.com' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
-						</Form.Item>
-						<Form.Item label='' name='password' rules={[...rules.required]}>
-							<Input.Password placeholder='dev' prefix={<LockOutlined className={styles.prefixIcon} />} size='large' />
-						</Form.Item>
-						<Button type='primary' block size='large' loading={submitting} htmlType='submit'>
-							Đăng nhập
-						</Button>
-					</Form>
-				</div>
 			</div>
+
 			<div className='login-footer'>
 				<Footer />
 			</div>

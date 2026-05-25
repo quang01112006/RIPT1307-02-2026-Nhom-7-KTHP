@@ -1,8 +1,9 @@
 import axios from '@/utils/axios';
+import type { AxiosResponse } from 'axios';
 import { ip3 } from '@/utils/ip';
 import type { Login } from './typing';
 
-export async function login(payload: { identifier: string; password: string }): Promise<Login.ILoginResponse> {
+export async function login(payload: { identifier: string; password: string }): Promise<any> {
 	return axios.post(`${ip3}/auth/login`, payload);
 }
 

@@ -1,111 +1,164 @@
 import React from 'react';
-import { Form, Input, Button, Typography, Card, Row, Col, Space, message, Checkbox } from 'antd';
-import { UserPlus, Mail, Lock, ShieldCheck, ArrowRight, CheckCircle, Sparkles, Phone } from 'lucide-react';
+import { Form, Input, Button, Typography, Card, message } from 'antd';
+import { UserPlus, Mail, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { register } from '@/services/base/api';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const RegisterPage: React.FC = () => {
-  const s: { [key: string]: React.CSSProperties } = {
-    layout: { minHeight: '100vh', background: '#020617', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 20px' },
-    card: { width: '100%', maxWidth: '1100px', borderRadius: '40px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' },
-    left: { background: 'linear-gradient(180deg, #4f46e5 0%, #1e1b4b 100%)', padding: '60px', height: '100%', color: '#fff', display: 'flex', flexDirection: 'column', position: 'relative' },
-    right: { padding: '60px', background: 'transparent' },
-    input: { borderRadius: '14px', height: '52px', background: '#1e293b', border: '1px solid #334155', color: '#fff' },
-    btn: { height: '58px', borderRadius: '18px', background: 'linear-gradient(90deg, #6366f1, #a855f7)', border: 'none', fontWeight: 800, fontSize: '18px', color: '#fff', marginTop: 20 }
+  const styles: { [key: string]: React.CSSProperties } = {
+    page: {
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 35%), #f5f7fb',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+    },
+    card: {
+      width: '100%',
+      maxWidth: '520px',
+      borderRadius: '28px',
+      border: '1px solid #e8eff8',
+      boxShadow: '0 32px 90px rgba(15, 23, 42, 0.08)',
+      overflow: 'hidden',
+    },
+    cardBody: {
+      padding: '42px 38px',
+      background: '#ffffff',
+    },
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      marginBottom: '28px',
+    },
+    logo: {
+      width: '48px',
+      height: '48px',
+      borderRadius: '14px',
+      objectFit: 'cover',
+    },
+    brandName: {
+      margin: 0,
+      fontSize: '22px',
+      fontWeight: 700,
+      color: '#102a43',
+      lineHeight: 1.1,
+    },
+    brandTag: {
+      fontSize: '14px',
+      color: '#64748b',
+      margin: 0,
+    },
+    title: {
+      marginBottom: '8px',
+      fontSize: '34px',
+      fontWeight: 800,
+      color: '#102a43',
+      lineHeight: 1.1,
+    },
+    subtitle: {
+      marginBottom: '28px',
+      color: '#64748b',
+      fontSize: '15px',
+      lineHeight: 1.6,
+    },
+    input: {
+      borderRadius: '14px',
+      height: '52px',
+      background: '#f7f8fc',
+      borderColor: '#dbe3ee',
+      color: '#102a43',
+    },
+    submit: {
+      marginTop: '16px',
+      height: '56px',
+      borderRadius: '14px',
+      fontWeight: 700,
+      fontSize: '16px',
+      boxShadow: '0 16px 34px rgba(99, 102, 241, 0.18)',
+    },
+    footerText: {
+      marginTop: '24px',
+      textAlign: 'center' as const,
+      color: '#64748b',
+    },
+  };
+
+  const onFinish = async (values: any) => {
+    try {
+      if (values.password !== values.confirm) {
+        return message.error('Mật khẩu xác nhận không khớp!');
+      }
+      const payload = {
+        fullName: values.name,
+        email: values.email,
+        password: values.password,
+        code: values.code,
+      };
+
+      await register(payload);
+      message.success('Đăng ký tài khoản thành công!');
+      setTimeout(() => {
+        window.location.href = '/user/login';
+      }, 1000);
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || 'Đăng ký thất bại!';
+      message.error(errorMsg);
+    }
   };
 
   return (
-    <div style={s.layout}>
-      <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}>
-        <Card style={s.card} bodyStyle={{ padding: 0 }} bordered={false}>
-          <Row>
-            <Col xs={0} lg={11}>
-              <div style={s.left}>
-                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 14, width: 'fit-content', marginBottom: 40 }}>
-                  <Sparkles color="#fff" size={28} />
-                </div>
-                <Title level={1} style={{ color: '#fff', fontWeight: 900, fontSize: '48px', lineHeight: 1.2 }}>Bắt đầu kỷ nguyên <br /> tri thức mới.</Title>
-                <Paragraph style={{ color: '#c7d2fe', fontSize: '18px', marginTop: 24, marginBottom: 50 }}>
-                  Chỉ mất 1 phút để sở hữu tài khoản EduStack và tiếp cận hàng ngàn tài nguyên học tập giá trị.
-                </Paragraph>
-                
-                <Space direction="vertical" size={24}>
-                  {[
-                    { t: 'Định danh sinh viên PTIT', d: 'Xác thực nhanh qua email học viện.' },
-                    { t: 'Lộ trình cá nhân hóa', d: 'Hệ thống gợi ý môn học thông minh.' },
-                    { t: 'Bảo mật tuyệt đối', d: 'Mã hóa dữ liệu chuẩn quốc tế.' }
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 16 }}>
-                      <div style={{ background: 'rgba(99,102,241,0.2)', padding: 10, borderRadius: 12, height: 'fit-content' }}>
-                        <CheckCircle color="#818cf8" size={20} />
-                      </div>
-                      <div>
-                        <Text style={{ color: '#fff', fontWeight: 700, display: 'block' }}>{item.t}</Text>
-                        <Text style={{ color: '#94a3b8', fontSize: '14px' }}>{item.d}</Text>
-                      </div>
-                    </div>
-                  ))}
-                </Space>
+    <div style={styles.page}>
+      <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+        <Card style={styles.card} bodyStyle={styles.cardBody} bordered={false}>
+          <div style={styles.header}>
+            <img src="/logo.png" alt="logo" style={styles.logo} />
+            <div>
+              <Title level={5} style={styles.brandName}>EduStack</Title>
+              <Text style={styles.brandTag}>Học tập cùng cộng đồng, thiết kế trải nghiệm tinh tế</Text>
+            </div>
+          </div>
 
-                <div style={{ marginTop: 'auto', paddingTop: 40 }}>
-                  <Text style={{ color: '#6366f1' }}>© 2026 EduStack Team - PTIT Project</Text>
-                </div>
-              </div>
-            </Col>
-            <Col xs={24} lg={13}>
-              <div style={s.right}>
-                <Title level={2} style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>Tạo tài khoản</Title>
-                <Text style={{ color: '#64748b', display: 'block', marginBottom: 40 }}>Điền thông tin bên dưới để đăng ký</Text>
-                
-                <Form layout="vertical" size="large" onFinish={() => message.success('Đăng ký thành công!')}>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item label={<span style={{color: '#94a3b8'}}>Họ và tên</span>} name="name" rules={[{ required: true }]}>
-                        <Input prefix={<UserPlus size={18} color="#6366f1" />} style={s.input} />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label={<span style={{color: '#94a3b8'}}>Số điện thoại</span>} name="phone">
-                        <Input prefix={<Phone size={18} color="#6366f1" />} placeholder="09xxx" style={s.input} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+          <div style={{ display: 'inline-flex', padding: '8px 14px', borderRadius: '999px', background: '#eef4ff', color: '#2563eb', fontWeight: 700, fontSize: '12px', marginBottom: 16 }}>
+            Chỉ 1 phút để đăng ký
+          </div>
+          <Title style={styles.title}>Tạo tài khoản</Title>
+          <Text style={styles.subtitle}>Điền đầy đủ thông tin dưới đây để tham gia hệ thống EduStack và quản lý nội dung dễ dàng.</Text>
 
-                  <Form.Item label={<span style={{color: '#94a3b8'}}>Email học viện</span>} name="email" rules={[{ required: true, type: 'email' }]}>
-                    <Input prefix={<Mail size={18} color="#6366f1" />} placeholder="name@student.ptit.edu.vn" style={s.input} />
-                  </Form.Item>
+          <Form layout="vertical" size="large" onFinish={onFinish}>
+            <Form.Item label="Họ và tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}> 
+              <Input className="auth-input" prefix={<UserPlus size={18} color="#667085" />} style={styles.input} placeholder="Nhập họ và tên" />
+            </Form.Item>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item label={<span style={{color: '#94a3b8'}}>Mật khẩu</span>} name="password" rules={[{ required: true, min: 8 }]}>
-                        <Input.Password style={s.input}/>
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item label={<span style={{color: '#94a3b8'}}>Xác nhận</span>} name="confirm" rules={[{ required: true }]}>
-                        <Input.Password style={s.input}/>
-                      </Form.Item>
-                    </Col>
-                  </Row>
+            <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}> 
+              <Input className="auth-input" prefix={<Mail size={18} color="#667085" />} style={styles.input} placeholder="Nhập email" />
+            </Form.Item>
 
-                  <Form.Item name="agreement" valuePropName="checked" rules={[{ validator: (_, value) => value ? Promise.resolve() : Promise.reject(new Error('Vui lòng đồng ý điều khoản!')) }]}>
-                    <Checkbox style={{ color: '#94a3b8' }}>
-                      Tôi đồng ý với <a href="#" style={{ color: '#818cf8' }}>Điều khoản & Chính sách</a> của EduStack
-                    </Checkbox>
-                  </Form.Item>
+            <Form.Item label="Mã SV/GV" name="code" rules={[{ required: true, message: 'Vui lòng nhập mã SV/GV' }]}> 
+              <Input className="auth-input" prefix={<ShieldCheck size={18} color="#667085" />} style={styles.input} placeholder="Nhập mã SV/GV" />
+            </Form.Item>
 
-                  <Button type="primary" block htmlType="submit" style={s.btn}>
-                    BẮT ĐẦU NGAY <ArrowRight size={20} style={{ marginLeft: 10 }} />
-                  </Button>
+            <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 8, message: 'Mật khẩu tối thiểu 8 ký tự' }]}> 
+              <Input.Password className="auth-input" prefix={<Lock size={18} color="#667085" />} style={styles.input} placeholder="Nhập mật khẩu" />
+            </Form.Item>
 
-                  <div style={{ textAlign: 'center', marginTop: 30 }}>
-                    <Text style={{ color: '#64748b' }}>Bạn đã có tài khoản? <a href="/user/Login" style={{ color: '#818cf8', fontWeight: 700 }}>Đăng nhập</a></Text>
-                  </div>
-                </Form>
-              </div>
-            </Col>
-          </Row>
+            <Form.Item label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}> 
+              <Input.Password className="auth-input" prefix={<Lock size={18} color="#667085" />} style={styles.input} placeholder="Nhập lại mật khẩu" />
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block style={styles.submit}>
+                Đăng ký <ArrowRight size={18} style={{ marginLeft: 8 }} />
+              </Button>
+            </Form.Item>
+          </Form>
+
+          <div style={styles.footerText}>
+            <Text>Đã có tài khoản? <a href="/user/login">Đăng nhập</a></Text>
+          </div>
         </Card>
       </motion.div>
     </div>
