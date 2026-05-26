@@ -1,6 +1,6 @@
 import { Col, Row, message } from 'antd';
 import { useEffect, useState } from 'react';
-import { useModel, useParams } from 'umi';
+import { useModel, useParams, history } from 'umi';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
 import AnswerForm from './components/AnswerForm';
@@ -9,7 +9,7 @@ import DanhSachBinhLuan from './components/DanhSachBinhLuan';
 import SidebarPhai from './components/SidebarPhai';
 
 const ChiTietBaiViet = () => {
-	const { record: post, getByIdModel: getPostDetail, voteBaiVietModel } = useModel('baiviet');
+	const { record: post, getByIdModel: getPostDetail, voteBaiVietModel, deleteModel: deletePostModel } = useModel('baiviet');
 	const {
 		danhSach: dsComments,
 		getCommentsByPostModel: getComments,
@@ -104,6 +104,7 @@ const ChiTietBaiViet = () => {
 	}, [id, post?.tags?.[0]]);
 
 	const userId = initialState?.currentUser?._id;
+	const isAdmin = initialState?.currentUser?.role === 'ADMIN';
 	const hasUpvoted = userId ? !!post?.upvotedBy?.includes(userId) : false;
 	const hasDownvoted = userId ? !!post?.downvotedBy?.includes(userId) : false;
 	const postScore = (post?.upvotedBy?.length || 0) - (post?.downvotedBy?.length || 0);
@@ -178,6 +179,21 @@ const ChiTietBaiViet = () => {
 		}
 	};
 
+	const handleDeletePost = async () => {
+		if (id) {
+			await deletePostModel(id, () => {
+				message.success('Đã xóa bài viết thành công!');
+				history.push('/dashboard');
+			});
+		}
+	};
+
+	const handleEditPost = () => {
+		if (id) {
+			history.push(`/ask?id=${id}`);
+		}
+	};
+
 	return (
 		<div style={{ maxWidth: '1200px', margin: '0 auto', padding: '8px 16px' }}>
 			<Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
@@ -192,6 +208,10 @@ const ChiTietBaiViet = () => {
 						onCommentClick={handleScrollToAnswerForm}
 						isBookmarked={isBookmarked}
 						onBookmarkClick={handleBookmarkClick}
+						userId={userId}
+						isAdmin={isAdmin}
+						onDeletePost={handleDeletePost}
+						onEditPost={handleEditPost}
 					/>
 
 					<DanhSachBinhLuan

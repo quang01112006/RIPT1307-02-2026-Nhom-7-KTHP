@@ -1,6 +1,6 @@
 import { getTagColor } from '@/utils/utils';
-import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Space, Tag, Typography, message } from 'antd';
+import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Avatar, Button, Card, Divider, Space, Tag, Typography, message, Dropdown, Menu, Modal } from 'antd';
 import moment from 'moment';
 import React from 'react';
 import styles from '../index.less';
@@ -16,6 +16,10 @@ interface BaiVietChinhProps {
 	onCommentClick: () => void;
 	isBookmarked?: boolean;
 	onBookmarkClick?: () => void;
+	userId?: string;
+	isAdmin?: boolean;
+	onDeletePost?: () => void;
+	onEditPost?: () => void;
 }
 
 const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
@@ -26,9 +30,46 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	onVote,
 	onCommentClick,
 	isBookmarked,
-	onBookmarkClick
+	onBookmarkClick,
+	userId,
+	isAdmin,
+	onDeletePost,
+	onEditPost,
 }) => {
 	if (!post) return null;
+
+	const isAuthor = userId && post.author?._id === userId;
+	const canModify = isAuthor || isAdmin;
+
+	const handleDeleteClick = () => {
+		Modal.confirm({
+			title: 'Xóa bài viết',
+			content: 'Bạn có chắc chắn muốn xóa bài viết này không? Không thể hoàn tác!',
+			okText: 'Xóa',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onDeletePost) onDeletePost();
+			},
+		});
+	};
+
+	const menu = (
+		<Menu style={{ borderRadius: '8px' }}>
+			<Menu.Item key='edit' icon={<EditOutlined />} onClick={onEditPost}>
+				Sửa bài viết
+			</Menu.Item>
+			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+				Xóa bài viết
+			</Menu.Item>
+		</Menu>
+	);
+
+	const cardExtra = canModify ? (
+		<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
+			<Button type='text' icon={<MoreOutlined style={{ fontSize: '20px' }} />} />
+		</Dropdown>
+	) : null;
 
 	const fallbackCopyTextToClipboard = (text: string) => {
 		const textArea = document.createElement('textarea');
@@ -77,7 +118,13 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	};
 
 	return (
-		<Card hoverable bordered={false} style={{ height: 'auto' }} title={<Title level={3}>{post.title}</Title>}>
+		<Card 
+			hoverable 
+			bordered={false} 
+			style={{ height: 'auto' }} 
+			title={<Title level={3} style={{ margin: 0 }}>{post.title}</Title>}
+			extra={cardExtra}
+		>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
 				<Space split={<Divider type='vertical' style={{ borderColor: '#bfbfbf' }} />}>
 					<Space>
