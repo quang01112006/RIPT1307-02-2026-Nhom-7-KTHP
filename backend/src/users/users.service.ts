@@ -15,15 +15,17 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const { password, email, code, role, teacherCode } = createUserDto;
+    const normalizedEmail = email.toLowerCase();
     let assignedRole = Role.STUDENT;
 
-    if (role === Role.TEACHER) {
-      const SECRET_KEY = this.configService.get<string>('TEACHER_SECRET_KEY');
-      if (teacherCode === SECRET_KEY) {
-        assignedRole = Role.TEACHER;
-      } else {
-        throw new BadRequestException('Mã xác thực không chính xác!');
-      }
+    if (
+      normalizedEmail.endsWith('@ptit.edu.vn') &&
+      !normalizedEmail.endsWith('@stu.ptit.edu.vn') &&
+      !normalizedEmail.endsWith('@student.ptit.edu.vn')
+    ) {
+      assignedRole = Role.TEACHER;
+    } else {
+      assignedRole = Role.STUDENT;
     }
 
     const orConditions: any[] = [{ email: email.toLowerCase() }];
