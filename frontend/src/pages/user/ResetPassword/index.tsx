@@ -17,7 +17,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   card: {
     width: '100%',
-    maxWidth: '520px',
+    maxWidth: '580px',
     borderRadius: '28px',
     border: '1px solid #e8eff8',
     boxShadow: '0 32px 90px rgba(15, 23, 42, 0.08)',

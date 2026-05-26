@@ -183,9 +183,9 @@ const QuanLyTag: React.FC = () => {
 							<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); form.resetFields(); setIsModalVisible(true); }} style={{ borderRadius: '6px', backgroundColor: '#0095ff', height: '40px' }}>
 								Thêm thẻ mới
 							</Button>
-							<Tooltip title="Tổng số cột dữ liệu trong bảng">
+							<Tooltip title="Tổng số hàng dữ liệu trong bảng">
 								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-									Tổng số: {columns.length}
+									Tổng số: {searchText ? filteredData.length : total}
 								</div>
 							</Tooltip>
 						</Space>

@@ -14,18 +14,19 @@ const RegisterPage: React.FC = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px',
+      padding: '16px',
     },
     card: {
       width: '100%',
-      maxWidth: '520px',
+      maxWidth: '640px',
       borderRadius: '28px',
       border: '1px solid #e8eff8',
       boxShadow: '0 32px 90px rgba(15, 23, 42, 0.08)',
       overflow: 'hidden',
+      boxSizing: 'border-box',
     },
     cardBody: {
-      padding: '20px 24px',
+      padding: '22px 28px',
       background: '#ffffff',
     },
     header: {
