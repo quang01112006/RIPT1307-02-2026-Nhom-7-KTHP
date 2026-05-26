@@ -68,9 +68,11 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 
 	const menu = (
 		<Menu style={{ borderRadius: '8px' }}>
-			<Menu.Item key='edit' icon={<EditOutlined />} onClick={onEditPost}>
-				Sửa bài viết
-			</Menu.Item>
+			{isAuthor && (
+				<Menu.Item key='edit' icon={<EditOutlined />} onClick={onEditPost}>
+					Sửa bài viết
+				</Menu.Item>
+			)}
 			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
 				Xóa bài viết
 			</Menu.Item>

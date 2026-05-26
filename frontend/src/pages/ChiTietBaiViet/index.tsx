@@ -209,7 +209,6 @@ const ChiTietBaiViet = () => {
 	const handleDeletePost = async () => {
 		if (id) {
 			await deletePostModel(id, () => {
-				message.success('Đã xóa bài viết thành công!');
 				history.push('/dashboard');
 			});
 		}
