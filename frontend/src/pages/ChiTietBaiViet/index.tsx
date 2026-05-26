@@ -18,7 +18,7 @@ const ChiTietBaiViet = () => {
 		putModel,
 		deleteModel,
 	} = useModel('binhluan');
-	const { initialState } = useModel('@@initialState');
+	const { initialState, setInitialState } = useModel('@@initialState');
 	const { id } = useParams<{ id: string }>();
 
 	const [hotPosts, setHotPosts] = useState<BaiViet.IRecord[]>([]);
@@ -51,6 +51,20 @@ const ChiTietBaiViet = () => {
 		const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
 		if (success) {
 			setIsBookmarked(!isBookmarked);
+			
+			// Cập nhật lại danh sách bookmarks trong initialState toàn cục
+			const currentBookmarks = initialState.currentUser.bookmarks || [];
+			const newBookmarks = isBookmarked
+				? currentBookmarks.filter((b: string) => b !== id)
+				: [...currentBookmarks, id];
+				
+			setInitialState({
+				...initialState,
+				currentUser: {
+					...initialState.currentUser,
+					bookmarks: newBookmarks,
+				},
+			});
 		}
 	};
 

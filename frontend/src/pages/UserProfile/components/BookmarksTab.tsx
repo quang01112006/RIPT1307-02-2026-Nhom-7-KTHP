@@ -1,9 +1,9 @@
-import { List, Spin, Typography, Space, Tag } from 'antd';
+import { getUserBookmarks } from '@/services/base/api';
+import { getTagColor } from '@/utils/utils';
+import { List, Space, Spin, Tag, Typography } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { Link } from 'umi';
-import { getUserBookmarks } from '@/services/base/api';
-import { getTagColor } from '@/utils/utils';
 
 const { Text } = Typography;
 
@@ -39,6 +39,10 @@ const BookmarksTab = ({ user }: Props) => {
 				<List
 					itemLayout='vertical'
 					dataSource={data}
+					pagination={{
+						pageSize: 5,
+						hideOnSinglePage: true,
+					}}
 					locale={{ emptyText: 'Chưa có bài viết nào được lưu' }}
 					renderItem={(item) => (
 						<List.Item key={item._id} style={{ padding: '16px 0', borderBottom: '1px solid #f0f0f0' }}>
@@ -49,7 +53,9 @@ const BookmarksTab = ({ user }: Props) => {
 							</div>
 							<Space size='middle' style={{ marginBottom: 8 }}>
 								{item.tags?.map((tag: string) => (
-									<Tag key={tag} color={getTagColor(tag)}>{tag}</Tag>
+									<Tag key={tag} color={getTagColor(tag)}>
+										{tag}
+									</Tag>
 								))}
 							</Space>
 							<div>

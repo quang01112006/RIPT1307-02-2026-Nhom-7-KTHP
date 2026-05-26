@@ -137,4 +137,15 @@ export class UsersService {
       },
     };
   }
+
+  async updateReputation(userId: string, amount: number) {
+    if (!userId) return;
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $inc: { reputation: amount } },
+        { new: true },
+      )
+      .exec();
+  }
 }

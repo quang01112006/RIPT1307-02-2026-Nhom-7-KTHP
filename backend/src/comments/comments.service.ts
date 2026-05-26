@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { PostsService } from 'src/posts/posts.service';
+import { UsersService } from 'src/users/users.service';
 import { Comment, CommentDocument } from './schemas/comment.schema';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class CommentsService {
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     private notificationsService: NotificationsService,
     private postsService: PostsService,
+    private usersService: UsersService,
   ) {}
 
   async create(createCommentDto: any, userId: string) {
@@ -134,6 +136,10 @@ export class CommentsService {
     const comment = await this.commentModel.findById(commentId);
     if (!comment) throw new NotFoundException('Bình luận không tồn tại');
 
+    if (String(comment.author) === String(userId)) {
+      throw new ForbiddenException('Bạn không thể tự đánh giá bình luận của chính mình!');
+    }
+
     const upvotedIndex = comment.upvotedBy.findIndex(
       (id) => String(id) === userId,
     );
@@ -144,9 +150,15 @@ export class CommentsService {
     if (type === 'up') {
       if (upvotedIndex > -1) {
         comment.upvotedBy.splice(upvotedIndex, 1);
+        if (comment.author) this.usersService.updateReputation(String(comment.author), -10);
       } else {
         comment.upvotedBy.push(userId as any);
-        if (downvotedIndex > -1) comment.downvotedBy.splice(downvotedIndex, 1);
+        if (comment.author) this.usersService.updateReputation(String(comment.author), 10);
+        
+        if (downvotedIndex > -1) {
+          comment.downvotedBy.splice(downvotedIndex, 1);
+          if (comment.author) this.usersService.updateReputation(String(comment.author), 2);
+        }
         
         if (String(comment.author) !== String(userId)) {
           this.notificationsService.create({
@@ -164,9 +176,15 @@ export class CommentsService {
     } else {
       if (downvotedIndex > -1) {
         comment.downvotedBy.splice(downvotedIndex, 1);
+        if (comment.author) this.usersService.updateReputation(String(comment.author), 2);
       } else {
         comment.downvotedBy.push(userId as any);
-        if (upvotedIndex > -1) comment.upvotedBy.splice(upvotedIndex, 1);
+        if (comment.author) this.usersService.updateReputation(String(comment.author), -2);
+        
+        if (upvotedIndex > -1) {
+          comment.upvotedBy.splice(upvotedIndex, 1);
+          if (comment.author) this.usersService.updateReputation(String(comment.author), -10);
+        }
       }
     }
 
