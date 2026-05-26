@@ -60,6 +60,26 @@ export default [
 		component: './UserProfile',
 		hideInMenu: true,
 	},
+	{
+		path: '/notifications',
+		name: 'Thông báo',
+		component: './Notifications',
+	},
+	{
+		path: '/tags',
+		name: 'Thẻ từ khóa',
+		component: './Tags',
+	},
+	{
+		path: '/bookmarks',
+		name: 'Bài viết đã lưu',
+		component: './Bookmarks',
+	},
+	{
+		path: '/leaderboard',
+		name: 'Bảng xếp hạng',
+		component: './Leaderboard',
+	},
 
 	// route admin
 	{

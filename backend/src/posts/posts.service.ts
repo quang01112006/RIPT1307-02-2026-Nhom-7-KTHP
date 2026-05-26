@@ -66,7 +66,7 @@ export class PostsService {
     const [data, total] = await Promise.all([
       this.postModel
         .find(filter)
-        .populate('author', 'fullName email code role')
+        .populate('author', 'fullName email code role avatar')
         .sort(sortOption)
         .limit(Number(limit))
         .skip(skip)
@@ -85,7 +85,7 @@ export class PostsService {
   async findOne(id: string) {
     const post = await this.postModel
       .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-      .populate('author', 'fullName code role')
+      .populate('author', 'fullName code role avatar')
       .exec();
 
     if (!post) throw new NotFoundException('Không tìm thấy bài viết');
