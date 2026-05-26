@@ -62,7 +62,7 @@ export default () => {
 			await toggleVoteComment(id, type);
 			getCommentsByPostModel(postId);
 		} catch (error) {
-			message.error('Lỗi khi bình chọn');
+			console.error('Lỗi khi bình chọn:', error);
 		}
 	};
 

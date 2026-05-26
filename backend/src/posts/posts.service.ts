@@ -18,12 +18,14 @@ interface PostQuery {
 }
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     private notificationsService: NotificationsService,
+    private usersService: UsersService,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: string) {
@@ -127,6 +129,12 @@ export class PostsService {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Bài viết không tồn tại');
 
+    if (String(post.author) === String(userId)) {
+      throw new ForbiddenException(
+        'Bạn không thể tự đánh giá bài viết của chính mình!',
+      );
+    }
+
     const upvotedIndex = post.upvotedBy.findIndex(
       (id) => String(id) === userId,
     );
@@ -137,9 +145,18 @@ export class PostsService {
     if (type === 'up') {
       if (upvotedIndex > -1) {
         post.upvotedBy.splice(upvotedIndex, 1);
+        if (post.author)
+          this.usersService.updateReputation(String(post.author), -10); // Rút lại upvote
       } else {
         post.upvotedBy.push(userId as any);
-        if (downvotedIndex > -1) post.downvotedBy.splice(downvotedIndex, 1);
+        if (post.author)
+          this.usersService.updateReputation(String(post.author), 10); // Thêm upvote
+
+        if (downvotedIndex > -1) {
+          post.downvotedBy.splice(downvotedIndex, 1);
+          if (post.author)
+            this.usersService.updateReputation(String(post.author), 2); // Rút lại downvote cũ
+        }
 
         if (String(post.author) !== String(userId)) {
           this.notificationsService
@@ -159,9 +176,18 @@ export class PostsService {
     } else {
       if (downvotedIndex > -1) {
         post.downvotedBy.splice(downvotedIndex, 1);
+        if (post.author)
+          this.usersService.updateReputation(String(post.author), 2); // Rút lại downvote
       } else {
         post.downvotedBy.push(userId as any);
-        if (upvotedIndex > -1) post.upvotedBy.splice(upvotedIndex, 1);
+        if (post.author)
+          this.usersService.updateReputation(String(post.author), -2); // Bị downvote
+
+        if (upvotedIndex > -1) {
+          post.upvotedBy.splice(upvotedIndex, 1);
+          if (post.author)
+            this.usersService.updateReputation(String(post.author), -10); // Mất upvote cũ
+        }
       }
     }
 

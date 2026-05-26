@@ -4,11 +4,13 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { Post, PostSchema } from './schemas/post.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
     NotificationsModule,
+    UsersModule,
   ],
   controllers: [PostsController],
   providers: [PostsService],
