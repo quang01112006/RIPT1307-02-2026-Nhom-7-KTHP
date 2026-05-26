@@ -17,6 +17,7 @@ import {
 	Tag,
 	Tooltip,
 	Typography,
+	Divider,
 } from 'antd';
 import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -54,30 +55,32 @@ const QuanLyBaiViet: React.FC = () => {
 		return Array.from(new Set(allTags)).map(tag => ({ text: tag, value: tag }));
 	}, [danhSach]);
 
+	const handleColumnSearchChange = async (value: string) => {
+		setSearchText(value);
+		setPage(1);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
+	};
+
 	const getColumnSearchProps = (dataIndex: string | string[], title: string) => ({
 		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-			<div style={{ padding: 8 }}>
+			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
-					placeholder={`Tìm ${title}`}
+					placeholder={`Tìm ${title}...`}
 					value={selectedKeys[0]}
-					onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-					onPressEnter={() => confirm()}
-					style={{ marginBottom: 8, display: 'block' }}
+					onChange={async (e) => {
+						const value = e.target.value;
+						setSelectedKeys(value ? [value] : []);
+						await handleColumnSearchChange(value);
+					}}
+					style={{ width: 320, borderRadius: '6px' }}
+					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+					allowClear
 				/>
-				<Space>
-					<Button
-						type="primary"
-						onClick={() => confirm()}
-						icon={<SearchOutlined />}
-						size="small"
-						style={{ width: 90 }}
-					>
-						Tìm
-					</Button>
-					<Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-						Xóa
-					</Button>
-				</Space>
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
@@ -216,22 +219,31 @@ const QuanLyBaiViet: React.FC = () => {
 	return (
 		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
 			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-					<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
-						<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-							<FileTextOutlined style={{ color: '#0095ff' }} />
-							Quản lý bài viết
-						</Title>
-						<Text type="secondary" style={{ fontSize: '13px', color: '#64748b' }}>Cấu trúc bảng hiện tại: {columns.length} cột dữ liệu</Text>
+				<div style={{ marginBottom: '20px' }}>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<FileTextOutlined style={{ color: '#0095ff' }} />
+								Quản lý bài viết
+							</Title>
+						</div>
+						<Tooltip title="Tổng số cột dữ liệu trong bảng">
+							<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
+								Tổng số: {columns.length}
+							</div>
+						</Tooltip>
 					</div>
-					<Input
-						placeholder="Tìm kiếm theo tiêu đề bài viết..."
+					<Divider style={{ margin: '16px 0' }} />
+					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+						<Input
+						placeholder="Tìm bài viết..."
 						prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 						value={searchText}
 						onChange={handleSearchTextChange}
-						style={{ width: 400, borderRadius: '4px' }}
-						allowClear
-					/>
+						style={{ width: 320, borderRadius: '6px' }}
+							allowClear
+						/>
+					</div>
 				</div>
 
 				<Table

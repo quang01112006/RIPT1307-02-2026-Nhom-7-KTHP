@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined, SearchOutlined, TagsOutlined } from '@ant-design/icons';
-import { Button, Card, Popover, Form, Input, Modal, Popconfirm, Space, Table, Tooltip, Typography, message, Tag } from 'antd';
+import { Button, Card, Popover, Form, Input, Modal, Popconfirm, Space, Table, Tooltip, Typography, Divider, message, Tag } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useModel } from 'umi';
 import { getTagColor } from '@/utils/utils';
@@ -10,6 +10,7 @@ const QuanLyTag: React.FC = () => {
 	const { danhSach, getModel, deleteModel, postModel, putModel, loading, page, limit, total, setPage, setLimit } = useModel('tags');
 	const [form] = Form.useForm();
 	const [searchText, setSearchText] = useState<string>('');
+	const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -51,30 +52,32 @@ const QuanLyTag: React.FC = () => {
 		setIsModalVisible(true);
 	};
 
+	const handleColumnSearchChange = async (value: string) => {
+		setSearchText(value);
+		setPage(1);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
+	};
+
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
 		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-			<div style={{ padding: 8 }}>
+			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
-					placeholder={`Tìm ${title}`}
+					placeholder={`Tìm ${title}...`}
 					value={selectedKeys[0]}
-					onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-					onPressEnter={() => confirm()}
-					style={{ marginBottom: 8, display: 'block' }}
+					onChange={async (e) => {
+						const value = e.target.value;
+						setSelectedKeys(value ? [value] : []);
+						await handleColumnSearchChange(value);
+					}}
+					style={{ width: 280, borderRadius: '6px' }}
+					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+					allowClear
 				/>
-				<Space>
-					<Button
-						type="primary"
-						onClick={() => confirm()}
-						icon={<SearchOutlined />}
-						size="small"
-						style={{ width: 90 }}
-					>
-						Tìm
-					</Button>
-					<Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-						Xóa
-					</Button>
-				</Space>
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
@@ -92,6 +95,7 @@ const QuanLyTag: React.FC = () => {
 		{
 			title: 'Tên thẻ',
 			dataIndex: 'name',
+			align: 'center' as const,
 			key: 'name',
 			...getColumnSearchProps('name', 'tên thẻ'),
 			width: '20%',
@@ -159,27 +163,36 @@ const QuanLyTag: React.FC = () => {
 	return (
 		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
 			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-					<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
-						<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-							<TagsOutlined style={{ color: '#0095ff' }} />
-							Quản lý tag
-						</Title>
-						<Text type="secondary" style={{ fontSize: '13px', color: '#64748b' }}>Cấu trúc bảng hiện tại: {columns.length} cột dữ liệu</Text>
+				<div style={{ marginBottom: '20px' }}>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<TagsOutlined style={{ color: '#0095ff' }} />
+								Quản lý tag
+							</Title>
+						</div>
+						<Space size={8}>
+							<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); form.resetFields(); setIsModalVisible(true); }} style={{ borderRadius: '6px', backgroundColor: '#0095ff', height: '40px' }}>
+								Thêm thẻ mới
+							</Button>
+							<Tooltip title="Tổng số cột dữ liệu trong bảng">
+								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
+									Tổng số: {columns.length}
+								</div>
+							</Tooltip>
+						</Space>
 					</div>
-					<Space>
+					<Divider style={{ margin: '16px 0' }} />
+					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
 						<Input
 							placeholder="Tìm thẻ..."
 							prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 							value={searchText}
 							onChange={handleSearchTextChange}
-							style={{ width: 300, borderRadius: '4px' }}
+							style={{ width: 320, borderRadius: '6px' }}
 							allowClear
 						/>
-						<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); form.resetFields(); setIsModalVisible(true); }} style={{ borderRadius: '4px', backgroundColor: '#0095ff' }}>
-							Thêm thẻ mới
-						</Button>
-					</Space>
+					</div>
 				</div>
 
 				<Table

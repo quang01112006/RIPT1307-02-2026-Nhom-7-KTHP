@@ -24,20 +24,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     overflow: 'hidden',
   },
   cardBody: {
-    padding: '42px 38px',
+    padding: '24px 32px',
     background: '#ffffff',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     gap: '14px',
-    marginBottom: '28px',
+    marginBottom: '20px',
   },
   logo: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '14px',
-    objectFit: 'cover',
+    width: '64px',
+    height: '40px',
+    borderRadius: '6px',
+    objectFit: 'contain',
   },
   brandName: {
     margin: 0,
@@ -59,7 +59,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     lineHeight: 1.1,
   },
   subtitle: {
-    marginBottom: '28px',
+    marginBottom: '20px',
     color: '#64748b',
     fontSize: '15px',
     lineHeight: 1.6,
@@ -116,7 +116,7 @@ const ResetPasswordPage: React.FC = () => {
               <img src="/logo.png" alt="logo" style={styles.logo} />
               <div>
                 <Title level={5} style={styles.brandName}>EduStack</Title>
-                <Text style={styles.brandTag}>Học tập thông minh, tự tin vươn cao</Text>
+                <Text style={styles.brandTag}>Kết nối học tập và chia sẻ tri thức</Text>
               </div>
             </div>
 

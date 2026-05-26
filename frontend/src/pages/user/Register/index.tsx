@@ -25,20 +25,20 @@ const RegisterPage: React.FC = () => {
       overflow: 'hidden',
     },
     cardBody: {
-      padding: '42px 38px',
+      padding: '20px 24px',
       background: '#ffffff',
     },
     header: {
       display: 'flex',
       alignItems: 'center',
-      gap: '14px',
-      marginBottom: '28px',
+      gap: '12px',
+      marginBottom: '18px',
     },
     logo: {
-      width: '48px',
-      height: '48px',
-      borderRadius: '14px',
-      objectFit: 'cover',
+      width: '56px',
+      height: '36px',
+      borderRadius: '6px',
+      objectFit: 'contain',
     },
     brandName: {
       margin: 0,
@@ -53,35 +53,35 @@ const RegisterPage: React.FC = () => {
       margin: 0,
     },
     title: {
-      marginBottom: '8px',
-      fontSize: '34px',
-      fontWeight: 800,
+      marginBottom: '6px',
+      fontSize: '26px',
+      fontWeight: 700,
       color: '#102a43',
-      lineHeight: 1.1,
+      lineHeight: 1.15,
     },
     subtitle: {
-      marginBottom: '28px',
+      marginBottom: '12px',
       color: '#64748b',
-      fontSize: '15px',
-      lineHeight: 1.6,
+      fontSize: '14px',
+      lineHeight: 1.4,
     },
     input: {
-      borderRadius: '14px',
-      height: '52px',
+      borderRadius: '12px',
+      height: '40px',
       background: '#f7f8fc',
       borderColor: '#dbe3ee',
       color: '#102a43',
     },
     submit: {
-      marginTop: '16px',
-      height: '56px',
-      borderRadius: '14px',
+      marginTop: '10px',
+      height: '44px',
+      borderRadius: '12px',
       fontWeight: 700,
-      fontSize: '16px',
-      boxShadow: '0 16px 34px rgba(99, 102, 241, 0.18)',
+      fontSize: '14px',
+      boxShadow: '0 10px 22px rgba(99, 102, 241, 0.10)',
     },
     footerText: {
-      marginTop: '24px',
+      marginTop: '12px',
       textAlign: 'center' as const,
       color: '#64748b',
     },
@@ -118,38 +118,38 @@ const RegisterPage: React.FC = () => {
             <img src="/logo.png" alt="logo" style={styles.logo} />
             <div>
               <Title level={5} style={styles.brandName}>EduStack</Title>
-              <Text style={styles.brandTag}>Học tập cùng cộng đồng, thiết kế trải nghiệm tinh tế</Text>
+              <Text style={styles.brandTag}>Kết nối học tập và chia sẻ tri thức</Text>
             </div>
           </div>
 
-          <div style={{ display: 'inline-flex', padding: '8px 14px', borderRadius: '999px', background: '#eef4ff', color: '#2563eb', fontWeight: 700, fontSize: '12px', marginBottom: 16 }}>
+          <div style={{ display: 'inline-flex', padding: '6px 12px', borderRadius: '999px', background: '#eef4ff', color: '#2563eb', fontWeight: 700, fontSize: '12px', marginBottom: 12 }}>
             Chỉ 1 phút để đăng ký
           </div>
           <Title style={styles.title}>Tạo tài khoản</Title>
-          <Text style={styles.subtitle}>Điền đầy đủ thông tin dưới đây để tham gia hệ thống EduStack và quản lý nội dung dễ dàng.</Text>
+          <Text style={styles.subtitle}>Điền nhanh thông tin để bắt đầu sử dụng EduStack.</Text>
 
-          <Form layout="vertical" size="large" onFinish={onFinish}>
-            <Form.Item label="Họ và tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}> 
+          <Form layout="vertical" size="middle" onFinish={onFinish}>
+            <Form.Item style={{ marginBottom: 12 }} label="Họ và tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ và tên' }]}> 
               <Input className="auth-input" prefix={<UserPlus size={18} color="#667085" />} style={styles.input} placeholder="Nhập họ và tên" />
             </Form.Item>
 
-            <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}> 
+            <Form.Item style={{ marginBottom: 12 }} label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}> 
               <Input className="auth-input" prefix={<Mail size={18} color="#667085" />} style={styles.input} placeholder="Nhập email" />
             </Form.Item>
 
-            <Form.Item label="Mã SV/GV" name="code" rules={[{ required: true, message: 'Vui lòng nhập mã SV/GV' }]}> 
+            <Form.Item style={{ marginBottom: 12 }} label="Mã SV/GV" name="code" rules={[{ required: true, message: 'Vui lòng nhập mã SV/GV' }]}> 
               <Input className="auth-input" prefix={<ShieldCheck size={18} color="#667085" />} style={styles.input} placeholder="Nhập mã SV/GV" />
             </Form.Item>
 
-            <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 8, message: 'Mật khẩu tối thiểu 8 ký tự' }]}> 
+            <Form.Item style={{ marginBottom: 12 }} label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 8, message: 'Mật khẩu tối thiểu 8 ký tự' }]}> 
               <Input.Password className="auth-input" prefix={<Lock size={18} color="#667085" />} style={styles.input} placeholder="Nhập mật khẩu" />
             </Form.Item>
 
-            <Form.Item label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}> 
+            <Form.Item style={{ marginBottom: 12 }} label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}> 
               <Input.Password className="auth-input" prefix={<Lock size={18} color="#667085" />} style={styles.input} placeholder="Nhập lại mật khẩu" />
             </Form.Item>
 
-            <Form.Item>
+            <Form.Item style={{ marginBottom: 0 }}>
               <Button type="primary" htmlType="submit" block style={styles.submit}>
                 Đăng ký <ArrowRight size={18} style={{ marginLeft: 8 }} />
               </Button>

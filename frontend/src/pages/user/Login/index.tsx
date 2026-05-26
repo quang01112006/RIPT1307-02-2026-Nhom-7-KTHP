@@ -57,7 +57,7 @@ const Login: React.FC = () => {
 						<img src='/logo.png' alt='Logo' className={styles.brandLogo} />
 						<div className={styles.brandText}>
 							<div className={styles.brandName}>EduStack</div>
-							<div className={styles.brandTag}>Học tập thông minh, tự tin vươn cao</div>
+							<div className={styles.brandTag}>Kết nối học tập và chia sẻ tri thức</div>
 						</div>
 					</div>
 

@@ -28,6 +28,7 @@ import {
 	Tag,
 	Tooltip,
 	Typography,
+	Divider,
 	message,
 } from 'antd';
 import axios from '@/utils/axios';
@@ -130,30 +131,32 @@ const QuanLyUser: React.FC = () => {
 		loadUserDetail(user);
 	};
 
+	const handleColumnSearchChange = async (value: string) => {
+		setSearchText(value);
+		setPage(1);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
+	};
+
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
 		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-			<div style={{ padding: 8 }}>
+			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
-					placeholder={`Tìm ${title}`}
+					placeholder={`Tìm ${title}...`}
 					value={selectedKeys[0]}
-					onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-					onPressEnter={() => confirm()}
-					style={{ marginBottom: 8, display: 'block' }}
+					onChange={async (e) => {
+						const value = e.target.value;
+						setSelectedKeys(value ? [value] : []);
+						await handleColumnSearchChange(value);
+					}}
+					style={{ width: 280, borderRadius: '6px' }}
+					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+					allowClear
 				/>
-				<Space>
-					<Button
-						type="primary"
-						onClick={() => confirm()}
-						icon={<SearchOutlined />}
-						size="small"
-						style={{ width: 90 }}
-					>
-						Tìm
-					</Button>
-					<Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-						Xóa
-					</Button>
-				</Space>
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
@@ -204,6 +207,7 @@ const QuanLyUser: React.FC = () => {
 		{
 			title: 'Vai trò',
 			dataIndex: 'role',
+			align: 'center' as const,
 			key: 'role',
 			filters: [
 				{ text: 'Admin', value: 'admin' },
@@ -229,7 +233,7 @@ const QuanLyUser: React.FC = () => {
 			title: 'Trạng thái',
 			dataIndex: 'isActive',
 			key: 'isActive',
-			align: 'center' as const,
+			align: 'left' as const,
 			render: (isActive: boolean, record: any) => (
 				<Space>
 					<Tooltip title={record._id === initialState?.currentUser?._id ? "Không thể tự khóa tài khoản" : (isActive ? "Đang hoạt động" : "Bị khóa")}>
@@ -303,32 +307,41 @@ const QuanLyUser: React.FC = () => {
 	return (
 		<div style={{ padding: '24px' }}>
 			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' }}>
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-					<div style={{ borderLeft: '4px solid #0095ff', paddingLeft: '16px' }}>
-						<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-							<UserOutlined style={{ color: '#0095ff' }} />
-							Quản lý người dùng
-						</Title>
-						<Text type="secondary" style={{ fontSize: '13px' }}>Cấu trúc bảng hiện tại: {columns.length} cột dữ liệu</Text>
+				<div style={{ marginBottom: '20px' }}>
+					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+								<UserOutlined style={{ color: '#0095ff' }} />
+								Quản lý người dùng
+							</Title>
+						</div>
+						<Space size={8}>
+							<Button
+								type="primary"
+								icon={<PlusOutlined />}
+								onClick={() => setIsCreateModalVisible(true)}
+								style={{ borderRadius: '6px', backgroundColor: '#0095ff', borderColor: '#0095ff', height: '40px' }}
+							>
+								Thêm mới
+							</Button>
+							<Tooltip title="Tổng số cột dữ liệu trong bảng">
+								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
+									Tổng số: {columns.length}
+								</div>
+							</Tooltip>
+						</Space>
 					</div>
-					<Space>
+					<Divider style={{ margin: '16px 0' }} />
+					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
 						<Input
-							placeholder="Tìm tên hoặc email..."
+						placeholder="Tìm người dùng..."
 							prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 							value={searchText}
 							onChange={handleSearchTextChange}
-							style={{ width: 300, borderRadius: '4px' }}
+							style={{ width: 320, borderRadius: '6px' }}
 							allowClear
 						/>
-						<Button 
-							type="primary" 
-							icon={<PlusOutlined />} 
-							onClick={() => setIsCreateModalVisible(true)}
-							style={{ borderRadius: '4px', backgroundColor: '#0095ff', borderColor: '#0095ff' }}
-						>
-							Thêm mới
-						</Button>
-					</Space>
+					</div>
 				</div>
 
 				<Row gutter={16} style={{ marginBottom: 24 }}>
