@@ -39,12 +39,6 @@ const Login: React.FC = () => {
 		} catch (error: any) {
 			const errorMsg = error?.response?.data?.message || 'Thông tin đăng nhập không chính xác.';
 			setLoginErrorMessage(errorMsg);
-			message.error(
-				<div>
-					{errorMsg} {' '}
-					<a href="/user/forgot-password" style={{ color: '#fff', textDecoration: 'underline' }}>Quên mật khẩu?</a>
-				</div>,
-			);
 		}
 		setSubmitting(false);
 	};
@@ -69,19 +63,48 @@ const Login: React.FC = () => {
 						</div>
 						<Form form={form} onFinish={handleSubmit} layout='vertical'>
 							<Form.Item label='' name='login' rules={[...rules.required]}>
-								<Input className='auth-input' placeholder='Nhập email hoặc mã GV/SV' prefix={<UserOutlined className={styles.prefixIcon} />} size='large' />
+								<Input
+									className='auth-input'
+									placeholder='Nhập email hoặc mã GV/SV'
+									prefix={<UserOutlined className={styles.prefixIcon} />}
+									size='large'
+								/>
 							</Form.Item>
-							<Form.Item label='' name='password' rules={[...rules.required]} validateStatus={loginErrorMessage ? 'error' : ''} help={loginErrorMessage ? <span>{loginErrorMessage} — <a href="/user/forgot-password">Quên mật khẩu?</a></span> : null}>
-								<Input.Password className='auth-input' placeholder='Mật khẩu' prefix={<LockOutlined className={styles.prefixIcon} />} size='large' />
+							<Form.Item
+								label=''
+								name='password'
+								rules={[...rules.required]}
+								validateStatus={loginErrorMessage ? 'error' : ''}
+								help={
+									loginErrorMessage ? (
+										<span>
+											{loginErrorMessage} — <a href='/user/forgot-password'>Quên mật khẩu?</a>
+										</span>
+									) : null
+								}
+							>
+								<Input.Password
+									className='auth-input'
+									placeholder='Mật khẩu'
+									prefix={<LockOutlined className={styles.prefixIcon} />}
+									size='large'
+								/>
 							</Form.Item>
-							<Button type='primary' block size='large' loading={submitting} htmlType='submit' className={styles.loginBtn}>
+							<Button
+								type='primary'
+								block
+								size='large'
+								loading={submitting}
+								htmlType='submit'
+								className={styles.loginBtn}
+							>
 								Đăng nhập
 							</Button>
 						</Form>
 
 						<div className={styles.bottomText}>
 							<span>Bạn chưa có tài khoản?</span>
-						<a href='/user/register'>Đăng ký ngay</a>
+							<a href='/user/register'>Đăng ký ngay</a>
 						</div>
 					</div>
 				</div>
