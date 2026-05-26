@@ -107,4 +107,34 @@ export class UsersService {
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
     return user;
   }
+
+  async toggleBookmark(userId: string, postId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    const index = user.bookmarks.indexOf(postId);
+    if (index > -1) {
+      user.bookmarks.splice(index, 1);
+    } else {
+      user.bookmarks.push(postId);
+    }
+
+    await user.save();
+    return user.bookmarks;
+  }
+
+  async getBookmarks(userId: string) {
+    const user = await this.userModel
+      .findById(userId)
+      .populate('bookmarks')
+      .exec();
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    return {
+      data: {
+        result: user.bookmarks,
+        total: user.bookmarks.length,
+      },
+    };
+  }
 }
