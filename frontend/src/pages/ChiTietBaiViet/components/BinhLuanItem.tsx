@@ -6,8 +6,9 @@ import {
 	EditOutlined,
 	MoreOutlined,
 	UserOutlined,
+	CheckCircleOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Typography } from 'antd';
+import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Typography, Tooltip, Tag } from 'antd';
 import moment from 'moment';
 import React, { useState } from 'react';
 import ReplyForm from './ReplyForm';
@@ -20,6 +21,7 @@ interface BinhLuanItemProps {
 	comment: BinhLuan.IRecord;
 	userId?: string;
 	currentUserAvatar?: string;
+	postAuthorId?: string;
 	isChild?: boolean;
 	isLast?: boolean;
 	directParent?: BinhLuan.IRecord | null;
@@ -30,12 +32,14 @@ interface BinhLuanItemProps {
 	setReplyingId: (id: string | null) => void;
 	onEdit: (id: string, content: string) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
+	onAccept?: (id: string) => Promise<void>;
 }
 
 const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	comment,
 	userId,
 	currentUserAvatar,
+	postAuthorId,
 	isChild = false,
 	isLast = false,
 	directParent = null,
@@ -46,6 +50,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	setReplyingId,
 	onEdit,
 	onDelete,
+	onAccept,
 }) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editContent, setEditContent] = useState<string>('');
@@ -108,7 +113,14 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	);
 
 	return (
-		<div style={{ position: 'relative', padding: isChild ? '8px 0 12px 0' : '4px 0' }}>
+		<div style={{
+			position: 'relative',
+			padding: isChild ? '8px 8px 12px 8px' : '8px 12px',
+			backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.06)' : undefined,
+			borderRadius: comment.isAccepted ? '8px' : '0',
+			border: comment.isAccepted ? '1px solid #b7eb8f' : '1px solid transparent',
+			transition: 'all 0.3s ease',
+		}}>
 			{/* line cong l cho cmt con */}
 			{isChild && (
 				<div
@@ -236,7 +248,15 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						</div>
 					</div>
 				) : (
-					<div
+					<>
+						{comment.isAccepted && (
+							<div style={{ marginBottom: 8 }}>
+								<Tag color="success" icon={<CheckCircleOutlined />} style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '4px' }}>
+									Tác giả bài viết đã chọn làm câu trả lời đúng
+								</Tag>
+							</div>
+						)}
+						<div
 						className={styles.postContent}
 						dangerouslySetInnerHTML={{ __html: comment.content || '' }}
 						style={{
@@ -247,6 +267,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 							whiteSpace: 'pre-wrap',
 						}}
 					/>
+					</>
 				)}
 
 				<div
@@ -298,6 +319,30 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 							onClick={() => onVote(comment._id, 'down')}
 						/>
 					</Space>
+
+					{!isChild && (postAuthorId === userId || comment.isAccepted) && (
+						<Tooltip title={comment.isAccepted ? 'Câu trả lời đã được giải quyết' : 'Đánh dấu là câu trả lời đúng'}>
+							<Button
+								type='text'
+								className={styles.textBtnNoBg}
+								icon={<CheckCircleOutlined style={{ fontSize: isChild ? '12px' : '14px' }} />}
+								style={{
+									color: comment.isAccepted ? '#52c41a' : '#bfbfbf',
+									backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.1)' : undefined,
+									display: 'inline-flex',
+									alignItems: 'center',
+									height: isChild ? '24px' : '28px',
+									padding: isChild ? '0 4px' : '0 6px',
+									cursor: postAuthorId !== userId ? 'default' : 'pointer',
+								}}
+								onClick={() => {
+									if (postAuthorId === userId && onAccept) {
+										onAccept(comment._id);
+									}
+								}}
+							/>
+						</Tooltip>
+					)}
 
 					<Button
 						type='text'

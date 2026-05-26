@@ -61,4 +61,13 @@ export class CommentsController {
   ) {
     return this.commentsService.toggleVote(id, req.user._id as string, type);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/accept')
+  toggleAccept(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.commentsService.toggleAccept(id, req.user._id as string);
+  }
 }
