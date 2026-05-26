@@ -1,6 +1,16 @@
 import { getTagColor } from '@/utils/utils';
-import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Space, Tag, Typography, message, Dropdown, Menu, Modal } from 'antd';
+import {
+	ArrowDownOutlined,
+	ArrowUpOutlined,
+	CommentOutlined,
+	DeleteOutlined,
+	EditOutlined,
+	MoreOutlined,
+	ShareAltOutlined,
+	UserOutlined,
+	CheckCircleFilled,
+} from '@ant-design/icons';
+import { Avatar, Button, Card, Divider, Dropdown, Menu, Modal, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
 import React from 'react';
 import styles from '../index.less';
@@ -20,6 +30,7 @@ interface BaiVietChinhProps {
 	isAdmin?: boolean;
 	onDeletePost?: () => void;
 	onEditPost?: () => void;
+	isSolved?: boolean;
 }
 
 const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
@@ -35,6 +46,7 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	isAdmin,
 	onDeletePost,
 	onEditPost,
+	isSolved,
 }) => {
 	if (!post) return null;
 
@@ -118,18 +130,29 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	};
 
 	return (
-		<Card 
-			hoverable 
-			bordered={false} 
-			style={{ height: 'auto' }} 
-			title={<Title level={3} style={{ margin: 0 }}>{post.title}</Title>}
+		<Card
+			hoverable
+			bordered={false}
+			style={{ height: 'auto' }}
+			title={
+				<div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap', paddingTop: '4px' }}>
+					{isSolved && (
+						<Tag color="success" icon={<CheckCircleFilled />} style={{ margin: 0, marginTop: '4px', padding: '2px 10px', fontSize: '13px', borderRadius: '4px' }}>
+							Đã giải quyết
+						</Tag>
+					)}
+					<Title level={3} style={{ margin: 0, whiteSpace: 'normal', lineHeight: 1.4 }}>
+						{post.title}
+					</Title>
+				</div>
+			}
 			extra={cardExtra}
 		>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
 				<Space split={<Divider type='vertical' style={{ borderColor: '#bfbfbf' }} />}>
 					<Space>
 						<Avatar src={post.author?.avatar} icon={<UserOutlined />} />
-						<Text type='secondary'>{post.author?.fullName || '--'}</Text>
+						<Text type='secondary'>{post.author?.fullName || 'Ẩn danh'}</Text>
 					</Space>
 					<Text type='secondary'>Đăng {moment(post.createdAt).fromNow() || '--'}</Text>
 					<Text type='secondary'>{post.views || 0} lượt xem</Text>
@@ -201,22 +224,22 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					<Button icon={<ShareAltOutlined />} type='text' className={styles.textBtnNoBg} onClick={handleShare}>
 						Chia sẻ
 					</Button>
-					
-					<Button 
+
+					<Button
 						icon={
-							<span className="anticon" style={{ fontSize: '16px' }}>
+							<span className='anticon' style={{ fontSize: '16px' }}>
 								{isBookmarked ? (
-									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="#1890ff">
-										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
+									<svg viewBox='0 0 24 24' width='1em' height='1em' fill='#1890ff'>
+										<path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'></path>
 									</svg>
 								) : (
-									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
-										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"></path>
+									<svg viewBox='0 0 24 24' width='1em' height='1em' fill='currentColor'>
+										<path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z'></path>
 									</svg>
 								)}
 							</span>
-						} 
-						type='text' 
+						}
+						type='text'
 						className={styles.textBtnNoBg}
 						onClick={onBookmarkClick}
 						style={{ color: isBookmarked ? '#1890ff' : undefined }}

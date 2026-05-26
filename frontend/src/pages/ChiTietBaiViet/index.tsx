@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useModel, useParams, history } from 'umi';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
+import { toggleAcceptComment } from '@/services/BinhLuan';
 import AnswerForm from './components/AnswerForm';
 import BaiVietChinh from './components/BaiVietChinh';
 import DanhSachBinhLuan from './components/DanhSachBinhLuan';
@@ -193,6 +194,18 @@ const ChiTietBaiViet = () => {
 		}
 	};
 
+	const handleAcceptComment = async (commentId: string) => {
+		if (id) {
+			try {
+				await toggleAcceptComment(commentId);
+				message.success('Đã cập nhật trạng thái câu trả lời');
+				getComments(id);
+			} catch (error) {
+				message.error('Có lỗi xảy ra');
+			}
+		}
+	};
+
 	const handleDeletePost = async () => {
 		if (id) {
 			await deletePostModel(id, () => {
@@ -215,6 +228,7 @@ const ChiTietBaiViet = () => {
 				<Col xs={24} lg={18}>
 					<BaiVietChinh
 						post={post}
+						isSolved={dsComments.some(c => c.isAccepted)}
 						postScore={postScore}
 						hasUpvoted={hasUpvoted}
 						hasDownvoted={hasDownvoted}
@@ -231,11 +245,13 @@ const ChiTietBaiViet = () => {
 					<DanhSachBinhLuan
 						comments={dsComments}
 						userId={userId}
+						postAuthorId={post?.author?._id || (post?.author as unknown as string)}
 						currentUserAvatar={initialState?.currentUser?.avatar}
 						onVote={handleVoteComment}
 						onSubmitReply={handleSubmitReply}
 						onEdit={handleEditComment}
 						onDelete={handleDeleteComment}
+						onAccept={handleAcceptComment}
 					/>
 
 					<AnswerForm currentUserAvatar={initialState?.currentUser?.avatar} onSubmit={handleMainAnswerSubmit} />
