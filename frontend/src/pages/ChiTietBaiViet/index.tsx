@@ -119,7 +119,7 @@ const ChiTietBaiViet = () => {
 	}, [id, post?.tags?.[0]]);
 
 	const userId = initialState?.currentUser?._id;
-	const isAdmin = initialState?.currentUser?.role === 'ADMIN';
+	const isAdmin = initialState?.currentUser?.role === 'admin';
 	const hasUpvoted = userId ? !!post?.upvotedBy?.includes(userId) : false;
 	const hasDownvoted = userId ? !!post?.downvotedBy?.includes(userId) : false;
 	const postScore = (post?.upvotedBy?.length || 0) - (post?.downvotedBy?.length || 0);

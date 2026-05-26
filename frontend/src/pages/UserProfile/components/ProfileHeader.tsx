@@ -53,7 +53,11 @@ const ProfileHeader = ({ user, isMe, onEditClick }: Props) => {
 								<Title level={2} style={{ margin: 0, fontWeight: 700, color: '#1f1f1f' }}>
 									{user.fullName}
 								</Title>
-								{user.role === 'teacher' ? (
+								{user.role === 'admin' ? (
+									<Tag color='volcano' style={{ borderRadius: 12, padding: '2px 12px', fontSize: 13, fontWeight: 600 }}>
+										<CheckCircleFilled style={{ marginRight: 4 }} /> Quản trị viên
+									</Tag>
+								) : user.role === 'teacher' ? (
 									<Tag color='geekblue' style={{ borderRadius: 12, padding: '2px 12px', fontSize: 13, fontWeight: 600 }}>
 										<CheckCircleFilled style={{ marginRight: 4 }} /> Giảng viên
 									</Tag>
