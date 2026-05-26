@@ -201,7 +201,7 @@ const QuanLyBaiViet: React.FC = () => {
 						</Space>
 					}
 					placement="left"
-					trigger="click"
+					trigger="hover"
 				>
 					<Button type="text" icon={<MenuOutlined />} />
 				</Popover>
@@ -221,28 +221,27 @@ const QuanLyBaiViet: React.FC = () => {
 			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+						<div>
 							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<FileTextOutlined style={{ color: '#0095ff' }} />
 								Quản lý bài viết
 							</Title>
 						</div>
-						<Tooltip title="Tổng số cột dữ liệu trong bảng">
-							<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-								Tổng số: {columns.length}
-							</div>
-						</Tooltip>
-					</div>
-					<Divider style={{ margin: '16px 0' }} />
-					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-						<Input
-						placeholder="Tìm bài viết..."
-						prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-						value={searchText}
-						onChange={handleSearchTextChange}
-						style={{ width: 320, borderRadius: '6px' }}
-							allowClear
-						/>
+						<Space size={8}>
+							<Input
+								placeholder="Tìm bài viết..."
+								prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+								value={searchText}
+								onChange={handleSearchTextChange}
+								style={{ width: 280, borderRadius: '6px', height: '40px' }}
+								allowClear
+							/>
+							<Tooltip title="Tổng số cột dữ liệu trong bảng">
+								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
+									Tổng số: {columns.length}
+								</div>
+							</Tooltip>
+						</Space>
 					</div>
 				</div>
 
@@ -258,7 +257,6 @@ const QuanLyBaiViet: React.FC = () => {
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
-						showTotal: (total) => `Tổng cộng ${total} bài viết`,
 						onChange: (p, s) => {
 							setPage(p);
 							setLimit(s);

@@ -109,7 +109,6 @@ const QuanLyUser: React.FC = () => {
 				role: values.role || 'student',
 				faculty: values.faculty,
 				bio: values.bio,
-				teacherCode: values.teacherCode,
 			};
 			await axios.post(`${ip3}/users/register`, payload);
 			message.success('Thêm người dùng mới thành công');
@@ -285,7 +284,7 @@ const QuanLyUser: React.FC = () => {
 						</Space>
 					}
 					placement="left"
-					trigger="click"
+					trigger="hover"
 				>
 					<Button type="text" icon={<MenuOutlined />} />
 				</Popover>
@@ -309,13 +308,21 @@ const QuanLyUser: React.FC = () => {
 			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+						<div>
 							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<UserOutlined style={{ color: '#0095ff' }} />
 								Quản lý người dùng
 							</Title>
 						</div>
 						<Space size={8}>
+							<Input
+								placeholder="Tìm người dùng..."
+								prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+								value={searchText}
+								onChange={handleSearchTextChange}
+								style={{ width: 280, borderRadius: '6px', height: '40px' }}
+								allowClear
+							/>
 							<Button
 								type="primary"
 								icon={<PlusOutlined />}
@@ -330,17 +337,6 @@ const QuanLyUser: React.FC = () => {
 								</div>
 							</Tooltip>
 						</Space>
-					</div>
-					<Divider style={{ margin: '16px 0' }} />
-					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-						<Input
-						placeholder="Tìm người dùng..."
-							prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-							value={searchText}
-							onChange={handleSearchTextChange}
-							style={{ width: 320, borderRadius: '6px' }}
-							allowClear
-						/>
 					</div>
 				</div>
 
@@ -409,19 +405,6 @@ const QuanLyUser: React.FC = () => {
 					</Form.Item>
 					<Form.Item name="faculty" label="Khoa">
 						<Input placeholder="Khoa/Đơn vị" />
-					</Form.Item>
-					<Form.Item shouldUpdate={(prevValues, currentValues) => prevValues.role !== currentValues.role} noStyle>
-						{({ getFieldValue }) =>
-							getFieldValue('role') === 'teacher' ? (
-								<Form.Item
-									name="teacherCode"
-									label="Mã xác thực giáo viên"
-									rules={[{ required: true, message: 'Vui lòng nhập mã xác thực giáo viên!' }]}
-								>
-									<Input.Password placeholder="Mã xác thực giáo viên" />
-								</Form.Item>
-							) : null
-						}
 					</Form.Item>
 					<Form.Item name="bio" label="Giới thiệu">
 						<Input.TextArea placeholder="Một dòng giới thiệu ngắn" rows={3} />

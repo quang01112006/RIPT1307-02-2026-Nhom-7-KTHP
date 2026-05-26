@@ -142,7 +142,7 @@ const QuanLyTag: React.FC = () => {
 						</Space>
 					}
 					placement="left"
-					trigger="click"
+					trigger="hover"
 				>
 					<Button type="text" icon={<MenuOutlined />} />
 				</Popover>
@@ -165,13 +165,21 @@ const QuanLyTag: React.FC = () => {
 			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-						<div style={{ borderLeft: '5px solid #0095ff', paddingLeft: '16px' }}>
+						<div>
 							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
 								<TagsOutlined style={{ color: '#0095ff' }} />
 								Quản lý tag
 							</Title>
 						</div>
 						<Space size={8}>
+							<Input
+								placeholder="Tìm thẻ..."
+								prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+								value={searchText}
+								onChange={handleSearchTextChange}
+								style={{ width: 280, borderRadius: '6px', height: '40px' }}
+								allowClear
+							/>
 							<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); form.resetFields(); setIsModalVisible(true); }} style={{ borderRadius: '6px', backgroundColor: '#0095ff', height: '40px' }}>
 								Thêm thẻ mới
 							</Button>
@@ -181,17 +189,6 @@ const QuanLyTag: React.FC = () => {
 								</div>
 							</Tooltip>
 						</Space>
-					</div>
-					<Divider style={{ margin: '16px 0' }} />
-					<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-						<Input
-							placeholder="Tìm thẻ..."
-							prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-							value={searchText}
-							onChange={handleSearchTextChange}
-							style={{ width: 320, borderRadius: '6px' }}
-							allowClear
-						/>
 					</div>
 				</div>
 
@@ -208,7 +205,6 @@ const QuanLyTag: React.FC = () => {
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
-						showTotal: (total) => `Tổng cộng ${total} thẻ`,
 						onChange: (p, s) => {
 							setPage(p);
 							setLimit(s);

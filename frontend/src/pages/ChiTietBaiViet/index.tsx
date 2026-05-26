@@ -1,6 +1,6 @@
-import { Col, Row } from 'antd';
+import { Col, Row, message } from 'antd';
 import { useEffect, useState } from 'react';
-import { useModel, useParams } from 'umi';
+import { useModel, useParams, history } from 'umi';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
 import AnswerForm from './components/AnswerForm';
@@ -9,7 +9,7 @@ import DanhSachBinhLuan from './components/DanhSachBinhLuan';
 import SidebarPhai from './components/SidebarPhai';
 
 const ChiTietBaiViet = () => {
-	const { record: post, getByIdModel: getPostDetail, voteBaiVietModel } = useModel('baiviet');
+	const { record: post, getByIdModel: getPostDetail, voteBaiVietModel, deleteModel: deletePostModel } = useModel('baiviet');
 	const {
 		danhSach: dsComments,
 		getCommentsByPostModel: getComments,
@@ -18,12 +18,13 @@ const ChiTietBaiViet = () => {
 		putModel,
 		deleteModel,
 	} = useModel('binhluan');
-	const { initialState } = useModel('@@initialState');
+	const { initialState, setInitialState } = useModel('@@initialState');
 	const { id } = useParams<{ id: string }>();
 
 	const [hotPosts, setHotPosts] = useState<BaiViet.IRecord[]>([]);
 	const [relatedPosts, setRelatedPosts] = useState<BaiViet.IRecord[]>([]);
 	const [popularTags, setPopularTags] = useState<string[]>([]);
+	const [isBookmarked, setIsBookmarked] = useState(false);
 
 	useEffect(() => {
 		if (id) {
@@ -31,6 +32,41 @@ const ChiTietBaiViet = () => {
 			getComments(id);
 		}
 	}, [id]);
+
+	const { toggleBookmarkModel } = useModel('users');
+
+	useEffect(() => {
+		if (initialState?.currentUser?.bookmarks?.includes(id as string)) {
+			setIsBookmarked(true);
+		} else {
+			setIsBookmarked(false);
+		}
+	}, [initialState?.currentUser, id]);
+
+	const handleBookmarkClick = async () => {
+		if (!initialState?.currentUser) {
+			message.warning('Vui lòng đăng nhập để lưu bài viết!');
+			return;
+		}
+		const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
+		if (success) {
+			setIsBookmarked(!isBookmarked);
+			
+			// Cập nhật lại danh sách bookmarks trong initialState toàn cục
+			const currentBookmarks = initialState.currentUser.bookmarks || [];
+			const newBookmarks = isBookmarked
+				? currentBookmarks.filter((b: string) => b !== id)
+				: [...currentBookmarks, id];
+				
+			setInitialState({
+				...initialState,
+				currentUser: {
+					...initialState.currentUser,
+					bookmarks: newBookmarks,
+				},
+			});
+		}
+	};
 
 	useEffect(() => {
 		if (!id) return;
@@ -82,6 +118,7 @@ const ChiTietBaiViet = () => {
 	}, [id, post?.tags?.[0]]);
 
 	const userId = initialState?.currentUser?._id;
+	const isAdmin = initialState?.currentUser?.role === 'ADMIN';
 	const hasUpvoted = userId ? !!post?.upvotedBy?.includes(userId) : false;
 	const hasDownvoted = userId ? !!post?.downvotedBy?.includes(userId) : false;
 	const postScore = (post?.upvotedBy?.length || 0) - (post?.downvotedBy?.length || 0);
@@ -156,6 +193,21 @@ const ChiTietBaiViet = () => {
 		}
 	};
 
+	const handleDeletePost = async () => {
+		if (id) {
+			await deletePostModel(id, () => {
+				message.success('Đã xóa bài viết thành công!');
+				history.push('/dashboard');
+			});
+		}
+	};
+
+	const handleEditPost = () => {
+		if (id) {
+			history.push(`/ask?id=${id}`);
+		}
+	};
+
 	return (
 		<div style={{ maxWidth: '1200px', margin: '0 auto', padding: '8px 16px' }}>
 			<Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
@@ -168,6 +220,12 @@ const ChiTietBaiViet = () => {
 						hasDownvoted={hasDownvoted}
 						onVote={handleVotePost}
 						onCommentClick={handleScrollToAnswerForm}
+						isBookmarked={isBookmarked}
+						onBookmarkClick={handleBookmarkClick}
+						userId={userId}
+						isAdmin={isAdmin}
+						onDeletePost={handleDeletePost}
+						onEditPost={handleEditPost}
 					/>
 
 					<DanhSachBinhLuan

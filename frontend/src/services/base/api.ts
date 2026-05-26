@@ -16,12 +16,46 @@ export async function getMe(): Promise<Login.IUser> {
 	return axios.get(`${ip3}/users/me`);
 }
 
-
-
 export async function toggleUserActive(id: string) {
 	return axios.patch(`${ip3}/users/${id}/toggle-active`);
 }
 
-export async function getUserProfile(id: string) {
-	return axios.get(`${ip3}/users/${id}`);
+export async function getUserPosts(authorId: string) {
+	return axios.get(`${ip3}/posts/page`, { params: { author: authorId } });
+}
+
+export async function getUserComments(authorId: string) {
+	return axios.get(`${ip3}/comments/author/${authorId}/page`);
+}
+
+export async function getUserBookmarks(userId: string) {
+	return axios.get(`${ip3}/users/${userId}/bookmarks`);
+}
+
+export const toggleBookmark = async (userId: string, postId: string) => {
+	return axios.post(`${ip3}/users/${userId}/bookmarks/${postId}`);
+};
+
+export async function getNotifications() {
+	return axios.get(`${ip3}/notifications/page`);
+}
+
+export async function markNotificationAsRead(id: string) {
+	return axios.patch(`${ip3}/notifications/${id}/read`);
+}
+
+export async function markNotificationAsUnread(id: string) {
+	return axios.patch(`${ip3}/notifications/${id}/unread`);
+}
+
+export async function markAllNotificationsAsRead() {
+	return axios.patch(`${ip3}/notifications/read-all`);
+}
+
+export async function deleteNotification(id: string) {
+	return axios.delete(`${ip3}/notifications/${id}`);
+}
+
+export async function deleteAllNotifications() {
+	return axios.delete(`${ip3}/notifications/all`);
 }

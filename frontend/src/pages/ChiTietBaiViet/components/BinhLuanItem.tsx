@@ -12,6 +12,7 @@ import moment from 'moment';
 import React, { useState } from 'react';
 import ReplyForm from './ReplyForm';
 import styles from '../index.less';
+import { Link } from 'umi';
 
 const { Text } = Typography;
 
@@ -154,15 +155,19 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						flexWrap: 'wrap',
 					}}
 				>
-					<Avatar
-						src={comment.author?.avatar}
-						icon={<UserOutlined />}
-						size={isChild ? 'small' : undefined}
-						style={{ width: isChild ? '24px' : '32px', height: isChild ? '24px' : '32px' }}
-					/>
-					<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined }}>
-						{comment.author?.fullName || 'Ẩn danh'}
-					</Text>
+					<Link to={`/profile/${comment.author?._id}`}>
+						<Avatar
+							src={comment.author?.avatar}
+							icon={<UserOutlined />}
+							size={isChild ? 'small' : undefined}
+							style={{ width: isChild ? '24px' : '32px', height: isChild ? '24px' : '32px', cursor: 'pointer' }}
+						/>
+					</Link>
+					<Link to={`/profile/${comment.author?._id}`}>
+						<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}>
+							{comment.author?.fullName || 'Ẩn danh'}
+						</Text>
+					</Link>
 
 					{/* tag mention khi rep cmt con */}
 					{isChild && isReplyToChild && directParent && (
@@ -257,6 +262,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						<Button
 							className={styles.voteUpBtn}
 							type='text'
+							shape='circle'
 							icon={<ArrowUpOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 							style={{
 								width: isChild ? '24px' : '28px',
@@ -280,6 +286,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						<Button
 							className={styles.voteDownBtn}
 							type='text'
+							shape='circle'
 							icon={<ArrowDownOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 							style={{
 								width: isChild ? '24px' : '28px',
@@ -294,6 +301,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 
 					<Button
 						type='text'
+						className={styles.textBtnNoBg}
 						icon={<CommentOutlined style={{ fontSize: isChild ? '11px' : '13px' }} />}
 						style={{
 							color: '#595959',
@@ -301,8 +309,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 							alignItems: 'center',
 							height: isChild ? '24px' : '28px',
 							fontSize: isChild ? '12px' : '13px',
-							padding: isChild ? '0 6px' : '0 8px',
-							borderRadius: '4px',
+							padding: isChild ? '0 4px' : '0 6px',
 						}}
 						onClick={() => {
 							setReplyingId(isReplyFormOpen ? null : comment._id);

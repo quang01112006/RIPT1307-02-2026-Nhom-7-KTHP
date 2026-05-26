@@ -91,4 +91,26 @@ export class UsersController {
     }
     return user;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/bookmarks/:postId')
+  @ApiOperation({ summary: 'Lưu hoặc bỏ lưu bài viết' })
+  toggleBookmark(
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    if (req.user._id !== id)
+      throw new ForbiddenException('Thao tác không được phép');
+    return this.usersService.toggleBookmark(id, postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/bookmarks')
+  @ApiOperation({ summary: 'Lấy danh sách bài viết đã lưu' })
+  getBookmarks(@Param('id') id: string, @Request() req: RequestWithUser) {
+    if (req.user._id !== id)
+      throw new ForbiddenException('Thao tác không được phép');
+    return this.usersService.getBookmarks(id);
+  }
 }

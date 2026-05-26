@@ -1,6 +1,6 @@
 import { getTagColor } from '@/utils/utils';
-import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Space, Tag, Typography, message } from 'antd';
+import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Avatar, Button, Card, Divider, Space, Tag, Typography, message, Dropdown, Menu, Modal } from 'antd';
 import moment from 'moment';
 import React from 'react';
 import styles from '../index.less';
@@ -14,6 +14,12 @@ interface BaiVietChinhProps {
 	hasDownvoted: boolean;
 	onVote: (type: 'up' | 'down') => void;
 	onCommentClick: () => void;
+	isBookmarked?: boolean;
+	onBookmarkClick?: () => void;
+	userId?: string;
+	isAdmin?: boolean;
+	onDeletePost?: () => void;
+	onEditPost?: () => void;
 }
 
 const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
@@ -23,8 +29,47 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	hasDownvoted,
 	onVote,
 	onCommentClick,
+	isBookmarked,
+	onBookmarkClick,
+	userId,
+	isAdmin,
+	onDeletePost,
+	onEditPost,
 }) => {
 	if (!post) return null;
+
+	const isAuthor = userId && post.author?._id === userId;
+	const canModify = isAuthor || isAdmin;
+
+	const handleDeleteClick = () => {
+		Modal.confirm({
+			title: 'Xóa bài viết',
+			content: 'Bạn có chắc chắn muốn xóa bài viết này không? Không thể hoàn tác!',
+			okText: 'Xóa',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onDeletePost) onDeletePost();
+			},
+		});
+	};
+
+	const menu = (
+		<Menu style={{ borderRadius: '8px' }}>
+			<Menu.Item key='edit' icon={<EditOutlined />} onClick={onEditPost}>
+				Sửa bài viết
+			</Menu.Item>
+			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+				Xóa bài viết
+			</Menu.Item>
+		</Menu>
+	);
+
+	const cardExtra = canModify ? (
+		<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
+			<Button type='text' icon={<MoreOutlined style={{ fontSize: '20px' }} />} />
+		</Dropdown>
+	) : null;
 
 	const fallbackCopyTextToClipboard = (text: string) => {
 		const textArea = document.createElement('textarea');
@@ -73,7 +118,13 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	};
 
 	return (
-		<Card hoverable bordered={false} style={{ height: 'auto' }} title={<Title level={3}>{post.title}</Title>}>
+		<Card 
+			hoverable 
+			bordered={false} 
+			style={{ height: 'auto' }} 
+			title={<Title level={3} style={{ margin: 0 }}>{post.title}</Title>}
+			extra={cardExtra}
+		>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
 				<Space split={<Divider type='vertical' style={{ borderColor: '#bfbfbf' }} />}>
 					<Space>
@@ -121,10 +172,9 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					<Button
 						className={styles.voteUpBtn}
 						type='text'
+						shape='circle'
 						icon={<ArrowUpOutlined />}
 						style={{
-							height: 'auto',
-							padding: '4px',
 							color: hasUpvoted ? '#1890ff' : undefined,
 							backgroundColor: hasUpvoted ? 'rgba(24, 144, 255, 0.08)' : undefined,
 						}}
@@ -135,22 +185,43 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					</Text>
 					<Button
 						type='text'
+						shape='circle'
 						className={styles.voteDownBtn}
 						icon={<ArrowDownOutlined />}
 						style={{
-							height: 'auto',
-							padding: '4px',
 							color: hasDownvoted ? '#ff4d4f' : undefined,
 							backgroundColor: hasDownvoted ? 'rgba(255, 77, 79, 0.08)' : undefined,
 						}}
 						onClick={() => onVote('down')}
 					/>
-					<Button icon={<CommentOutlined />} type='text' onClick={onCommentClick}>
+					<Button icon={<CommentOutlined />} type='text' className={styles.textBtnNoBg} onClick={onCommentClick}>
 						Trả lời
 					</Button>
 
-					<Button icon={<ShareAltOutlined />} type='text' onClick={handleShare}>
+					<Button icon={<ShareAltOutlined />} type='text' className={styles.textBtnNoBg} onClick={handleShare}>
 						Chia sẻ
+					</Button>
+					
+					<Button 
+						icon={
+							<span className="anticon" style={{ fontSize: '16px' }}>
+								{isBookmarked ? (
+									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="#1890ff">
+										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
+									</svg>
+								) : (
+									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
+										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"></path>
+									</svg>
+								)}
+							</span>
+						} 
+						type='text' 
+						className={styles.textBtnNoBg}
+						onClick={onBookmarkClick}
+						style={{ color: isBookmarked ? '#1890ff' : undefined }}
+					>
+						{isBookmarked ? 'Đã lưu' : 'Lưu bài'}
 					</Button>
 				</Space>
 			</div>
