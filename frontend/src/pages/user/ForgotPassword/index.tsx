@@ -1,17 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Typography, Card, Steps, message, Space, Divider } from 'antd';
-import { Mail, ChevronLeft, Send, ShieldCheck, Fingerprint, Timer, RefreshCcw, ArrowRight } from 'lucide-react';
+import { Form, Input, Button, Typography, Steps, message, Alert } from 'antd';
+import { Mail, Send, ShieldCheck, Timer, RefreshCcw, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { history } from 'umi';
 
 const { Title, Text, Paragraph } = Typography;
+
+const styles: { [key: string]: React.CSSProperties } = {
+  page: {
+    minHeight: '100vh',
+    background: 'radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 35%), #f5f7fb',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '24px',
+  },
+  card: {
+    width: '100%',
+    maxWidth: '580px',
+    borderRadius: '28px',
+    border: '1px solid #e8eff8',
+    boxShadow: '0 32px 90px rgba(15, 23, 42, 0.08)',
+    overflow: 'hidden',
+  },
+  cardBody: {
+    padding: '24px 32px',
+    background: '#ffffff',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    marginBottom: '20px',
+  },
+  logo: {
+    width: '64px',
+    height: '40px',
+    borderRadius: '6px',
+    objectFit: 'contain',
+  },
+  brandName: {
+    margin: 0,
+    fontSize: '22px',
+    fontWeight: 700,
+    color: '#102a43',
+    lineHeight: 1.1,
+  },
+  brandTag: {
+    fontSize: '14px',
+    color: '#64748b',
+    margin: 0,
+  },
+  title: {
+    marginBottom: '8px',
+    fontSize: '34px',
+    fontWeight: 800,
+    color: '#102a43',
+    lineHeight: 1.1,
+  },
+  subtitle: {
+    marginBottom: '20px',
+    color: '#64748b',
+    fontSize: '15px',
+    lineHeight: 1.6,
+  },
+  input: {
+    borderRadius: '14px',
+    height: '52px',
+    background: '#f7f8fc',
+    borderColor: '#dbe3ee',
+    color: '#102a43',
+  },
+  submit: {
+    marginTop: '16px',
+    height: '56px',
+    borderRadius: '14px',
+    fontWeight: 700,
+    fontSize: '16px',
+    boxShadow: '0 16px 34px rgba(59, 130, 246, 0.18)',
+  },
+};
 
 const ForgotPasswordPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [countdown, setCountdown] = useState(0);
 
-  // Xử lý đếm ngược gửi lại mã
   useEffect(() => {
     let timer: any;
     if (countdown > 0) {
@@ -20,10 +96,12 @@ const ForgotPasswordPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleSendEmail = (values: any) => {
+  const handleSendEmail = async (values: any) => {
     setLoading(true);
+
+    const generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
     setEmail(values.email);
-    // Giả lập gửi email trong 1.5s
+    setOtpCode(generatedOtp);
     setTimeout(() => {
       setLoading(false);
       setCurrentStep(1);
@@ -33,138 +111,84 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   const handleVerifyOTP = (values: any) => {
+    if (values.otp !== otpCode) {
+      message.error('Mã OTP không đúng. Vui lòng kiểm tra lại.');
+      return;
+    }
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       message.success('Xác thực thành công! Đang chuyển đến trang đặt lại mật khẩu.');
-      // Điều hướng tới trang ResetPassword
-      window.location.href = '/user/ResetPassword';
-    }, 1500);
-  };
-
-  const s: { [key: string]: React.CSSProperties } = {
-    layout: { minHeight: '100vh', background: '#020617', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
-    card: { width: '100%', maxWidth: '500px', borderRadius: '32px', background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.08)', padding: '32px' },
-    iconBox: { width: 80, height: 80, background: 'rgba(99,102,241,0.1)', borderRadius: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', border: '1px solid rgba(99,102,241,0.2)' },
-    input: { borderRadius: '14px', height: '54px', background: '#1e293b', border: '1px solid #334155', color: '#fff' },
-    btn: { height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', border: 'none', fontWeight: 800, fontSize: '16px', color: '#fff' },
-    stepWrapper: { marginBottom: '40px' }
+      history.push('/user/reset-password');
+    }, 1200);
   };
 
   return (
-    <div style={s.layout}>
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-        <Card style={s.card} bordered={false}>
-          <div style={s.stepWrapper}>
-            <Steps
-              current={currentStep}
-              responsive={false}
-            >
-              <Steps.Step title="Gửi mail" />
-              <Steps.Step title="Xác thực" />
-            </Steps>
-          </div>
+    <div style={styles.page}>
+      <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+        <div style={styles.card}>
+          <div style={styles.cardBody}>
+            <div style={styles.header}>
+              <img src="/logo.png" alt="logo" style={styles.logo} />
+              <div>
+                <Title level={5} style={styles.brandName}>EduStack</Title>
+                <Text style={styles.brandTag}>Kết nối học tập và chia sẻ tri thức</Text>
+              </div>
+            </div>
 
-          <AnimatePresence mode="wait">
-            {currentStep === 0 ? (
-              <motion.div
-                key="step1"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 20, opacity: 0 }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div style={s.iconBox}><Fingerprint size={40} color="#6366f1" /></div>
-                  <Title level={2} style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Quên mật khẩu?</Title>
-                  <Paragraph style={{ color: '#94a3b8', marginBottom: 32 }}>
-                    Đừng lo lắng! Nhập email học viện của bạn để bắt đầu quá trình khôi phục tài khoản.
-                  </Paragraph>
-                </div>
+            <div style={{ display: 'inline-flex', padding: '8px 14px', borderRadius: '999px', background: '#eef4ff', color: '#2563eb', fontWeight: 700, fontSize: '12px', marginBottom: 16 }}>
+              Quên mật khẩu
+            </div>
+            
+            <Title style={styles.title}>{currentStep === 0 ? 'Khôi phục mật khẩu' : 'Xác thực OTP'}</Title>
+            <Text style={styles.subtitle}>{currentStep === 0 ? 'Nhập email học viện của bạn để nhận mã xác thực khôi phục tài khoản.' : `Mã OTP đã được gửi đến ${email}`}</Text>
 
-                <Form layout="vertical" onFinish={handleSendEmail}>
-                  <Form.Item
-                    name="email"
-                    rules={[
-                      { required: true, message: 'Vui lòng nhập Email!' },
-                      { type: 'email', message: 'Email không đúng định dạng!' }
-                    ]}
-                  >
-                    <Input 
-                      prefix={<Mail size={18} color="#6366f1" style={{ marginRight: 8 }} />} 
-                      placeholder="name@student.ptit.edu.vn" 
-                      style={s.input} 
+              <AnimatePresence>
+                {currentStep === 0 ? (
+                  <motion.div key="step1" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }}>
+                    <Form layout="vertical" onFinish={handleSendEmail}>
+                      <Form.Item name="email" rules={[{ required: true, message: 'Vui lòng nhập Email!' }, { type: 'email', message: 'Email không đúng định dạng!' }]}>
+                        <Input className='auth-input' style={styles.input} placeholder='name@student.ptit.edu.vn' prefix={<Mail size={18} color="#667085" style={{ marginRight: 8 }} />} size='large' />
+                      </Form.Item>
+                      <Button type="primary" block htmlType="submit" loading={loading} style={styles.submit}>GỬI MÃ XÁC THỰC <Send size={16} style={{ marginLeft: 8 }} /></Button>
+                    </Form>
+                  </motion.div>
+                ) : (
+                  <motion.div key="step2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                      <div style={{ width: 64, height: 64, margin: '0 auto 12px', borderRadius: 20, background: 'rgba(16,185,129,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><ShieldCheck size={32} color='#10b981' /></div>
+                    </div>
+
+                    <Alert
+                      message='Mã OTP đã gửi'
+                      description={`Mã demo: ${otpCode}. Trong môi trường demo, mã hiển thị ngay tại đây để bạn kiểm tra logic.`}
+                      type='info'
+                      showIcon
+                      style={{ marginBottom: 20, borderRadius: 16 }}
                     />
-                  </Form.Item>
-                  <Button type="primary" block htmlType="submit" loading={loading} style={s.btn}>
-                    GỬI MÃ XÁC THỰC <Send size={18} style={{ marginLeft: 10 }} />
-                  </Button>
-                </Form>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="step2"
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div style={s.iconBox}><ShieldCheck size={40} color="#10b981" /></div>
-                  <Title level={2} style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Kiểm tra Email</Title>
-                  <Paragraph style={{ color: '#94a3b8', marginBottom: 32 }}>
-                    Chúng tôi đã gửi mã OTP gồm 6 chữ số đến <br /><b style={{ color: '#fff' }}>{email}</b>
-                  </Paragraph>
-                </div>
+                    <Form layout="vertical" onFinish={handleVerifyOTP}>
+                      <Form.Item name="otp" rules={[{ required: true, message: 'Vui lòng nhập mã OTP!' }, { len: 6, message: 'Mã OTP phải có 6 chữ số!' }]}>
+                        <Input className='auth-input' placeholder='000000' maxLength={6} style={{ ...styles.input, textAlign: 'center', fontSize: 24, letterSpacing: 8 }} />
+                      </Form.Item>
+                      <Button type="primary" block htmlType="submit" loading={loading} style={styles.submit}>XÁC THỰC NGAY <ArrowRight size={16} style={{ marginLeft: 8 }} /></Button>
+                    </Form>
 
-                <Form layout="vertical" onFinish={handleVerifyOTP}>
-                  <Form.Item
-                    name="otp"
-                    rules={[{ required: true, message: 'Vui lòng nhập mã OTP!' }, { len: 6, message: 'Mã OTP phải có 6 chữ số!' }]}
-                  >
-                    <Input 
-                      placeholder="0 0 0 0 0 0" 
-                      style={{ ...s.input, textAlign: 'center', fontSize: '24px', letterSpacing: '8px' }} 
-                      maxLength={6}
-                    />
-                  </Form.Item>
-                  <Button type="primary" block htmlType="submit" loading={loading} style={s.btn}>
-                    XÁC THỰC NGAY <ArrowRight size={20} style={{ marginLeft: 10 }} />
-                  </Button>
-                </Form>
+                    <div style={{ textAlign: 'center', marginTop: 18 }}>
+                      {countdown > 0 ? (
+                        <Text style={{ color: '#64748b' }}><Timer size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> Gửi lại mã sau <b>{countdown}s</b></Text>
+                      ) : (
+                        <Button type="link" icon={<RefreshCcw size={14} />} onClick={() => setCountdown(60)} style={{ color: '#2563eb', fontWeight: 600 }}>Gửi lại mã</Button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                <div style={{ textAlign: 'center', marginTop: 24 }}>
-                  {countdown > 0 ? (
-                    <Text style={{ color: '#64748b' }}>
-                      <Timer size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                      Gửi lại mã sau <b>{countdown}s</b>
-                    </Text>
-                  ) : (
-                    <Button 
-                      type="link" 
-                      icon={<RefreshCcw size={16} />} 
-                      onClick={() => setCountdown(60)}
-                      style={{ color: '#818cf8', fontWeight: 600 }}
-                    >
-                      Gửi lại mã ngay
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <Divider style={{ borderColor: 'rgba(255,255,255,0.05)', margin: '24px 0' }} />
-
-          <div style={{ textAlign: 'center' }}>
-            <Button 
-              type="link" 
-              icon={<ChevronLeft size={18} />} 
-              href="/user/Login" 
-              style={{ color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}
-            >
-              Quay lại Đăng nhập
-            </Button>
+              <div style={{ textAlign: 'center', marginTop: 18 }}>
+                <a href="/user/login" style={{ color: '#2563eb', fontWeight: 600 }}>Quay lại Đăng nhập</a>
+              </div>
           </div>
-        </Card>
+        </div>
       </motion.div>
     </div>
   );
