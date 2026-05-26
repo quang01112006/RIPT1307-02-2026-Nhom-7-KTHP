@@ -35,13 +35,11 @@ export default [
 	},
 
 	///////////////////////////////////
-	// DEFAULT MENU
 	{
 		path: '/dashboard',
 		name: 'Trang chủ',
 		component: './TrangChu',
 		icon: 'FireTwoTone',
-		access: 'isUser',
 	},
 	{
 		path: '/question/:id',
@@ -90,28 +88,28 @@ export default [
 	{
 		path: '/admin/dashboard',
 		name: 'Trang chủ',
-		icon: 'DashboardTwoTone',
+		icon: 'AppstoreOutlined',
 		access: 'isAdmin',
 		component: './Admin/Dashboard',
 	},
 	{
 		path: '/admin/posts',
 		name: 'Quản lý bài viết',
-		icon: 'ProfileTwoTone',
+		icon: 'FileTextOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyBaiViet',
 	},
 	{
 		path: '/admin/tags',
 		name: 'Quản lý Tag',
-		icon: 'TagsTwoTone',
+		icon: 'TagsOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyTag',
 	},
 	{
 		path: '/admin/users',
 		name: 'Quản lý người dùng',
-		icon: 'ContactsTwoTone',
+		icon: 'TeamOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyUser',
 	},

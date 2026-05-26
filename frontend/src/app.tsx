@@ -115,7 +115,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 				if (item.access === 'isAdmin' && role !== 'admin') {
 					return false;
 				}
-				if (item.access === 'isUser' && role === 'admin') {
+				if (role === 'admin' && item.path && !item.path.startsWith('/admin')) {
 					return false;
 				}
 				return true;
