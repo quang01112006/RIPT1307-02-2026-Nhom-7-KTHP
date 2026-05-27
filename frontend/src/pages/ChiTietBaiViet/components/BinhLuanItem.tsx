@@ -1,19 +1,20 @@
 import {
 	ArrowDownOutlined,
 	ArrowUpOutlined,
+	CheckCircleOutlined,
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	LockOutlined,
 	MoreOutlined,
 	UserOutlined,
-	CheckCircleOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Typography, Tooltip, Tag } from 'antd';
+import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Tag, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import React, { useState } from 'react';
-import ReplyForm from './ReplyForm';
+import { Link, useModel } from 'umi';
 import styles from '../index.less';
-import { Link } from 'umi';
+import ReplyForm from './ReplyForm';
 
 const { Text } = Typography;
 
@@ -33,6 +34,7 @@ interface BinhLuanItemProps {
 	onEdit: (id: string, content: string) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
 	onAccept?: (id: string) => Promise<void>;
+	onBanUser?: (userId: string) => void;
 }
 
 const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
@@ -51,7 +53,11 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	onEdit,
 	onDelete,
 	onAccept,
+	onBanUser,
 }) => {
+	const { initialState } = useModel('@@initialState');
+	const isAdmin = initialState?.currentUser?.role === 'admin';
+
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editContent, setEditContent] = useState<string>('');
 	const [submittingEdit, setSubmittingEdit] = useState<boolean>(false);
@@ -64,9 +70,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	const isAuthor = userId && comment.author?._id === userId;
 
 	const startEdit = () => {
-		const plainText = (comment.content || '')
-			.replace(/^<p>/i, '')
-			.replace(/<\/p>$/i, '');
+		const plainText = (comment.content || '').replace(/^<p>/i, '').replace(/<\/p>$/i, '');
 		setEditContent(plainText);
 		setIsEditing(true);
 	};
@@ -101,26 +105,57 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 		});
 	};
 
+	const handleBanClick = () => {
+		Modal.confirm({
+			title: 'Khóa tài khoản này',
+			content: `Bạn có chắc chắn muốn khóa tài khoản của ${
+				comment.author?.fullName || 'người dùng này'
+			}? Họ sẽ bị văng ra khỏi hệ thống ngay lập tức!`,
+			okText: 'Khóa ngay',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onBanUser && comment.author?._id) {
+					onBanUser(comment.author._id);
+				}
+			},
+		});
+	};
+
 	const menu = (
 		<Menu style={{ borderRadius: '8px' }}>
-			<Menu.Item key='edit' icon={<EditOutlined />} onClick={startEdit}>
-				Sửa
-			</Menu.Item>
-			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
-				Xóa
-			</Menu.Item>
+			{isAuthor && (
+				<Menu.Item key='edit' icon={<EditOutlined />} onClick={startEdit}>
+					Sửa bình luận
+				</Menu.Item>
+			)}
+			{(isAuthor || isAdmin) && (
+				<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+					Xóa bình luận
+				</Menu.Item>
+			)}
+			{isAdmin && !isAuthor && (
+				<>
+					<Menu.Divider />
+					<Menu.Item key='ban' icon={<LockOutlined />} danger onClick={handleBanClick}>
+						Khóa tài khoản này
+					</Menu.Item>
+				</>
+			)}
 		</Menu>
 	);
 
 	return (
-		<div style={{
-			position: 'relative',
-			padding: isChild ? '8px 8px 12px 8px' : '8px 12px',
-			backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.06)' : undefined,
-			borderRadius: comment.isAccepted ? '8px' : '0',
-			border: comment.isAccepted ? '1px solid #b7eb8f' : '1px solid transparent',
-			transition: 'all 0.3s ease',
-		}}>
+		<div
+			style={{
+				position: 'relative',
+				padding: isChild ? '8px 8px 12px 8px' : '8px 12px',
+				backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.06)' : undefined,
+				borderRadius: comment.isAccepted ? '8px' : '0',
+				border: comment.isAccepted ? '1px solid #b7eb8f' : '1px solid transparent',
+				transition: 'all 0.3s ease',
+			}}
+		>
 			{/* line cong l cho cmt con */}
 			{isChild && (
 				<div
@@ -176,7 +211,10 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						/>
 					</Link>
 					<Link to={`/profile/${comment.author?._id}`}>
-						<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}>
+						<Text
+							strong
+							style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}
+						>
 							{comment.author?.fullName || 'Ẩn danh'}
 						</Text>
 					</Link>
@@ -196,7 +234,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 					</Text>
 				</div>
 
-				{isAuthor && (
+				{(isAuthor || isAdmin) && (
 					<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
 						<Button
 							type='text'
@@ -251,22 +289,26 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 					<>
 						{comment.isAccepted && (
 							<div style={{ marginBottom: 8 }}>
-								<Tag color="success" icon={<CheckCircleOutlined />} style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '4px' }}>
+								<Tag
+									color='success'
+									icon={<CheckCircleOutlined />}
+									style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '4px' }}
+								>
 									Tác giả bài viết đã chọn làm câu trả lời đúng
 								</Tag>
 							</div>
 						)}
 						<div
-						className={styles.postContent}
-						dangerouslySetInnerHTML={{ __html: comment.content || '' }}
-						style={{
-							fontSize: isChild ? '14px' : '15px',
-							lineHeight: isChild ? '1.5' : '1.6',
-							wordBreak: 'break-word',
-							color: isChild ? '#434343' : undefined,
-							whiteSpace: 'pre-wrap',
-						}}
-					/>
+							className={styles.postContent}
+							dangerouslySetInnerHTML={{ __html: comment.content || '' }}
+							style={{
+								fontSize: isChild ? '14px' : '15px',
+								lineHeight: isChild ? '1.5' : '1.6',
+								wordBreak: 'break-word',
+								color: isChild ? '#434343' : undefined,
+								whiteSpace: 'pre-wrap',
+							}}
+						/>
 					</>
 				)}
 

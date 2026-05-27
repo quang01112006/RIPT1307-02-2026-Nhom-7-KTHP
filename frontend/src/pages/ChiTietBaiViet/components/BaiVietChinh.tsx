@@ -6,6 +6,7 @@ import {
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	LockOutlined,
 	MoreOutlined,
 	ShareAltOutlined,
 	UserOutlined,
@@ -30,6 +31,7 @@ interface BaiVietChinhProps {
 	isAdmin?: boolean;
 	onDeletePost?: () => void;
 	onEditPost?: () => void;
+	onBanUser?: (id: string) => void;
 	isSolved?: boolean;
 }
 
@@ -46,6 +48,7 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	isAdmin,
 	onDeletePost,
 	onEditPost,
+	onBanUser,
 	isSolved,
 }) => {
 	if (!post) return null;
@@ -66,6 +69,19 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 		});
 	};
 
+	const handleBanClick = () => {
+		Modal.confirm({
+			title: 'Khóa tài khoản này',
+			content: `Bạn có chắc chắn muốn khóa tài khoản của ${post.author?.fullName || 'người dùng này'}? Họ sẽ bị văng ra khỏi hệ thống ngay lập tức!`,
+			okText: 'Khóa ngay',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onBanUser && post.author?._id) onBanUser(post.author._id);
+			},
+		});
+	};
+
 	const menu = (
 		<Menu style={{ borderRadius: '8px' }}>
 			{isAuthor && (
@@ -76,6 +92,14 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
 				Xóa bài viết
 			</Menu.Item>
+			{isAdmin && !isAuthor && (
+				<>
+					<Menu.Divider />
+					<Menu.Item key='ban' icon={<LockOutlined />} danger onClick={handleBanClick}>
+						Khóa tài khoản này
+					</Menu.Item>
+				</>
+			)}
 		</Menu>
 	);
 

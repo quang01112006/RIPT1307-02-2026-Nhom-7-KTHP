@@ -34,7 +34,7 @@ const ChiTietBaiViet = () => {
 		}
 	}, [id]);
 
-	const { toggleBookmarkModel } = useModel('users');
+	const { toggleBookmarkModel, putModel: putUserModel } = useModel('users');
 
 	useEffect(() => {
 		if (initialState?.currentUser?.bookmarks?.includes(id as string)) {
@@ -220,6 +220,15 @@ const ChiTietBaiViet = () => {
 		}
 	};
 
+	const handleBanUser = async (userIdToBan: string) => {
+		try {
+			await putUserModel(userIdToBan, { isActive: false });
+			message.success('Đã khóa tài khoản thành công!');
+		} catch (error) {
+			message.error('Lỗi khi khóa tài khoản');
+		}
+	};
+
 	return (
 		<div style={{ maxWidth: '1200px', margin: '0 auto', padding: '8px 16px' }}>
 			<Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
@@ -239,6 +248,7 @@ const ChiTietBaiViet = () => {
 						isAdmin={isAdmin}
 						onDeletePost={handleDeletePost}
 						onEditPost={handleEditPost}
+						onBanUser={handleBanUser}
 					/>
 
 					<DanhSachBinhLuan
@@ -251,6 +261,7 @@ const ChiTietBaiViet = () => {
 						onEdit={handleEditComment}
 						onDelete={handleDeleteComment}
 						onAccept={handleAcceptComment}
+						onBanUser={handleBanUser}
 					/>
 
 					<AnswerForm currentUserAvatar={initialState?.currentUser?.avatar} onSubmit={handleMainAnswerSubmit} />
