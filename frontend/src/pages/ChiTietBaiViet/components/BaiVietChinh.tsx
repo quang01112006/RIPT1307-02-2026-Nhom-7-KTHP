@@ -2,13 +2,13 @@ import { getTagColor } from '@/utils/utils';
 import {
 	ArrowDownOutlined,
 	ArrowUpOutlined,
+	CheckCircleFilled,
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
 	MoreOutlined,
 	ShareAltOutlined,
 	UserOutlined,
-	CheckCircleFilled,
 } from '@ant-design/icons';
 import { Avatar, Button, Card, Divider, Dropdown, Menu, Modal, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
@@ -126,7 +126,6 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					fallbackCopyTextToClipboard(shareUrl);
 				});
 		} else {
-			// dùng cờ cổ cho http vs đt chung wifi
 			fallbackCopyTextToClipboard(shareUrl);
 		}
 	};
@@ -137,11 +136,17 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 			bordered={false}
 			style={{ height: 'auto' }}
 			title={
-				<div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap', paddingTop: '4px' }}>
+				<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px', paddingBottom: '4px' }}>
 					{isSolved && (
-						<Tag color="success" icon={<CheckCircleFilled />} style={{ margin: 0, marginTop: '4px', padding: '2px 10px', fontSize: '13px', borderRadius: '4px' }}>
-							Đã giải quyết
-						</Tag>
+						<div>
+							<Tag
+								color='success'
+								icon={<CheckCircleFilled />}
+								style={{ margin: 0, padding: '2px 10px', fontSize: '13px', borderRadius: '100px' }}
+							>
+								Đã giải quyết
+							</Tag>
+						</div>
 					)}
 					<Title level={3} style={{ margin: 0, whiteSpace: 'normal', lineHeight: 1.4 }}>
 						{post.title}
