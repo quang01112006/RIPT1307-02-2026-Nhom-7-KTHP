@@ -68,6 +68,24 @@ export class UsersService {
       .select('+password');
   }
 
+  async findOneByEmail(email: string) {
+    return this.userModel.findOne({ email: email.toLowerCase() });
+  }
+
+  async updateOtp(userId: string, otpCode: string, otpExpires: Date) {
+    return this.userModel.findByIdAndUpdate(userId, {
+      otpCode,
+      otpExpires,
+    });
+  }
+
+  async updatePasswordAndClearOtp(userId: string, hashedPassword: string) {
+    return this.userModel.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+      $unset: { otpCode: 1, otpExpires: 1 },
+    });
+  }
+
   async findAll() {
     const result = await this.userModel.find().select('-password').exec();
     return {

@@ -3,6 +3,7 @@ import { Form, Input, Button, Typography, Steps, message, Alert } from 'antd';
 import { Mail, Send, ShieldCheck, Timer, RefreshCcw, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { history } from 'umi';
+import { forgotPassword as forgotPasswordApi } from '@/services/base/api';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -98,29 +99,25 @@ const ForgotPasswordPage: React.FC = () => {
 
   const handleSendEmail = async (values: any) => {
     setLoading(true);
-
-    const generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
-    setEmail(values.email);
-    setOtpCode(generatedOtp);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await forgotPasswordApi(values.email);
+      setEmail(values.email);
       setCurrentStep(1);
       setCountdown(60);
       message.success('Mã xác thực đã được gửi đến email của bạn!');
-    }, 1500);
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Có lỗi xảy ra khi gửi mã xác thực!');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerifyOTP = (values: any) => {
-    if (values.otp !== otpCode) {
-      message.error('Mã OTP không đúng. Vui lòng kiểm tra lại.');
-      return;
-    }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      message.success('Xác thực thành công! Đang chuyển đến trang đặt lại mật khẩu.');
-      history.push('/user/reset-password');
-    }, 1200);
+    // Chuyển hướng sang trang Reset Password, truyền email và otp qua state
+    history.push({
+      pathname: '/user/reset-password',
+      state: { email, otp: values.otp }
+    });
   };
 
   return (
@@ -161,7 +158,7 @@ const ForgotPasswordPage: React.FC = () => {
 
                     <Alert
                       message='Mã OTP đã gửi'
-                      description={`Mã demo: ${otpCode}. Trong môi trường demo, mã hiển thị ngay tại đây để bạn kiểm tra logic.`}
+                      description='Vui lòng kiểm tra hộp thư đến (hoặc hộp thư rác) trong email của bạn để lấy mã xác thực 6 chữ số.'
                       type='info'
                       showIcon
                       style={{ marginBottom: 20, borderRadius: 16 }}

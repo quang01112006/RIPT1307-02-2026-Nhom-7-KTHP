@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { TagsModule } from './tags/tags.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -48,6 +49,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     NotificationsModule,
 
     DashboardModule,
+
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -49,5 +49,11 @@ export class User {
 
   @Prop({ type: [{ type: String, ref: 'Post' }], default: [] })
   bookmarks: string[];
+
+  @Prop()
+  otpCode?: string;
+
+  @Prop()
+  otpExpires?: Date;
 }
 export const UserSchema = SchemaFactory.createForClass(User);
