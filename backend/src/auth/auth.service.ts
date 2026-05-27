@@ -25,6 +25,10 @@ export class AuthService {
       throw new UnauthorizedException(errorMessage);
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa bởi Quản trị viên!');
+    }
+
     const isMatch = await bcrypt.compare(pass, user.password);
     if (isMatch) {
       const { password, ...result } = user.toObject();
