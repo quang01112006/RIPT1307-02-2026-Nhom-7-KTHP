@@ -9,9 +9,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PostsService } from '../posts/posts.service';
-import { MailService } from '../mail/mail.service';
 import { UsersService } from '../users/users.service';
 import { Comment, CommentDocument } from './schemas/comment.schema';
 
@@ -47,20 +47,20 @@ export class CommentsService {
           link: `/question/${post._id}`,
         });
 
-        // Gửi email thông báo
-        try {
-          const senderUser = await this.usersService.findOne(userId);
-          const authorEmail = (post.author as any).email;
-          if (authorEmail && senderUser) {
-            await this.mailService.sendCommentNotificationEmail(
+        // Gửi email thông báo (chạy ngầm, không await để tránh lag)
+        const senderUser = await this.usersService.findOne(userId);
+        const authorEmail = (post.author as any).email;
+        if (authorEmail && senderUser) {
+          this.mailService
+            .sendCommentNotificationEmail(
               authorEmail,
               post.title,
               senderUser.fullName,
-              post._id.toString()
-            );
-          }
-        } catch (mailError) {
-          console.error('Lỗi gửi email thông báo bình luận:', mailError);
+              post._id.toString(),
+            )
+            .catch((mailError) => {
+              console.error('Lỗi gửi email thông báo bình luận:', mailError);
+            });
         }
       }
 
@@ -85,20 +85,21 @@ export class CommentsService {
             link: `/question/${post._id}`,
           });
 
-          // Gửi email thông báo cho người được reply
-          try {
-            const senderUser = await this.usersService.findOne(userId);
-            const parentAuthor = await this.usersService.findOne((parentComment.author as any)._id);
-            if (parentAuthor?.email && senderUser) {
-              await this.mailService.sendCommentNotificationEmail(
+          const senderUser = await this.usersService.findOne(userId);
+          const parentAuthor = await this.usersService.findOne(
+            (parentComment.author as any)._id,
+          );
+          if (parentAuthor?.email && senderUser) {
+            this.mailService
+              .sendCommentNotificationEmail(
                 parentAuthor.email,
                 post.title,
                 senderUser.fullName,
-                post._id.toString()
-              );
-            }
-          } catch (mailError) {
-            console.error('Lỗi gửi email thông báo phản hồi:', mailError);
+                post._id.toString(),
+              )
+              .catch((mailError) => {
+                console.error('Lỗi gửi email thông báo phản hồi:', mailError);
+              });
           }
         }
       }
@@ -111,7 +112,6 @@ export class CommentsService {
       'fullName code role avatar',
     );
 
-    // Broadcast comment tới toàn mạng
     this.notificationsService.broadcastComment(populatedResult);
 
     return populatedResult;
@@ -136,7 +136,7 @@ export class CommentsService {
     const data = await this.commentModel
       .find({ author: authorId as any, type: 'ANSWER' })
       .populate('author', 'fullName email code role avatar')
-      .populate('post', 'title') // Lấy thêm tiêu đề bài viết
+      .populate('post', 'title')
       .sort({ createdAt: -1 })
       .exec();
 
