@@ -87,7 +87,7 @@ export class PostsService {
   async findOne(id: string) {
     const post = await this.postModel
       .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-      .populate('author', 'fullName code role avatar')
+      .populate('author', 'fullName email code role avatar')
       .exec();
 
     if (!post) throw new NotFoundException('Không tìm thấy bài viết');

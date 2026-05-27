@@ -58,4 +58,52 @@ export class MailService {
     `;
     return this.sendMail(to, subject, html);
   }
+
+  // Template gửi email thông báo khi có bình luận mới
+  async sendCommentNotificationEmail(
+    to: string,
+    postTitle: string,
+    commenterName: string,
+    postId: string,
+  ) {
+    const subject = 'Có người vừa bình luận vào bài viết của bạn - EduStack';
+    // Đảm bảo BASE_URL được cấu hình chuẩn
+    const baseUrl = process.env.CLIENT_URL || 'http://localhost:8000';
+    const postUrl = `${baseUrl}/question/${postId}`;
+
+    const html = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background-color: #f8fafc; max-width: 600px; margin: 0 auto; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #0f172a; margin-bottom: 4px; font-size: 26px;">EduStack</h2>
+          <p style="color: #64748b; margin-top: 0; font-size: 14px;">Bạn có một thông báo mới</p>
+        </div>
+        
+        <div style="background-color: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05); border: 1px solid #e2e8f0;">
+          <h3 style="color: #1e293b; margin-top: 0; font-size: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">Bình luận mới!</h3>
+          <p style="color: #334155; font-size: 16px; line-height: 1.6;">Chào bạn,</p>
+          <p style="color: #334155; font-size: 16px; line-height: 1.6;">
+            <strong>${commenterName}</strong> vừa để lại một bình luận trong bài viết 
+            <span style="color: #2563eb; font-style: italic;">"${postTitle}"</span> của bạn.
+          </p>
+          
+          <div style="text-align: center; margin: 35px 0 20px;">
+            <a href="${postUrl}" style="background-color: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);">
+              Xem bình luận ngay
+            </a>
+          </div>
+          
+          <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 30px; text-align: center;">
+            Tiếp tục chia sẻ và lan tỏa tri thức cùng cộng đồng EduStack nhé!
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 24px; color: #94a3b8; font-size: 12px;">
+          <p>Email này được gửi tự động từ hệ thống EduStack. Vui lòng không trả lời.</p>
+          <p>© 2026 EduStack. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    return this.sendMail(to, subject, html);
+  }
 }

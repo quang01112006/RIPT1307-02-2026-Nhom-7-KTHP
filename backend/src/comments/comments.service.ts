@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PostsService } from '../posts/posts.service';
+import { MailService } from '../mail/mail.service';
 import { UsersService } from '../users/users.service';
 import { Comment, CommentDocument } from './schemas/comment.schema';
 
@@ -21,6 +22,7 @@ export class CommentsService {
     private notificationsService: NotificationsService,
     private postsService: PostsService,
     private usersService: UsersService,
+    private mailService: MailService,
   ) {}
 
   async create(createCommentDto: any, userId: string) {
@@ -44,6 +46,22 @@ export class CommentsService {
           message: `Đã có người trả lời câu hỏi "${post.title}" của bạn.`,
           link: `/question/${post._id}`,
         });
+
+        // Gửi email thông báo
+        try {
+          const senderUser = await this.usersService.findOne(userId);
+          const authorEmail = (post.author as any).email;
+          if (authorEmail && senderUser) {
+            await this.mailService.sendCommentNotificationEmail(
+              authorEmail,
+              post.title,
+              senderUser.fullName,
+              post._id.toString()
+            );
+          }
+        } catch (mailError) {
+          console.error('Lỗi gửi email thông báo bình luận:', mailError);
+        }
       }
 
       if (createCommentDto.parent) {
@@ -66,6 +84,22 @@ export class CommentsService {
             message: `Đã có người phản hồi bình luận của bạn trong câu hỏi "${post.title}".`,
             link: `/question/${post._id}`,
           });
+
+          // Gửi email thông báo cho người được reply
+          try {
+            const senderUser = await this.usersService.findOne(userId);
+            const parentAuthor = await this.usersService.findOne((parentComment.author as any)._id);
+            if (parentAuthor?.email && senderUser) {
+              await this.mailService.sendCommentNotificationEmail(
+                parentAuthor.email,
+                post.title,
+                senderUser.fullName,
+                post._id.toString()
+              );
+            }
+          } catch (mailError) {
+            console.error('Lỗi gửi email thông báo phản hồi:', mailError);
+          }
         }
       }
     } catch (error) {
