@@ -69,7 +69,7 @@ export class MailService {
     const subject = 'Có người vừa bình luận vào bài viết của bạn - EduStack';
     // Đảm bảo BASE_URL được cấu hình chuẩn
     const baseUrl = process.env.CLIENT_URL || 'http://localhost:8000';
-    const postUrl = `${baseUrl}/ask?id=${postId}`;
+    const postUrl = `${baseUrl}/question/${postId}`;
 
     const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; background-color: #f8fafc; max-width: 600px; margin: 0 auto; border-radius: 12px;">
