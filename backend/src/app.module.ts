@@ -13,11 +13,18 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MailModule } from './mail/mail.module';
 
+import { ThrottlerModule } from '@nestjs/throttler';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 giây
+      limit: 3, // Tối đa 3 request trong 60 giây
+    }]),
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule],

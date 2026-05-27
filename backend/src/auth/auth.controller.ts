@@ -1,5 +1,6 @@
-import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/create-auth.dto';
 
@@ -23,6 +24,8 @@ export class AuthController {
 
     return this.authService.login(user);
   }
+
+  @UseGuards(ThrottlerGuard)
   @Post('forgot-password')
   @ApiOperation({ summary: 'Yêu cầu khôi phục mật khẩu (gửi OTP)' })
   async forgotPassword(@Body() body: { email: string }) {

@@ -67,7 +67,6 @@ export class MailService {
     postId: string,
   ) {
     const subject = 'Có người vừa bình luận vào bài viết của bạn - EduStack';
-    // Đảm bảo BASE_URL được cấu hình chuẩn
     const baseUrl = process.env.CLIENT_URL || 'http://localhost:8000';
     const postUrl = `${baseUrl}/question/${postId}`;
 
