@@ -279,6 +279,14 @@ export class CommentsService {
     comment.isAccepted = !comment.isAccepted;
     await comment.save();
 
+    if (postId) {
+      const acceptedCount = await this.commentModel.countDocuments({
+        post: postId,
+        isAccepted: true,
+      });
+      await this.postsService.updateResolvedStatus(postId, acceptedCount > 0);
+    }
+
     if (comment.isAccepted && commentAuthorId) {
       if (commentAuthorId !== userId) {
         this.usersService.updateReputation(commentAuthorId, 15);

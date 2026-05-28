@@ -193,4 +193,10 @@ export class PostsService {
 
     return post.save();
   }
+
+  async updateResolvedStatus(postId: string, isResolved: boolean) {
+    return this.postModel
+      .findByIdAndUpdate(postId, { isResolved }, { new: true })
+      .exec();
+  }
 }
