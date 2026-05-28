@@ -6,6 +6,7 @@ import {
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	FlagOutlined,
 	LockOutlined,
 	MoreOutlined,
 	ShareAltOutlined,
@@ -32,6 +33,7 @@ interface BaiVietChinhProps {
 	onDeletePost?: () => void;
 	onEditPost?: () => void;
 	onBanUser?: (id: string) => void;
+	onReport?: (id: string) => void;
 	isSolved?: boolean;
 }
 
@@ -49,12 +51,13 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	onDeletePost,
 	onEditPost,
 	onBanUser,
+	onReport,
 	isSolved,
 }) => {
 	if (!post) return null;
 
 	const isAuthor = userId && post.author?._id === userId;
-	const canModify = isAuthor || isAdmin;
+	const canModify = isAuthor || isAdmin || !!userId; // Any logged in user can open menu to report
 
 	const handleDeleteClick = () => {
 		Modal.confirm({
@@ -89,9 +92,16 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					Sửa bài viết
 				</Menu.Item>
 			)}
-			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
-				Xóa bài viết
-			</Menu.Item>
+			{(isAuthor || isAdmin) && (
+				<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+					Xóa bài viết
+				</Menu.Item>
+			)}
+			{userId && !isAuthor && !isAdmin && (
+				<Menu.Item key='report' icon={<FlagOutlined />} onClick={() => onReport && post._id && onReport(post._id)}>
+					Báo cáo bài viết
+				</Menu.Item>
+			)}
 			{isAdmin && !isAuthor && (
 				<>
 					<Menu.Divider />

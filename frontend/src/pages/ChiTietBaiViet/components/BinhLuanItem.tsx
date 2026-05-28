@@ -5,6 +5,7 @@ import {
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	FlagOutlined,
 	LockOutlined,
 	MoreOutlined,
 	UserOutlined,
@@ -35,6 +36,7 @@ interface BinhLuanItemProps {
 	onDelete: (id: string) => Promise<void>;
 	onAccept?: (id: string) => Promise<void>;
 	onBanUser?: (userId: string) => void;
+	onReport?: (id: string) => void;
 }
 
 const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
@@ -54,6 +56,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	onDelete,
 	onAccept,
 	onBanUser,
+	onReport,
 }) => {
 	const { initialState } = useModel('@@initialState');
 	const isAdmin = initialState?.currentUser?.role === 'admin';
@@ -132,6 +135,11 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 			{(isAuthor || isAdmin) && (
 				<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
 					Xóa bình luận
+				</Menu.Item>
+			)}
+			{userId && !isAuthor && !isAdmin && (
+				<Menu.Item key='report' icon={<FlagOutlined />} onClick={() => onReport && onReport(comment._id)}>
+					Báo cáo bình luận
 				</Menu.Item>
 			)}
 			{isAdmin && !isAuthor && (
@@ -234,7 +242,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 					</Text>
 				</div>
 
-				{(isAuthor || isAdmin) && (
+				{(isAuthor || isAdmin || !!userId) && (
 					<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
 						<Button
 							type='text'

@@ -17,6 +17,7 @@ interface DanhSachBinhLuanProps {
 	onDelete: (id: string) => Promise<void>;
 	onAccept?: (id: string) => Promise<void>;
 	onBanUser?: (userId: string) => void;
+	onReport?: (id: string) => void;
 }
 
 const DanhSachBinhLuan = ({
@@ -30,6 +31,7 @@ const DanhSachBinhLuan = ({
 	onDelete,
 	onAccept,
 	onBanUser,
+	onReport,
 }: DanhSachBinhLuanProps) => {
 	const [replyingId, setReplyingId] = useState<string | null>(null);
 	const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'votes'>('newest');
@@ -126,6 +128,7 @@ const DanhSachBinhLuan = ({
 							onDelete={onDelete}
 							onAccept={onAccept}
 							onBanUser={onBanUser}
+							onReport={onReport}
 						/>
 
 						{/*==== PHẦN BÌNH LUẬN CON ====*/}
@@ -161,6 +164,7 @@ const DanhSachBinhLuan = ({
 											onDelete={onDelete}
 											onAccept={onAccept}
 											onBanUser={onBanUser}
+											onReport={onReport}
 										/>
 									);
 								})}

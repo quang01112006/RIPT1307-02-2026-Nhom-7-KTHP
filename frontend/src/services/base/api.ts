@@ -60,6 +60,10 @@ export async function markAllNotificationsAsRead() {
 	return axios.patch(`${ip3}/notifications/read-all`);
 }
 
+export async function createReport(payload: { targetType: 'Post' | 'Comment'; targetId: string; reason: string }) {
+	return axios.post(`${ip3}/reports`, payload);
+}
+
 export async function deleteNotification(id: string) {
 	return axios.delete(`${ip3}/notifications/${id}`);
 }

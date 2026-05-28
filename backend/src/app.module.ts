@@ -14,6 +14,7 @@ import { TagsModule } from './tags/tags.module';
 import { UsersModule } from './users/users.module';
 
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -60,6 +61,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     DashboardModule,
 
     MailModule,
+
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

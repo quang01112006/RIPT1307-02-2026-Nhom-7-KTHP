@@ -18,14 +18,15 @@ export class AuthService {
   ) {}
 
   async validateUser(term: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOneByLoginTerm(term);
+    const cleanTerm = term?.trim();
+    const user = await this.usersService.findOneByLoginTerm(cleanTerm);
     const errorMessage = 'Tài khoản hoặc mật khẩu không chính xác!';
 
     if (!user) {
       throw new UnauthorizedException(errorMessage);
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       throw new UnauthorizedException('Tài khoản của bạn đã bị khóa bởi Quản trị viên!');
     }
 

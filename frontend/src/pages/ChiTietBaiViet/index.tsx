@@ -1,16 +1,22 @@
-import { Col, Row, message } from 'antd';
-import { useEffect, useState } from 'react';
-import { useModel, useParams, history } from 'umi';
+import { toggleAcceptComment } from '@/services/BinhLuan';
+import { createReport } from '@/services/base/api';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
-import { toggleAcceptComment } from '@/services/BinhLuan';
+import { Col, Form, Input, message, Modal, Row, Select } from 'antd';
+import { useEffect, useState } from 'react';
+import { history, useModel, useParams } from 'umi';
 import AnswerForm from './components/AnswerForm';
 import BaiVietChinh from './components/BaiVietChinh';
 import DanhSachBinhLuan from './components/DanhSachBinhLuan';
 import SidebarPhai from './components/SidebarPhai';
 
 const ChiTietBaiViet = () => {
-	const { record: post, getByIdModel: getPostDetail, voteBaiVietModel, deleteModel: deletePostModel } = useModel('baiviet');
+	const {
+		record: post,
+		getByIdModel: getPostDetail,
+		voteBaiVietModel,
+		deleteModel: deletePostModel,
+	} = useModel('baiviet');
 	const {
 		danhSach: dsComments,
 		getCommentsByPostModel: getComments,
@@ -24,8 +30,12 @@ const ChiTietBaiViet = () => {
 
 	const [hotPosts, setHotPosts] = useState<BaiViet.IRecord[]>([]);
 	const [relatedPosts, setRelatedPosts] = useState<BaiViet.IRecord[]>([]);
-	const [popularTags, setPopularTags] = useState<string[]>([]);
-	const [isBookmarked, setIsBookmarked] = useState(false);
+	const [popularTags, setPopularTags] = useState<any[]>([]);
+	const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+
+	const [reportVisible, setReportVisible] = useState(false);
+	const [reportTarget, setReportTarget] = useState<{ type: 'Post' | 'Comment'; id: string } | null>(null);
+	const [reportForm] = Form.useForm();
 
 	useEffect(() => {
 		if (id) {
@@ -52,13 +62,11 @@ const ChiTietBaiViet = () => {
 		const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
 		if (success) {
 			setIsBookmarked(!isBookmarked);
-			
+
 			// Cập nhật lại danh sách bookmarks trong initialState toàn cục
 			const currentBookmarks = initialState.currentUser.bookmarks || [];
-			const newBookmarks = isBookmarked
-				? currentBookmarks.filter((b: string) => b !== id)
-				: [...currentBookmarks, id];
-				
+			const newBookmarks = isBookmarked ? currentBookmarks.filter((b: string) => b !== id) : [...currentBookmarks, id];
+
 			setInitialState({
 				...initialState,
 				currentUser: {
@@ -229,6 +237,34 @@ const ChiTietBaiViet = () => {
 		}
 	};
 
+	const handleReportClick = (type: 'Post' | 'Comment', targetId: string) => {
+		if (!initialState?.currentUser) {
+			message.warning('Vui lòng đăng nhập để sử dụng tính năng này!');
+			return;
+		}
+		setReportTarget({ type, id: targetId });
+		setReportVisible(true);
+	};
+
+	const handleReportSubmit = async () => {
+		try {
+			const values = await reportForm.validateFields();
+			if (reportTarget) {
+				await createReport({
+					targetType: reportTarget.type,
+					targetId: reportTarget.id,
+					reason: values.reason === 'other' ? values.otherReason : values.reason,
+				});
+				message.success('Đã gửi báo cáo thành công. Cảm ơn bạn đã đóng góp!');
+				setReportVisible(false);
+				reportForm.resetFields();
+			}
+		} catch (error) {
+			if (error && (error as any).errorFields) return;
+			message.error('Gửi báo cáo thất bại!');
+		}
+	};
+
 	return (
 		<div style={{ maxWidth: '1200px', margin: '0 auto', padding: '8px 16px' }}>
 			<Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
@@ -236,7 +272,7 @@ const ChiTietBaiViet = () => {
 				<Col xs={24} lg={18}>
 					<BaiVietChinh
 						post={post}
-						isSolved={dsComments.some(c => c.isAccepted)}
+						isSolved={dsComments.some((c) => c.isAccepted)}
 						postScore={postScore}
 						hasUpvoted={hasUpvoted}
 						hasDownvoted={hasDownvoted}
@@ -249,6 +285,7 @@ const ChiTietBaiViet = () => {
 						onDeletePost={handleDeletePost}
 						onEditPost={handleEditPost}
 						onBanUser={handleBanUser}
+						onReport={(targetId) => handleReportClick('Post', targetId)}
 					/>
 
 					<DanhSachBinhLuan
@@ -262,6 +299,7 @@ const ChiTietBaiViet = () => {
 						onDelete={handleDeleteComment}
 						onAccept={handleAcceptComment}
 						onBanUser={handleBanUser}
+						onReport={(targetId) => handleReportClick('Comment', targetId)}
 					/>
 
 					<AnswerForm currentUserAvatar={initialState?.currentUser?.avatar} onSubmit={handleMainAnswerSubmit} />
@@ -269,13 +307,46 @@ const ChiTietBaiViet = () => {
 
 				{/* bên phải */}
 				<Col xs={24} lg={6}>
-					<SidebarPhai
-						popularTags={popularTags}
-						hotPosts={hotPosts}
-						relatedPosts={relatedPosts}
-					/>
+					<SidebarPhai popularTags={popularTags} hotPosts={hotPosts} relatedPosts={relatedPosts} />
 				</Col>
 			</Row>
+
+			<Modal
+				title='Báo cáo vi phạm'
+				visible={reportVisible}
+				onCancel={() => {
+					setReportVisible(false);
+					reportForm.resetFields();
+				}}
+				onOk={handleReportSubmit}
+				okText='Gửi báo cáo'
+				cancelText='Hủy'
+			>
+				<Form form={reportForm} layout='vertical'>
+					<Form.Item
+						name='reason'
+						label='Lý do báo cáo'
+						rules={[{ required: true, message: 'Vui lòng chọn lý do báo cáo!' }]}
+					>
+						<Select placeholder='Chọn lý do...'>
+							<Select.Option value='Spam, quảng cáo'>Spam, quảng cáo</Select.Option>
+							<Select.Option value='Ngôn từ thù địch, chửi thề'>Ngôn từ thù địch, chửi thề</Select.Option>
+							<Select.Option value='Thông tin sai lệch'>Thông tin sai lệch</Select.Option>
+							<Select.Option value='Sai chuyên mục'>Sai chuyên mục</Select.Option>
+							<Select.Option value='other'>Khác...</Select.Option>
+						</Select>
+					</Form.Item>
+					<Form.Item noStyle shouldUpdate={(prev, curr) => prev.reason !== curr.reason}>
+						{({ getFieldValue }) =>
+							getFieldValue('reason') === 'other' ? (
+								<Form.Item name='otherReason' rules={[{ required: true, message: 'Vui lòng nhập lý do cụ thể!' }]}>
+									<Input.TextArea rows={4} placeholder='Nhập chi tiết vi phạm...' />
+								</Form.Item>
+							) : null
+						}
+					</Form.Item>
+				</Form>
+			</Modal>
 		</div>
 	);
 };

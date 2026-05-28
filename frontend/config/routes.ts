@@ -113,6 +113,13 @@ export default [
 		access: 'isAdmin',
 		component: './Admin/QuanLyUser',
 	},
+	{
+		path: '/admin/reports',
+		name: 'Quản lý báo cáo',
+		icon: 'FlagOutlined',
+		access: 'isAdmin',
+		component: './Admin/QuanLyBaoCao',
+	},
 
 	{
 		path: '/',
