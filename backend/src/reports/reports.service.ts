@@ -31,7 +31,10 @@ export class ReportsService {
       this.reportModel
         .find(filter)
         .populate('reporter', 'fullName email')
-        .populate('targetId')
+        .populate({
+          path: 'targetId',
+          populate: { path: 'author', select: 'fullName email avatar' },
+        })
         .sort({ createdAt: -1 })
         .limit(Number(limit))
         .skip(skip)
