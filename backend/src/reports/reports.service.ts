@@ -31,6 +31,7 @@ export class ReportsService {
       this.reportModel
         .find(filter)
         .populate('reporter', 'fullName email')
+        .populate('targetId')
         .sort({ createdAt: -1 })
         .limit(Number(limit))
         .skip(skip)
