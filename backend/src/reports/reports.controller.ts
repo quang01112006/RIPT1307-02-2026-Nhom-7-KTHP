@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -25,11 +26,11 @@ export class ReportsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('page')
-  findAll(@Request() req: any) {
+  findAll(@Request() req: any, @Query() query: any) {
     if (req.user.role !== 'admin') {
       throw new Error('Forbidden');
     }
-    return this.reportsService.findAll();
+    return this.reportsService.findAll(query);
   }
 
   @UseGuards(JwtAuthGuard)

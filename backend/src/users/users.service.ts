@@ -86,12 +86,37 @@ export class UsersService {
     });
   }
 
-  async findAll() {
-    const result = await this.userModel.find().select('-password').exec();
+  async findAll(query: any = {}) {
+    const { search, role, isActive, page = 1, limit = 10 } = query;
+    const filter: any = {};
+
+    if (search) {
+      filter.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (role) filter.role = role;
+    if (isActive !== undefined) filter.isActive = isActive === 'true' || isActive === true;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [result, total] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .limit(Number(limit))
+        .skip(skip)
+        .exec(),
+      this.userModel.countDocuments(filter),
+    ]);
+
     return {
       data: {
         result,
-        total: result.length,
+        total,
       },
     };
   }
