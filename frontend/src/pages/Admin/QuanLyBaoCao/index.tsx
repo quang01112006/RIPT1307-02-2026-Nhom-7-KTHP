@@ -59,6 +59,17 @@ const QuanLyBaoCao: React.FC = () => {
 		getModel();
 	}, []);
 
+	const fetchData = (search = searchText, status = statusFilter, type = typeFilter, p = page, l = limit) => {
+		const query: any = {};
+		if (search) query.search = search;
+		if (status) query.status = status;
+		if (type) query.targetType = type;
+
+		setPage(p);
+		setLimit(l);
+		getModel(undefined, undefined, undefined, p, l, undefined, query);
+	};
+
 	const getTargetId = (report: any) => {
 		if (!report?.targetId) return '-';
 		if (typeof report.targetId === 'object') return report.targetId._id || report.targetId.toString();
@@ -98,26 +109,6 @@ const QuanLyBaoCao: React.FC = () => {
 		setSelectedReport(null);
 		setDetailVisible(false);
 	};
-
-	const filteredReports = useMemo(() => {
-		let data = reports || [];
-		if (searchText) {
-			const keyword = searchText.toLowerCase();
-			data = data.filter((item: any) =>
-				(item.reason || '').toLowerCase().includes(keyword) ||
-				(item.reporter?.fullName || '').toLowerCase().includes(keyword) ||
-				(item.reporter?.email || '').toLowerCase().includes(keyword) ||
-				getTargetId(item).toString().toLowerCase().includes(keyword),
-			);
-		}
-		if (statusFilter) {
-			data = data.filter((item: any) => item.status === statusFilter);
-		}
-		if (typeFilter) {
-			data = data.filter((item: any) => item.targetType === typeFilter);
-		}
-		return data;
-	}, [reports, searchText, statusFilter, typeFilter]);
 
 	const summary = useMemo(() => {
 		const counts = {
@@ -280,13 +271,19 @@ const QuanLyBaoCao: React.FC = () => {
 								placeholder='Tìm lý do, người báo cáo...'
 								prefix={<SearchOutlined style={{ color: '#8c8c8c' }} />}
 								value={searchText}
-								onChange={(e) => setSearchText(e.target.value)}
+								onChange={(e) => {
+									setSearchText(e.target.value);
+									fetchData(e.target.value, statusFilter, typeFilter, 1);
+								}}
 							/>
 							<Select
 								style={{ width: 180 }}
 								placeholder='Lọc trạng thái'
 								value={statusFilter}
-								onChange={(value) => setStatusFilter(value)}
+								onChange={(value) => {
+									setStatusFilter(value);
+									fetchData(searchText, value, typeFilter, 1);
+								}}
 								allowClear
 							>
 								<Option value='PENDING'>Chưa xử lý</Option>
@@ -297,7 +294,10 @@ const QuanLyBaoCao: React.FC = () => {
 								style={{ width: 180 }}
 								placeholder='Lọc loại'
 								value={typeFilter}
-								onChange={(value) => setTypeFilter(value)}
+								onChange={(value) => {
+									setTypeFilter(value);
+									fetchData(searchText, statusFilter, value, 1);
+								}}
 								allowClear
 							>
 								<Option value='Post'>Bài viết</Option>
@@ -305,7 +305,7 @@ const QuanLyBaoCao: React.FC = () => {
 							</Select>
 							<Tooltip title='Tổng số hàng dữ liệu trong bảng'>
 								<div style={{ padding: '0 15px', height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: 8, fontWeight: 'bold', fontSize: 14, whiteSpace: 'nowrap' }}>
-									Tổng số: {searchText || statusFilter || typeFilter ? filteredReports.length : summary.total}
+									Tổng số: {total}
 								</div>
 							</Tooltip>
 						</Space>
@@ -428,20 +428,18 @@ const QuanLyBaoCao: React.FC = () => {
 				<Table
 					rowKey='_id'
 					columns={columns}
-					dataSource={filteredReports}
+					dataSource={reports}
 					loading={loading}
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: searchText || statusFilter || typeFilter ? filteredReports.length : total,
+						total: total,
 						showSizeChanger: false,
 						showQuickJumper: true,
 						onChange: (current, size) => {
 							setPage(current);
 							setLimit(size);
-							if (!searchText && !statusFilter && !typeFilter) {
-								getModel(undefined, undefined, undefined, current, size);
-							}
+							fetchData(searchText, statusFilter, typeFilter, current, size);
 						},
 					}}
 					locale={{ emptyText: 'Không có báo cáo phù hợp' }}

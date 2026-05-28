@@ -30,7 +30,6 @@ import {
 	Tag,
 	Tooltip,
 	Typography,
-	Divider,
 	message,
 } from 'antd';
 import axios from '@/utils/axios';
@@ -47,18 +46,41 @@ const QuanLyUser: React.FC = () => {
 	const [form] = Form.useForm();
 
 	const [searchText, setSearchText] = useState<string>('');
+	const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+
+	const fetchUsers = async (
+		search = searchText,
+		role = roleFilter,
+		p = page,
+		s = limit,
+	) => {
+		const query: any = {};
+		if (search) query.search = search;
+		if (role) query.role = role;
+
+		setPage(p);
+		setLimit(s);
+
+		return getModel(undefined, undefined, undefined, p, s, undefined, query);
+	};
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearchText(value);
 		setPage(1);
-		if (value) {
-			const fetchLimit = total > 0 ? total : 9999;
-			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
-		} else {
-			getModel(undefined, undefined, undefined, 1, limit);
-		}
+		await fetchUsers(value, roleFilter, 1, limit);
 	};
+
+	const handleTableChange = (pagination: any, filters: any) => {
+		const newRole = filters?.role && filters.role.length > 0 ? filters.role[0] : undefined;
+		setRoleFilter(newRole);
+		const p = pagination.current || 1;
+		const s = pagination.pageSize || limit;
+		setPage(p);
+		setLimit(s);
+		fetchUsers(searchText, newRole, p, s);
+	};
+
 	const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState<boolean>(false);
 	const [currentUserDetail, setCurrentUserDetail] = useState<any>(null);
@@ -132,17 +154,6 @@ const QuanLyUser: React.FC = () => {
 		loadUserDetail(user);
 	};
 
-	const handleColumnSearchChange = async (value: string) => {
-		setSearchText(value);
-		setPage(1);
-		if (value) {
-			const fetchLimit = total > 0 ? total : 9999;
-			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
-		} else {
-			getModel(undefined, undefined, undefined, 1, limit);
-		}
-	};
-
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
 		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
@@ -152,7 +163,8 @@ const QuanLyUser: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						await handleColumnSearchChange(value);
+						setSearchText(value);
+						await fetchUsers(value, roleFilter, 1, limit);
 					}}
 					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -161,7 +173,6 @@ const QuanLyUser: React.FC = () => {
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-		onFilter: (value: any, record: any) => record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
 	});
 
 	const columns = [
@@ -210,12 +221,13 @@ const QuanLyUser: React.FC = () => {
 			dataIndex: 'role',
 			align: 'center' as const,
 			key: 'role',
+			filteredValue: roleFilter ? [roleFilter] : null,
+			filterMultiple: false,
 			filters: [
 				{ text: 'Admin', value: 'admin' },
 				{ text: 'Sinh viên', value: 'student' },
 				{ text: 'Giảng viên', value: 'teacher' },
 			],
-			onFilter: (value: any, record: any) => record.role === value,
 			render: (role: string) => (
 				<Tag color={role === 'admin' ? 'volcano' : 'blue'} style={{ borderRadius: '4px' }}>
 					{role === 'admin' ? 'ADMIN' : role === 'teacher' ? 'GIẢNG VIÊN' : 'SINH VIÊN'}
@@ -237,11 +249,11 @@ const QuanLyUser: React.FC = () => {
 			align: 'left' as const,
 			render: (isActive: boolean, record: any) => (
 				<Space>
-					<Tooltip title={record._id === initialState?.currentUser?._id ? "Không thể tự khóa tài khoản" : (isActive ? "Đang hoạt động" : "Bị khóa")}>
+					<Tooltip title={record._id === initialState?.currentUser?._id ? 'Không thể tự khóa tài khoản' : (isActive ? 'Đang hoạt động' : 'Bị khóa')}>
 						<Switch 
 							checked={isActive} 
 							onChange={(checked) => handleStatusChange(checked, record)} 
-							size="small" 
+							size='small' 
 							disabled={record._id === initialState?.currentUser?._id}
 						/>
 					</Tooltip>
@@ -259,8 +271,8 @@ const QuanLyUser: React.FC = () => {
 				<Popover
 					content={
 						<Space size="middle">
-							<Tooltip title="Xem chi tiết">
-								<Button type="text" icon={<EyeOutlined style={{ color: '#0074cc' }} />} onClick={() => showUserDetail(record)} />
+							<Tooltip title='Xem chi tiết'>
+								<Button type='text' icon={<EyeOutlined style={{ color: '#0074cc' }} />} onClick={() => showUserDetail(record)} />
 							</Tooltip>
 							<Dropdown
 								overlay={
@@ -272,20 +284,20 @@ const QuanLyUser: React.FC = () => {
 								}
 							>
 								<Tooltip title="Đổi vai trò">
-									<Button type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} />
+									<Button type='text' icon={<EditOutlined style={{ color: '#faad14' }} />} />
 								</Tooltip>
 							</Dropdown>
 							<Popconfirm 
 								title={`Xóa ${record.fullName || 'người dùng này'}?`} 
 								onConfirm={async () => { if (record.role !== 'admin') { await deleteModel(record._id); refreshData(); } }}
 							>
-								<Tooltip title={record.role === 'admin' ? "Không thể xóa tài khoản Admin" : "Xóa"}>
-									<Button type="text" danger icon={<DeleteOutlined />} disabled={record.role === 'admin'} />
+								<Tooltip title={record.role === 'admin' ? 'Không thể xóa tài khoản Admin' : 'Xóa'}>
+									<Button type='text' danger icon={<DeleteOutlined />} disabled={record.role === 'admin'} />
 								</Tooltip>
 							</Popconfirm>
 						</Space>
 					}
-					placement="left"
+					placement='left'
 					trigger="hover"
 				>
 					<Button type="text" icon={<MenuOutlined />} />
@@ -293,17 +305,6 @@ const QuanLyUser: React.FC = () => {
 			),
 		},
 	];
-
-	const filteredData = React.useMemo(() => {
-		const dataSource = danhSach || [];
-		if (!searchText) return dataSource;
-		const lowerSearch = searchText.toLowerCase();
-		return dataSource.filter((u: any) =>
-			(u.fullName || '').toLowerCase().includes(lowerSearch) ||
-			u.email?.toLowerCase().includes(lowerSearch) ||
-			u.code?.toLowerCase().includes(lowerSearch),
-		);
-	}, [danhSach, searchText]);
 
 	return (
 		<div style={{ padding: '24px' }}>
@@ -335,7 +336,7 @@ const QuanLyUser: React.FC = () => {
 							</Button>
 							<Tooltip title="Tổng số hàng dữ liệu trong bảng">
 								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-									Tổng số: {searchText ? filteredData.length : total}
+									Tổng số: {total}
 								</div>
 							</Tooltip>
 						</Space>
@@ -389,24 +390,18 @@ const QuanLyUser: React.FC = () => {
 
 				<Table
 					columns={columns}
-					dataSource={filteredData}
+					dataSource={danhSach}
 					loading={loading}
 					rowKey="_id"
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: searchText ? filteredData.length : total,
+						total: total,
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
-						onChange: (p, s) => {
-							setPage(p);
-							setLimit(s);
-							if (!searchText) {
-								getModel(undefined, undefined, undefined, p, s);
-							}
-						},
 					}}
+					onChange={handleTableChange}
 					size="middle"
 				/>
 			</Card>
