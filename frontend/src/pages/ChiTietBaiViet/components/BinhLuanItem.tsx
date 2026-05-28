@@ -155,6 +155,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 
 	return (
 		<div
+			id={`comment-${comment._id}`}
 			style={{
 				position: 'relative',
 				padding: isChild ? '8px 8px 12px 8px' : '8px 12px',

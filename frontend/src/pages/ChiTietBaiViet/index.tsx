@@ -44,6 +44,24 @@ const ChiTietBaiViet = () => {
 		}
 	}, [id]);
 
+	useEffect(() => {
+		if (dsComments && dsComments.length > 0) {
+			const hash = window.location.hash;
+			if (hash && hash.startsWith('#comment-')) {
+				setTimeout(() => {
+					const element = document.getElementById(hash.replace('#', ''));
+					if (element) {
+						element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						element.style.backgroundColor = 'rgba(24, 144, 255, 0.1)';
+						setTimeout(() => {
+							element.style.backgroundColor = '';
+						}, 2000);
+					}
+				}, 500);
+			}
+		}
+	}, [dsComments]);
+
 	const { toggleBookmarkModel, putModel: putUserModel } = useModel('users');
 
 	useEffect(() => {

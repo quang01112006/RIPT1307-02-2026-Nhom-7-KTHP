@@ -6,7 +6,6 @@ import {
 	DeleteOutlined,
 	EyeOutlined,
 	FlagOutlined,
-	MenuOutlined,
 	SearchOutlined,
 	FileTextOutlined,
 } from '@ant-design/icons';
@@ -16,9 +15,7 @@ import {
 	Col,
 	Divider,
 	Input,
-	Modal,
 	Popconfirm,
-	Popover,
 	Row,
 	Space,
 	Statistic,
@@ -27,14 +24,11 @@ import {
 	Tooltip,
 	Typography,
 	message,
-	Select,
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useModel } from 'umi';
-import moment from 'moment';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const STATUS_LABEL: Record<string, { text: string; color: string }> = {
 	PENDING: { text: 'Chưa xử lý', color: 'orange' },
@@ -52,8 +46,6 @@ const QuanLyBaoCao: React.FC = () => {
 	const [searchText, setSearchText] = useState<string>('');
 	const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
 	const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
-	const [detailVisible, setDetailVisible] = useState<boolean>(false);
-	const [selectedReport, setSelectedReport] = useState<any>(null);
 
 	useEffect(() => {
 		getModel();
@@ -65,9 +57,19 @@ const QuanLyBaoCao: React.FC = () => {
 		if (status) query.status = status;
 		if (type) query.targetType = type;
 
+		return getModel(undefined, undefined, undefined, p, l, undefined, query);
+	};
+
+	const handleTableChange = (pagination: any, filters: any) => {
+		const newStatus = filters?.status?.[0];
+		const newType = filters?.targetType?.[0];
+		setStatusFilter(newStatus);
+		setTypeFilter(newType);
+		const p = pagination.current || 1;
+		const s = pagination.pageSize || limit;
 		setPage(p);
-		setLimit(l);
-		getModel(undefined, undefined, undefined, p, l, undefined, query);
+		setLimit(s);
+		fetchData(searchText, newStatus, newType, p, s);
 	};
 
 	const getTargetId = (report: any) => {
@@ -78,8 +80,13 @@ const QuanLyBaoCao: React.FC = () => {
 
 	const getTargetLink = (report: any) => {
 		const id = getTargetId(report);
-		if (!id) return null;
+		if (!id) return '';
 		if (report.targetType === 'Post') return `/question/${id}`;
+		if (report.targetType === 'Comment') {
+			// Lấy postId từ targetId object nếu BE đã populate, hoặc dùng trường postId có sẵn
+			const postId = report.targetId?.post?._id || report.targetId?.post || report.postId;
+			return postId ? `/question/${postId}?commentId=${id}` : `/question/${id}`;
+		}
 		return null;
 	};
 
@@ -100,14 +107,32 @@ const QuanLyBaoCao: React.FC = () => {
 		}
 	};
 
-	const showDetail = (report: any) => {
-		setSelectedReport(report);
-		setDetailVisible(true);
+	const getTargetSummary = (report: any) => {
+		const target = report?.targetId;
+		if (!target) return 'Không có dữ liệu';
+		if (typeof target === 'object') {
+			if (report.targetType === 'Post') return target.title || target.content || target._id || 'Không có tiêu đề';
+			return target.content || target._id || 'Không có nội dung';
+		}
+		return target.toString();
 	};
 
-	const closeDetail = () => {
-		setSelectedReport(null);
-		setDetailVisible(false);
+	const getReportedUser = (report: any) => {
+		const target = report?.targetId;
+		if (!target) return '-';
+		const author = target.author;
+		if (!author) return '-';
+		if (typeof author === 'object') return author.fullName || author.email || author._id || '-';
+		return author.toString();
+	};
+
+	const openTargetContent = (record: any) => {
+		const url = getTargetLink(record);
+		if (!url) {
+			message.warning('Không tìm thấy đường dẫn đối tượng.');
+			return;
+		}
+		window.open(url, '_blank');
 	};
 
 	const summary = useMemo(() => {
@@ -141,16 +166,22 @@ const QuanLyBaoCao: React.FC = () => {
 			title: 'Đối tượng',
 			dataIndex: 'targetType',
 			key: 'targetType',
-			width: 140,
-			render: (type: string) => <Tag color={type === 'Post' ? 'cyan' : 'geekblue'}>{TYPE_LABEL[type] || type}</Tag>,
-		},
-		{
-			title: 'ID đối tượng',
-			dataIndex: 'targetId',
-			key: 'targetId',
 			width: 180,
+			filters: [
+				{ text: 'Bài viết', value: 'Post' },
+				{ text: 'Bình luận', value: 'Comment' },
+			],
+			filterMultiple: false,
+			filteredValue: typeFilter ? [typeFilter] : null,
 			render: (_: any, record: any) => (
-				<Text copyable>{getTargetId(record)}</Text>
+				<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+					<div>
+						<Tag color={record.targetType === 'Post' ? 'cyan' : 'geekblue'}>{TYPE_LABEL[record.targetType] || record.targetType}</Tag>
+					</div>
+					<Text ellipsis={{ tooltip: getTargetSummary(record) }} style={{ maxWidth: 260, display: 'block' }}>
+						{getTargetSummary(record)}
+					</Text>
+				</div>
 			),
 		},
 		{
@@ -166,91 +197,89 @@ const QuanLyBaoCao: React.FC = () => {
 			width: 220,
 			render: (_: any, record: any) => (
 				<div>
-					<div style={{ fontWeight: 600 }}>{record.reporter?.fullName || 'Người dùng ẩn danh'}</div>
-					<Text type='secondary'>{record.reporter?.email || 'Không có email'}</Text>
+					<div style={{ fontWeight: 600, fontSize: '13px' }}>{record.reporter?.fullName || 'Người dùng ẩn danh'}</div>
+					<Text type='secondary' style={{ fontSize: '12px' }}>{record.reporter?.email || 'Không có email'}</Text>
 				</div>
 			),
+		},
+		{
+			title: 'Người bị báo cáo',
+			key: 'reportedUser',
+			width: 220,
+			render: (_: any, record: any) => {
+				const user = getReportedUser(record);
+				return (
+					<div>
+						<div style={{ fontWeight: 600, fontSize: '13px' }}>{typeof user === 'string' ? user : String(user)}</div>
+						<Text type='secondary' style={{ fontSize: '12px' }}>{record.targetType === 'Comment' ? 'Người viết bình luận' : 'Người viết bài viết'}</Text>
+					</div>
+				);
+			},
 		},
 		{
 			title: 'Trạng thái',
 			dataIndex: 'status',
 			key: 'status',
-			width: 140,
+			width: 120,
+			filters: [
+				{ text: 'Chưa xử lý', value: 'PENDING' },
+				{ text: 'Đã xử lý', value: 'RESOLVED' },
+				{ text: 'Đã từ chối', value: 'REJECTED' },
+			],
+			filterMultiple: false,
+			filteredValue: statusFilter ? [statusFilter] : null,
 			render: (status: string) => {
 				const label = STATUS_LABEL[status] || { text: status, color: 'default' };
-				return <Tag color={label.color}>{label.text}</Tag>;
+				return <Tag color={label.color} style={{ borderRadius: 4 }}>{label.text}</Tag>;
 			},
-		},
-		{
-			title: 'Ngày báo cáo',
-			dataIndex: 'createdAt',
-			key: 'createdAt',
-			width: 150,
-			render: (date: string) => moment(date).format('DD/MM/YYYY HH:mm'),
 		},
 		{
 			title: 'Thao tác',
 			key: 'action',
-			width: 80,
+			width: 170,
 			align: 'center' as const,
 			render: (_: any, record: any) => (
-				<Popover
-					content={
-						<Space size='middle'>
-							<Tooltip title='Xem chi tiết'>
-								<Button icon={<EyeOutlined style={{ color: '#0074cc' }} />} type='text' onClick={() => showDetail(record)} />
+				<Space size='small'>
+					<Tooltip title='Xem đối tượng'>
+						<Button
+							type='text'
+							icon={<EyeOutlined style={{ color: '#0074cc', fontSize: 18 }} />}
+							onClick={() => openTargetContent(record)}
+						/>
+					</Tooltip>
+					{record.status === 'PENDING' && (
+						<>
+							<Tooltip title='Giải quyết'>
+								<Button
+									type='text'
+									icon={<CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />}
+									onClick={() => handleStatusUpdate(record._id, 'RESOLVED')}
+								/>
 							</Tooltip>
-							{getTargetLink(record) ? (
-								<Tooltip title='Mở nội dung được báo cáo'>
-									<Button
-										icon={<FileTextOutlined style={{ color: '#1890ff' }} />}
-										type='text'
-										onClick={() => {
-											const link = getTargetLink(record);
-											if (link) window.open(link, '_blank');
-										}}
-									/>
-								</Tooltip>
-							) : (
-								<Tooltip title='Không có đường dẫn trực tiếp'>
-									<Button icon={<FlagOutlined />} type='text' disabled />
-								</Tooltip>
-							)}
-							{record.status !== 'RESOLVED' && (
-								<Tooltip title='Đánh dấu đã xử lý'>
-									<Button
-										icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-										type='text'
-										onClick={() => handleStatusUpdate(record._id, 'RESOLVED')}
-									/>
-								</Tooltip>
-							)}
-							{record.status !== 'REJECTED' && (
-								<Tooltip title='Từ chối báo cáo'>
-									<Button
-										icon={<CloseCircleOutlined style={{ color: '#faad14' }} />}
-										type='text'
-										onClick={() => handleStatusUpdate(record._id, 'REJECTED')}
-									/>
-								</Tooltip>
-							)}
-							<Tooltip title='Xóa báo cáo'>
-								<Popconfirm
-									title='Bạn có chắc muốn xóa báo cáo này?'
-									onConfirm={() => handleDeleteReport(record._id)}
-									okText='Xóa'
-									cancelText='Hủy'
-								>
-									<Button icon={<DeleteOutlined />} type='text' danger />
-								</Popconfirm>
+							<Tooltip title='Từ chối'>
+								<Button
+									type='text'
+									icon={<CloseCircleOutlined style={{ color: '#f5222d', fontSize: 18 }} />}
+									onClick={() => handleStatusUpdate(record._id, 'REJECTED')}
+								/>
 							</Tooltip>
-						</Space>
-					}
-					placement='left'
-					trigger='hover'
-				>
-					<Button type='text' icon={<MenuOutlined />} />
-				</Popover>
+						</>
+					)}
+					<Popconfirm
+						title='Xóa báo cáo này?'
+						onConfirm={() => handleDeleteReport(record._id)}
+						okText='Xóa'
+						cancelText='Hủy'
+					>
+						<Tooltip title='Xóa báo cáo'>
+							<Button
+								type='text'
+								danger
+								icon={<DeleteOutlined style={{ fontSize: 18 }} />}
+							/>
+						</Tooltip>
+					</Popconfirm>
+				</Space>
 			),
 		},
 	];
@@ -276,33 +305,6 @@ const QuanLyBaoCao: React.FC = () => {
 									fetchData(e.target.value, statusFilter, typeFilter, 1);
 								}}
 							/>
-							<Select
-								style={{ width: 180 }}
-								placeholder='Lọc trạng thái'
-								value={statusFilter}
-								onChange={(value) => {
-									setStatusFilter(value);
-									fetchData(searchText, value, typeFilter, 1);
-								}}
-								allowClear
-							>
-								<Option value='PENDING'>Chưa xử lý</Option>
-								<Option value='RESOLVED'>Đã xử lý</Option>
-								<Option value='REJECTED'>Đã từ chối</Option>
-							</Select>
-							<Select
-								style={{ width: 180 }}
-								placeholder='Lọc loại'
-								value={typeFilter}
-								onChange={(value) => {
-									setTypeFilter(value);
-									fetchData(searchText, statusFilter, value, 1);
-								}}
-								allowClear
-							>
-								<Option value='Post'>Bài viết</Option>
-								<Option value='Comment'>Bình luận</Option>
-							</Select>
 							<Tooltip title='Tổng số hàng dữ liệu trong bảng'>
 								<div style={{ padding: '0 15px', height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: 8, fontWeight: 'bold', fontSize: 14, whiteSpace: 'nowrap' }}>
 									Tổng số: {total}
@@ -436,66 +438,11 @@ const QuanLyBaoCao: React.FC = () => {
 						total: total,
 						showSizeChanger: false,
 						showQuickJumper: true,
-						onChange: (current, size) => {
-							setPage(current);
-							setLimit(size);
-							fetchData(searchText, statusFilter, typeFilter, current, size);
-						},
 					}}
+					onChange={handleTableChange}
 					locale={{ emptyText: 'Không có báo cáo phù hợp' }}
 				/>
 			</Card>
-
-			<Modal
-				title='Chi tiết báo cáo'
-				visible={detailVisible}
-				onCancel={closeDetail}
-				onOk={closeDetail}
-				okText='Đóng'
-			>
-				{selectedReport ? (
-					<div>
-						<Space direction='vertical' size='middle' style={{ width: '100%' }}>
-							<div>
-								<Text strong>Loại đối tượng:</Text> <Text>{TYPE_LABEL[selectedReport.targetType] || selectedReport.targetType}</Text>
-							</div>
-							<div>
-								<Text strong>ID đối tượng:</Text> <Text copyable>{getTargetId(selectedReport)}</Text>
-							</div>
-							<div>
-								<Text strong>Lý do:</Text>
-								<div style={{ marginTop: 8 }}>{selectedReport.reason}</div>
-							</div>
-							<div>
-								<Text strong>Người báo cáo:</Text>
-								<div style={{ marginTop: 8 }}>{selectedReport.reporter?.fullName || selectedReport.reporter?.email || 'Không rõ'}</div>
-								<Text type='secondary'>{selectedReport.reporter?.email}</Text>
-							</div>
-							<div>
-								<Text strong>Trạng thái:</Text>{' '}
-								<Tag color={STATUS_LABEL[selectedReport.status]?.color || 'default'}>{STATUS_LABEL[selectedReport.status]?.text || selectedReport.status}</Tag>
-							</div>
-							<div>
-								<Text strong>Ngày tạo:</Text>{' '}
-								<Text>{moment(selectedReport.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
-							</div>
-							{getTargetLink(selectedReport) ? (
-								<Button
-									type='link'
-									onClick={() => {
-									const link = getTargetLink(selectedReport);
-									if (link) window.open(link, '_blank');
-								}}
-								>
-									Mở nội dung liên quan
-								</Button>
-							) : (
-								<Text type='secondary'>Không có đường dẫn trực tiếp đến nội dung báo cáo.</Text>
-							)}
-						</Space>
-					</div>
-				) : null}
-			</Modal>
 		</div>
 	);
 };
