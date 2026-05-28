@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined, SearchOutlined, TagsOutlined } from '@ant-design/icons';
-import { Button, Card, Popover, Form, Input, Modal, Popconfirm, Space, Table, Tooltip, Typography, message, Tag } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { Button, Card, Popover, Form, Input, Modal, Popconfirm, Space, Table, Tooltip, Typography, Divider, message, Tag } from 'antd';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useModel } from 'umi';
 import { getTagColor } from '@/utils/utils';
 
@@ -11,21 +11,16 @@ const QuanLyTag: React.FC = () => {
 	const [form] = Form.useForm();
 	const [searchText, setSearchText] = useState<string>('');
 
-	const fetchTags = async (search = searchText, p = page, s = limit) => {
-		const query: any = {};
-		if (search) query.search = search;
-
-		setPage(p);
-		setLimit(s);
-
-		return getModel(undefined, undefined, undefined, p, s, undefined, query);
-	};
-
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearchText(value);
 		setPage(1);
-		await fetchTags(value, 1, limit);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
 	};
 	const [isModalVisible, setIsModalVisible] = useState(false);
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,7 +52,7 @@ const QuanLyTag: React.FC = () => {
 	};
 
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -65,8 +60,11 @@ const QuanLyTag: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						setSearchText(value);
-						await fetchTags(value, 1, limit);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
 					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -75,6 +73,7 @@ const QuanLyTag: React.FC = () => {
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+		onFilter: (value: any, record: any) => record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
 	});
 
 	const columns = [
@@ -143,9 +142,19 @@ const QuanLyTag: React.FC = () => {
 		},
 	];
 
+	const filteredData = React.useMemo(() => {
+		const dataSource = danhSach || [];
+		if (!searchText) return dataSource;
+		const lowerSearch = searchText.toLowerCase();
+		return dataSource.filter((t: any) =>
+			t.name?.toLowerCase().includes(lowerSearch) ||
+			t.description?.toLowerCase().includes(lowerSearch),
+		);
+	}, [danhSach, searchText]);
+
 	return (
-		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
+		<div style={{ padding: '24px' }}>
+			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 						<div>
@@ -168,7 +177,7 @@ const QuanLyTag: React.FC = () => {
 							</Button>
 							<Tooltip title="Tổng số hàng dữ liệu trong bảng">
 								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-									Tổng số: {total}
+									Tổng số: {searchText ? filteredData.length : total}
 								</div>
 							</Tooltip>
 						</Space>
@@ -177,27 +186,30 @@ const QuanLyTag: React.FC = () => {
 
 				<Table
 					columns={columns}
-					dataSource={danhSach}
+					dataSource={filteredData || []}
+
 					loading={loading}
 					rowKey="_id"
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: total,
+						total: searchText ? filteredData.length : total,
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
-						onChange: async (p, s) => {
+						onChange: (p, s) => {
 							setPage(p);
 							setLimit(s);
-							await fetchTags(searchText, p, s);
+							if (!searchText) {
+								getModel(undefined, undefined, undefined, p, s);
+							}
 						},
 					}}
 				/>
 			</Card>
 
 			<Modal
-				title={editingId ? 'Chỉnh sửa thẻ' : 'Thêm thẻ mới'}
+				title={editingId ? "Chỉnh sửa thẻ" : "Thêm thẻ mới"}
 				visible={isModalVisible}
 				onCancel={() => setIsModalVisible(false)}
 				onOk={() => form.submit()}

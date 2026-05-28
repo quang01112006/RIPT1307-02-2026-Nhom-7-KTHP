@@ -1,11 +1,13 @@
 import {
 	CheckCircleOutlined,
+	CloseCircleOutlined,
 	DeleteOutlined,
 	EditOutlined,
 	EyeOutlined,
 	MenuOutlined,
 	PlusOutlined,
 	SafetyCertificateOutlined,
+	TeamOutlined,
 	SearchOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
@@ -30,6 +32,7 @@ import {
 	Tag,
 	Tooltip,
 	Typography,
+	Divider,
 	message,
 } from 'antd';
 import axios from '@/utils/axios';
@@ -46,47 +49,27 @@ const QuanLyUser: React.FC = () => {
 	const [form] = Form.useForm();
 
 	const [searchText, setSearchText] = useState<string>('');
-	const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
-
-	const fetchUsers = async (
-		search = searchText,
-		role = roleFilter,
-		p = page,
-		s = limit,
-	) => {
-		const query: any = {};
-		if (search) query.search = search;
-		if (role) query.role = role;
-
-		setPage(p);
-		setLimit(s);
-
-		return getModel(undefined, undefined, undefined, p, s, undefined, query);
-	};
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearchText(value);
 		setPage(1);
-		await fetchUsers(value, roleFilter, 1, limit);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
 	};
-
-	const handleTableChange = (pagination: any, filters: any) => {
-		const newRole = filters?.role && filters.role.length > 0 ? filters.role[0] : undefined;
-		setRoleFilter(newRole);
-		const p = pagination.current || 1;
-		const s = pagination.pageSize || limit;
-		setPage(p);
-		setLimit(s);
-		fetchUsers(searchText, newRole, p, s);
-	};
-
 	const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState<boolean>(false);
 	const [currentUserDetail, setCurrentUserDetail] = useState<any>(null);
 
 	const activeCount = useMemo(() => danhSach?.filter((u: any) => u.isActive).length || 0, [danhSach]);
 	const adminCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'admin').length || 0, [danhSach]);
+	const teacherCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'teacher').length || 0, [danhSach]);
+	const studentCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'student').length || 0, [danhSach]);
+	const lockedCount = useMemo(() => danhSach?.filter((u: any) => !u.isActive).length || 0, [danhSach]);
 	const totalCount = total || 0;
 
 	useEffect(() => {
@@ -155,7 +138,7 @@ const QuanLyUser: React.FC = () => {
 	};
 
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -163,8 +146,11 @@ const QuanLyUser: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						setSearchText(value);
-						await fetchUsers(value, roleFilter, 1, limit);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
 					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -173,6 +159,7 @@ const QuanLyUser: React.FC = () => {
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+		onFilter: (value: any, record: any) => record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
 	});
 
 	const columns = [
@@ -221,13 +208,12 @@ const QuanLyUser: React.FC = () => {
 			dataIndex: 'role',
 			align: 'center' as const,
 			key: 'role',
-			filteredValue: roleFilter ? [roleFilter] : null,
-			filterMultiple: false,
 			filters: [
 				{ text: 'Admin', value: 'admin' },
 				{ text: 'Sinh viên', value: 'student' },
 				{ text: 'Giảng viên', value: 'teacher' },
 			],
+			onFilter: (value: any, record: any) => record.role === value,
 			render: (role: string) => (
 				<Tag color={role === 'admin' ? 'volcano' : 'blue'} style={{ borderRadius: '4px' }}>
 					{role === 'admin' ? 'ADMIN' : role === 'teacher' ? 'GIẢNG VIÊN' : 'SINH VIÊN'}
@@ -249,11 +235,11 @@ const QuanLyUser: React.FC = () => {
 			align: 'left' as const,
 			render: (isActive: boolean, record: any) => (
 				<Space>
-					<Tooltip title={record._id === initialState?.currentUser?._id ? 'Không thể tự khóa tài khoản' : (isActive ? 'Đang hoạt động' : 'Bị khóa')}>
+					<Tooltip title={record._id === initialState?.currentUser?._id ? "Không thể tự khóa tài khoản" : (isActive ? "Đang hoạt động" : "Bị khóa")}>
 						<Switch 
 							checked={isActive} 
 							onChange={(checked) => handleStatusChange(checked, record)} 
-							size='small' 
+							size="small" 
 							disabled={record._id === initialState?.currentUser?._id}
 						/>
 					</Tooltip>
@@ -271,8 +257,8 @@ const QuanLyUser: React.FC = () => {
 				<Popover
 					content={
 						<Space size="middle">
-							<Tooltip title='Xem chi tiết'>
-								<Button type='text' icon={<EyeOutlined style={{ color: '#0074cc' }} />} onClick={() => showUserDetail(record)} />
+							<Tooltip title="Xem chi tiết">
+								<Button type="text" icon={<EyeOutlined style={{ color: '#0074cc' }} />} onClick={() => showUserDetail(record)} />
 							</Tooltip>
 							<Dropdown
 								overlay={
@@ -284,20 +270,20 @@ const QuanLyUser: React.FC = () => {
 								}
 							>
 								<Tooltip title="Đổi vai trò">
-									<Button type='text' icon={<EditOutlined style={{ color: '#faad14' }} />} />
+									<Button type="text" icon={<EditOutlined style={{ color: '#faad14' }} />} />
 								</Tooltip>
 							</Dropdown>
 							<Popconfirm 
 								title={`Xóa ${record.fullName || 'người dùng này'}?`} 
 								onConfirm={async () => { if (record.role !== 'admin') { await deleteModel(record._id); refreshData(); } }}
 							>
-								<Tooltip title={record.role === 'admin' ? 'Không thể xóa tài khoản Admin' : 'Xóa'}>
-									<Button type='text' danger icon={<DeleteOutlined />} disabled={record.role === 'admin'} />
+								<Tooltip title={record.role === 'admin' ? "Không thể xóa tài khoản Admin" : "Xóa"}>
+									<Button type="text" danger icon={<DeleteOutlined />} disabled={record.role === 'admin'} />
 								</Tooltip>
 							</Popconfirm>
 						</Space>
 					}
-					placement='left'
+					placement="left"
 					trigger="hover"
 				>
 					<Button type="text" icon={<MenuOutlined />} />
@@ -305,6 +291,17 @@ const QuanLyUser: React.FC = () => {
 			),
 		},
 	];
+
+	const filteredData = React.useMemo(() => {
+		const dataSource = danhSach || [];
+		if (!searchText) return dataSource;
+		const lowerSearch = searchText.toLowerCase();
+		return dataSource.filter((u: any) =>
+			(u.fullName || '').toLowerCase().includes(lowerSearch) ||
+			u.email?.toLowerCase().includes(lowerSearch) ||
+			u.code?.toLowerCase().includes(lowerSearch),
+		);
+	}, [danhSach, searchText]);
 
 	return (
 		<div style={{ padding: '24px' }}>
@@ -336,7 +333,7 @@ const QuanLyUser: React.FC = () => {
 							</Button>
 							<Tooltip title="Tổng số hàng dữ liệu trong bảng">
 								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-									Tổng số: {total}
+									Tổng số: {searchText ? filteredData.length : total}
 								</div>
 							</Tooltip>
 						</Space>
@@ -344,7 +341,7 @@ const QuanLyUser: React.FC = () => {
 				</div>
 
 				<Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-					<Col xs={24} sm={12} md={8}>
+					<Col xs={24} sm={12} md={8} lg={4}>
 						<Card
 							size='small'
 							bordered={false}
@@ -355,10 +352,15 @@ const QuanLyUser: React.FC = () => {
 								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
 							}}
 						>
-							<Statistic title={<Text strong style={{ color: '#0050b3' }}>TỔNG NGƯỜI DÙNG</Text>} value={totalCount} valueStyle={{ color: '#0050b3', fontWeight: 'bold' }} prefix={<UserOutlined />} />
+							<Statistic
+								title={<Text strong style={{ color: '#0050b3' }}>TỔNG USER</Text>}
+								value={totalCount}
+								valueStyle={{ color: '#0050b3', fontWeight: 'bold' }}
+								prefix={<UserOutlined />}
+							/>
 						</Card>
 					</Col>
-					<Col xs={24} sm={12} md={8}>
+					<Col xs={24} sm={12} md={8} lg={4}>
 						<Card
 							size='small'
 							bordered={false}
@@ -369,39 +371,112 @@ const QuanLyUser: React.FC = () => {
 								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
 							}}
 						>
-							<Statistic title={<Text strong style={{ color: '#237804' }}>ĐANG KÍCH HOẠT</Text>} value={activeCount} valueStyle={{ color: '#237804', fontWeight: 'bold' }} prefix={<CheckCircleOutlined />} />
+							<Statistic
+								title={<Text strong style={{ color: '#237804' }}>HOẠT ĐỘNG</Text>}
+								value={activeCount}
+								valueStyle={{ color: '#237804', fontWeight: 'bold' }}
+								prefix={<CheckCircleOutlined />}
+							/>
 						</Card>
 					</Col>
-					<Col xs={24} sm={12} md={8}>
+					<Col xs={24} sm={12} md={8} lg={4}>
 						<Card
 							size='small'
 							bordered={false}
 							style={{
 								borderRadius: 12,
-								background: 'linear-gradient(135deg, #f9f0ff 0%, #efdbff 100%)',
-								border: '1px solid #d3adf7',
+								background: 'linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%)',
+								border: '1px solid #ffa39e',
 								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
 							}}
 						>
-							<Statistic title={<Text strong style={{ color: '#531dab' }}>ADMINISTRATOR</Text>} value={adminCount} valueStyle={{ color: '#531dab', fontWeight: 'bold' }} prefix={<SafetyCertificateOutlined />} />
+							<Statistic
+								title={<Text strong style={{ color: '#a8071a' }}>BỊ KHÓA</Text>}
+								value={lockedCount}
+								valueStyle={{ color: '#a8071a', fontWeight: 'bold' }}
+								prefix={<CloseCircleOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%)',
+								border: '1px solid #ffd666',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#874d00' }}>ADMIN</Text>}
+								value={adminCount}
+								valueStyle={{ color: '#874d00', fontWeight: 'bold' }}
+								prefix={<SafetyCertificateOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #f0f5ff 0%, #d6e4ff 100%)',
+								border: '1px solid #adc6ff',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#1d39c4' }}>GIẢNG VIÊN</Text>}
+								value={teacherCount}
+								valueStyle={{ color: '#1d39c4', fontWeight: 'bold' }}
+								prefix={<TeamOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%)',
+								border: '1px solid #87e8de',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#006d75' }}>SINH VIÊN</Text>}
+								value={studentCount}
+								valueStyle={{ color: '#006d75', fontWeight: 'bold' }}
+								prefix={<TeamOutlined />}
+							/>
 						</Card>
 					</Col>
 				</Row>
 
 				<Table
 					columns={columns}
-					dataSource={danhSach}
+					dataSource={filteredData}
 					loading={loading}
 					rowKey="_id"
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: total,
+						total: searchText ? filteredData.length : total,
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
+						onChange: (p, s) => {
+							setPage(p);
+							setLimit(s);
+							if (!searchText) {
+								getModel(undefined, undefined, undefined, p, s);
+							}
+						},
 					}}
-					onChange={handleTableChange}
 					size="middle"
 				/>
 			</Card>

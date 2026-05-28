@@ -5,6 +5,7 @@ import {
 	MenuOutlined,
 	SearchOutlined,
 	TagsOutlined,
+	UserOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -28,54 +29,25 @@ const { Text, Title } = Typography;
 const QuanLyBaiViet: React.FC = () => {
 	const { danhSach, getModel, deleteModel, loading, page, limit, total, setPage, setLimit } = useModel('baiviet');
 	const [searchText, setSearchText] = useState<string>('');
-	const [resolvedFilter, setResolvedFilter] = useState<boolean | null>(null);
-	const [tagFilter, setTagFilter] = useState<string[]>([]);
 
 	useEffect(() => {
 		getModel();
 	}, []);
 
-	const fetchPosts = async (
-		search = searchText,
-		isResolved = resolvedFilter,
-		tag = tagFilter?.[0],
-		p = page,
-		s = limit,
-	) => {
-		const query: any = {};
-		if (search) query.search = search;
-		if (isResolved !== null) query.isResolved = isResolved;
-		if (tag) query.tag = tag;
-
-		setPage(p);
-		setLimit(s);
-
-		return getModel(undefined, undefined, undefined, p, s, undefined, query);
-	};
-
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setSearchText(value);
 		setPage(1);
-		await fetchPosts(value, resolvedFilter, tagFilter?.[0], 1, limit);
+		if (value) {
+			const fetchLimit = total > 0 ? total : 9999;
+			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
+		} else {
+			getModel(undefined, undefined, undefined, 1, limit);
+		}
 	};
 
 	const refreshData = () => {
-		fetchPosts(searchText, resolvedFilter, tagFilter?.[0], page, limit);
-	};
-
-	const handleTableChange = async (pagination: any = {}, filters: any = {}) => {
-		const currentPage = pagination?.current || 1;
-		const pageSize = pagination?.pageSize || limit;
-		const newResolvedFilter =
-			Array.isArray(filters?.isResolved) && filters.isResolved.length > 0 ? filters.isResolved[0] : null;
-		const newTagFilter = filters?.tags || [];
-
-		setResolvedFilter(newResolvedFilter);
-		setTagFilter(newTagFilter);
-		setPage(currentPage);
-		setLimit(pageSize);
-		await fetchPosts(searchText, newResolvedFilter, newTagFilter?.[0], currentPage, pageSize);
+		getModel();
 	};
 
 	const tagFilters = useMemo(() => {
@@ -84,7 +56,7 @@ const QuanLyBaiViet: React.FC = () => {
 	}, [danhSach]);
 
 	const getColumnSearchProps = (dataIndex: string | string[], title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -92,16 +64,27 @@ const QuanLyBaiViet: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						setSearchText(value);
-						await fetchPosts(value, resolvedFilter, tagFilter?.[0], 1, limit);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
-					style={{ width: 320, borderRadius: '6px' }}
+					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 					allowClear
 				/>
 			</div>
 		),
 		filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+		onFilter: (value: any, record: any) => {
+			const keys = Array.isArray(dataIndex) ? dataIndex : [dataIndex];
+			const val = keys.reduce((obj, key) => obj?.[key], record);
+			if (Array.isArray(val)) {
+				return val.some(item => item?.toString().toLowerCase().includes(value.toLowerCase()));
+			}
+			return val?.toString().toLowerCase().includes(value.toLowerCase());
+		},
 	});
 
 	const columns = [
@@ -133,15 +116,20 @@ const QuanLyBaiViet: React.FC = () => {
 			key: 'author',
 			...getColumnSearchProps(['author', 'fullName'], 'tác giả'),
 			sorter: (a: any, b: any) => (a.author?.fullName || '').localeCompare(b.author?.fullName || ''),
-			render: (fullName: string) => <Text style={{ color: '#0074cc' }}>{fullName || 'Ẩn danh'}</Text>,
+			render: (fullName: string) => (
+				<Space>
+					<UserOutlined style={{ color: '#6a737c' }} />
+					<Text style={{ color: '#0074cc' }}>{fullName || 'Ẩn danh'}</Text>
+				</Space>
+			),
 		},
 		{
 			title: 'Thẻ',
 			dataIndex: 'tags',
 			key: 'tags',
 			...getColumnSearchProps('tags', 'thẻ'),
-			filteredValue: tagFilter,
 			filters: tagFilters,
+			onFilter: (value: any, record: any) => record.tags?.includes(value),
 			render: (tags: string[]) => (
 				<div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
 					{tags?.map((tag) => (
@@ -178,19 +166,16 @@ const QuanLyBaiViet: React.FC = () => {
 			dataIndex: 'isResolved',
 			key: 'isResolved',
 			width: 120,
-			filteredValue: resolvedFilter !== null ? [resolvedFilter] : null,
 			filters: [
 				{ text: 'Đã giải quyết', value: true },
 				{ text: 'Chưa giải quyết', value: false },
 			],
-			render: (_: any, record: any) => {
-				const status = !!(record.isResolved || record.isSolved);
-				return (
-					<Tag color={status ? 'green' : 'default'} style={{ borderRadius: '4px' }}>
-						{status ? 'Đã giải quyết' : 'Chưa giải quyết'}
-					</Tag>
-				);
-			},
+			onFilter: (value: any, record: any) => record.isResolved === value,
+			render: (resolved: boolean) => (
+				<Tag color={resolved ? 'green' : 'default'} style={{ borderRadius: '4px' }}>
+					{resolved ? 'Đã giải quyết' : 'Chưa giải quyết'}
+				</Tag>
+			),
 		},
 		{
 			title: 'Thao tác',
@@ -222,9 +207,16 @@ const QuanLyBaiViet: React.FC = () => {
 		},
 	];
 
+	const filteredData = React.useMemo(() => {
+		const dataSource = danhSach || [];
+		if (!searchText) return dataSource;
+		const lowerSearch = searchText.toLowerCase();
+		return dataSource.filter((p: any) => p.title?.toLowerCase().includes(lowerSearch));
+	}, [danhSach, searchText]);
+
 	return (
 		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
+			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 						<div>
@@ -244,7 +236,7 @@ const QuanLyBaiViet: React.FC = () => {
 							/>
 							<Tooltip title="Tổng số hàng dữ liệu trong bảng">
 								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
-									Tổng số: {total}
+									Tổng số: {searchText ? filteredData.length : total}
 								</div>
 							</Tooltip>
 						</Space>
@@ -253,18 +245,24 @@ const QuanLyBaiViet: React.FC = () => {
 
 				<Table
 					columns={columns}
-					dataSource={danhSach || []}
+					dataSource={filteredData || []}
 					loading={loading}
 					rowKey="_id"
 					pagination={{
 						current: page,
 						pageSize: limit,
-						total: total,
+						total: searchText ? filteredData.length : total,
 						showSizeChanger: false,
 						showQuickJumper: true,
 						locale: { jump_to: 'Đến trang', page: '' },
+						onChange: (p, s) => {
+							setPage(p);
+							setLimit(s);
+							if (!searchText) {
+						getModel(undefined, undefined, undefined, p, s);
+					}
+						},
 					}}
-					onChange={handleTableChange}
 					size="middle"
 				/>
 			</Card>
