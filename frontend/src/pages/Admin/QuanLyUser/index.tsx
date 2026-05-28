@@ -1,9 +1,11 @@
 import {
+	CheckCircleOutlined,
 	DeleteOutlined,
 	EditOutlined,
 	EyeOutlined,
 	MenuOutlined,
 	PlusOutlined,
+	SafetyCertificateOutlined,
 	SearchOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
@@ -340,20 +342,47 @@ const QuanLyUser: React.FC = () => {
 					</div>
 				</div>
 
-				<Row gutter={16} style={{ marginBottom: 24 }}>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Tổng người dùng" value={totalCount} />
+				<Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+					<Col xs={24} sm={12} md={8}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)',
+								border: '1px solid #91d5ff',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic title={<Text strong style={{ color: '#0050b3' }}>TỔNG NGƯỜI DÙNG</Text>} value={totalCount} valueStyle={{ color: '#0050b3', fontWeight: 'bold' }} prefix={<UserOutlined />} />
 						</Card>
 					</Col>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Đang kích hoạt" value={activeCount} />
+					<Col xs={24} sm={12} md={8}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
+								border: '1px solid #b7eb8f',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic title={<Text strong style={{ color: '#237804' }}>ĐANG KÍCH HOẠT</Text>} value={activeCount} valueStyle={{ color: '#237804', fontWeight: 'bold' }} prefix={<CheckCircleOutlined />} />
 						</Card>
 					</Col>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Admin" value={adminCount} />
+					<Col xs={24} sm={12} md={8}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #f9f0ff 0%, #efdbff 100%)',
+								border: '1px solid #d3adf7',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic title={<Text strong style={{ color: '#531dab' }}>ADMINISTRATOR</Text>} value={adminCount} valueStyle={{ color: '#531dab', fontWeight: 'bold' }} prefix={<SafetyCertificateOutlined />} />
 						</Card>
 					</Col>
 				</Row>
