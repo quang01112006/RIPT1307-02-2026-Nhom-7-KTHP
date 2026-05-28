@@ -117,15 +117,6 @@ const QuanLyBaoCao: React.FC = () => {
 		return target.toString();
 	};
 
-	const getReportedUser = (report: any) => {
-		const target = report?.targetId;
-		if (!target) return '-';
-		const author = target.author;
-		if (!author) return '-';
-		if (typeof author === 'object') return author.fullName || author.email || author._id || '-';
-		return author.toString();
-	};
-
 	const openTargetContent = (record: any) => {
 		const url = getTargetLink(record);
 		if (!url) {
@@ -207,11 +198,11 @@ const QuanLyBaoCao: React.FC = () => {
 			key: 'reportedUser',
 			width: 220,
 			render: (_: any, record: any) => {
-				const user = getReportedUser(record);
+				const author = record?.targetId?.author;
 				return (
 					<div>
-						<div style={{ fontWeight: 600, fontSize: '13px' }}>{typeof user === 'string' ? user : String(user)}</div>
-						<Text type='secondary' style={{ fontSize: '12px' }}>{record.targetType === 'Comment' ? 'Người viết bình luận' : 'Người viết bài viết'}</Text>
+						<div style={{ fontWeight: 600, fontSize: '13px' }}>{author?.fullName || 'Không rõ tác giả'}</div>
+						<Text type='secondary' style={{ fontSize: '12px' }}>{author?.email || 'Không có email'}</Text>
 					</div>
 				);
 			},

@@ -18,14 +18,6 @@ export class ReportsService {
     return report.save();
   }
 
-<<<<<<< HEAD
-  async findAll() {
-    const data = await this.reportModel
-      .find()
-      .populate('reporter', 'fullName email')
-      .sort({ createdAt: -1 })
-      .exec();
-=======
   async findAll(query: any = {}) {
     const { status, page = 1, limit = 10, search } = query;
     const filter: any = {};
@@ -39,7 +31,10 @@ export class ReportsService {
       this.reportModel
         .find(filter)
         .populate('reporter', 'fullName email')
-        .populate('targetId')
+        .populate({
+          path: 'targetId',
+          populate: { path: 'author', select: 'fullName email avatar' },
+        })
         .sort({ createdAt: -1 })
         .limit(Number(limit))
         .skip(skip)
@@ -47,11 +42,10 @@ export class ReportsService {
       this.reportModel.countDocuments(filter),
     ]);
 
->>>>>>> d7143bb9603e0623d673947be0410c7d99974203
     return {
       data: {
         result: data,
-        total: data.length,
+        total,
       },
     };
   }

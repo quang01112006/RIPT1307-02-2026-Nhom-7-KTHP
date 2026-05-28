@@ -29,7 +29,7 @@ export class ReportsController {
     if (req.user.role !== 'admin') {
       throw new Error('Forbidden');
     }
-    return this.reportsService.findAll();
+    return this.reportsService.findAll(req.query);
   }
 
   @UseGuards(JwtAuthGuard)
