@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -38,5 +39,13 @@ export class ReportsController {
       throw new Error('Forbidden');
     }
     return this.reportsService.updateStatus(id, body.status);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req: any) {
+    if (req.user.role !== 'admin') {
+      throw new Error('Forbidden');
+    }
+    return this.reportsService.remove(id);
   }
 }

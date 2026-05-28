@@ -35,4 +35,8 @@ export class ReportsService {
   async updateStatus(id: string, status: string) {
     return this.reportModel.findByIdAndUpdate(id, { status }, { new: true });
   }
+
+  async remove(id: string) {
+    return this.reportModel.findByIdAndDelete(id).exec();
+  }
 }
