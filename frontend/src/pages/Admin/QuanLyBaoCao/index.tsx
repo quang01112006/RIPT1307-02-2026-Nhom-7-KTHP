@@ -1,4 +1,4 @@
-import {
+﻿import {
 	CheckCircleOutlined,
 	ClockCircleOutlined,
 	CloseCircleOutlined,
@@ -51,8 +51,8 @@ const TYPE_LABEL: Record<string, string> = {
 const QuanLyBaoCao: React.FC = () => {
 	const { danhSach, getModel, putModel, deleteModel, loading, page, limit, total, setPage, setLimit } = useModel('reports');
 
-	const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
-	const [currentReportDetail, setCurrentReportDetail] = useState<any>(null);
+	const [isResolveModalVisible, setIsResolveModalVisible] = useState<boolean>(false);
+	const [currentResolveReport, setCurrentResolveReport] = useState<any>(null);
 	const [searchText, setSearchText] = useState<string>('');
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,24 +130,29 @@ const QuanLyBaoCao: React.FC = () => {
 		if (report.targetType === 'Post') return `/question/${id}`;
 		if (report.targetType === 'Comment') {
 			const postId = report.targetId?.post?._id || report.targetId?.post || report.postId;
-			return postId ? `/question/${postId}?commentId=${id}` : `/question/${id}`;
+			return postId ? `/question/${postId}#comment-${id}` : `/question/${id}`;
 		}
 		return null;
 	};
 
-	const showReportDetail = (report: any) => {
-		setCurrentReportDetail(report);
-		setIsDetailModalVisible(true);
+	const showResolveModal = (report: any) => {
+		setCurrentResolveReport(report);
+		setIsResolveModalVisible(true);
 	};
 
-	const handleStatusUpdate = async (id: string, status: string) => {
+	const handleStatusUpdate = async (id: string, status: string, messageText?: string) => {
 		try {
-			await putModel(id, { status }, undefined, false, undefined, `Đã chuyển trạng thái thành ${STATUS_LABEL[status]?.text || status}`);
+			await putModel(id, { status }, undefined, false, undefined, messageText || `Đã chuyển trạng thái thành ${STATUS_LABEL[status]?.text || status}`);
 			refreshData();
 		} catch (error) {
 		}
 	};
 
+	const handleProcessReport = async (report: any, actionType: 'delete' | 'ban' | 'ignore') => {
+		const actionLabel = actionType === 'delete' ? 'Xóa nội dung này' : actionType === 'ban' ? 'Khóa tài khoản' : 'Bỏ qua';
+		await handleStatusUpdate(report._id, 'RESOLVED', `Đã giải quyết: ${actionLabel}`);
+		setIsResolveModalVisible(false);
+	};
 
 	const handleDeleteReport = async (id: string) => {
 		try {
@@ -166,6 +171,30 @@ const QuanLyBaoCao: React.FC = () => {
 			return removeHtmlTags(rawText || target._id || 'Không có nội dung');
 		}
 		return removeHtmlTags(String(target));
+	};
+
+	const getTargetViolationContent = (report: any) => {
+		const target = report?.targetId;
+		if (!target) return 'Không có nội dung vi phạm';
+
+		if (report.targetType === 'Post') {
+			return removeHtmlTags(target.title || target.content || '---');
+		}
+
+		if (report.targetType === 'Comment') {
+			const commentText = removeHtmlTags(target.content || '---');
+			const postTitle = target.post?.title
+				? removeHtmlTags(target.post.title)
+				: typeof target.post === 'string'
+					? target.post
+					: report.postId || '';
+
+			return postTitle
+				? `Bài viết: ${postTitle}\n\nBình luận: ${commentText}`
+				: `Bình luận: ${commentText}`;
+		}
+
+		return removeHtmlTags(target.title || target.content || '---');
 	};
 
 	const openTargetContent = (record: any) => {
@@ -253,14 +282,12 @@ const QuanLyBaoCao: React.FC = () => {
 			...getColumnSearchProps('reporter', 'người báo cáo'),
 			width: 220,
 			render: (_: any, record: any) => (
-				<a onClick={() => showReportDetail(record)}>
-					<Space>
-						<UserOutlined style={{ color: '#6a737c' }} />
-						<Text strong style={{ color: '#0074cc' }}>
-							{record.reporter?.fullName || record.reporter?.email || 'Người dùng ẩn danh'}
-						</Text>
-					</Space>
-				</a>
+				<Space>
+					<UserOutlined style={{ color: '#6a737c' }} />
+					<Text strong style={{ color: '#0074cc' }}>
+						{record.reporter?.fullName || record.reporter?.email || 'Người dùng ẩn danh'}
+					</Text>
+				</Space>
 			),
 		},
 		{
@@ -313,22 +340,13 @@ const QuanLyBaoCao: React.FC = () => {
 								/>
 							</Tooltip>
 							{record.status === 'PENDING' && (
-								<>
-									<Tooltip title='Giải quyết'>
-										<Button
-											type='text'
-											icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-											onClick={() => handleStatusUpdate(record._id, 'RESOLVED')}
-										/>
-									</Tooltip>
-									<Tooltip title='Từ chối'>
-										<Button
-											type='text'
-											icon={<CloseCircleOutlined style={{ color: '#f5222d' }} />}
-											onClick={() => handleStatusUpdate(record._id, 'REJECTED')}
-										/>
-									</Tooltip>
-								</>
+								<Tooltip title='Giải quyết'>
+									<Button
+										type='text'
+										icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+										onClick={() => showResolveModal(record)}
+									/>
+								</Tooltip>
 							)}
 							<Popconfirm
 								title='Xóa báo cáo này?'
@@ -515,24 +533,58 @@ prefix={<CheckCircleOutlined />}
 			</Card>
 
 			<Modal
-				title={`Chi tiết báo cáo`}
-				visible={isDetailModalVisible}
-				onCancel={() => setIsDetailModalVisible(false)}
-				footer={null}
-				width={750}
-				centered
-			>
-				<Descriptions bordered column={1} size="small">
-					<Descriptions.Item label="Người báo cáo">{currentReportDetail?.reporter?.fullName || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Email">{currentReportDetail?.reporter?.email || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Lý do báo cáo"><Text type="danger">{currentReportDetail?.reason || '---'}</Text></Descriptions.Item>
-					<Descriptions.Item label="Mô tả">{currentReportDetail?.description || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Loại nội dung">{currentReportDetail?.targetType === 'Post' ? 'Bài viết' : 'Bình luận'}</Descriptions.Item>
-					<Descriptions.Item label="ID nội dung bị báo cáo">{currentReportDetail?.targetId?._id || currentReportDetail?.targetId || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Trạng thái">{STATUS_LABEL[currentReportDetail?.status]?.text || currentReportDetail?.status || '---'}</Descriptions.Item>
-					<Descriptions.Item label="Ngày tạo">{currentReportDetail?.createdAt ? moment(currentReportDetail.createdAt).format('DD/MM/YYYY HH:mm') : '---'}</Descriptions.Item>
-				</Descriptions>
-			</Modal>
+title={`Xử lý báo cáo`}
+visible={isResolveModalVisible}
+onCancel={() => setIsResolveModalVisible(false)}
+footer={null}
+width={750}
+centered
+>
+<Descriptions bordered column={1} size="small">
+<Descriptions.Item label="Người bị báo cáo">
+{currentResolveReport?.targetId?.author?.fullName || currentResolveReport?.targetId?.author?.email || '---'}
+{currentResolveReport?.targetId?.author?.email && (
+<div style={{ marginTop: 8 }}><Text type="secondary">{currentResolveReport?.targetId?.author?.email}</Text></div>
+)}
+</Descriptions.Item>
+<Descriptions.Item label="Nội dung vi phạm">
+<div style={{ whiteSpace: 'pre-line' }}>
+{getTargetViolationContent(currentResolveReport)}
+</div>
+</Descriptions.Item>
+<Descriptions.Item label="Liên kết nội dung vi phạm">
+{currentResolveReport && (
+<Button type="link" onClick={() => openTargetContent(currentResolveReport)}>
+Mở nội dung vi phạm
+</Button>
+)}
+</Descriptions.Item>
+<Descriptions.Item label="Trạng thái báo cáo">
+<Tag color={STATUS_LABEL[currentResolveReport?.status]?.color || 'default'}>
+{STATUS_LABEL[currentResolveReport?.status]?.text || currentResolveReport?.status || '---'}
+</Tag>
+</Descriptions.Item>
+</Descriptions>
+
+<div style={{ marginTop: 24 }}>
+<Title level={5}>Xử lý</Title>
+{currentResolveReport?.status === 'PENDING' ? (
+<Space>
+<Button type='primary' danger onClick={() => handleProcessReport(currentResolveReport, 'delete')}>
+Xóa nội dung này
+</Button>
+<Button type='primary' onClick={() => handleProcessReport(currentResolveReport, 'ban')}>
+Khóa tài khoản
+</Button>
+<Button onClick={() => handleProcessReport(currentResolveReport, 'ignore')}>
+Bỏ qua
+</Button>
+</Space>
+) : (
+<Text type='secondary'>Báo cáo đã được xử lý, vui lòng cập nhật trạng thái nếu cần.</Text>
+)}
+</div>
+</Modal>
 		</div>
 	);
 };
