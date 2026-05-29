@@ -30,10 +30,9 @@ import {
 	Typography,
 	message,
 } from 'antd';
-import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useModel } from 'umi';
-import { removeHtmlTags, toRegex } from '@/utils/utils';
+import { removeHtmlTags } from '@/utils/utils';
 
 const { Title, Text } = Typography;
 
@@ -53,6 +52,8 @@ const QuanLyBaoCao: React.FC = () => {
 
 	const [isResolveModalVisible, setIsResolveModalVisible] = useState<boolean>(false);
 	const [currentResolveReport, setCurrentResolveReport] = useState<any>(null);
+	const [selectedAction, setSelectedAction] = useState<'delete' | 'ban' | 'reject' | null>(null);
+	const [isConfirming, setIsConfirming] = useState<boolean>(false);
 	const [searchText, setSearchText] = useState<string>('');
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +138,7 @@ const QuanLyBaoCao: React.FC = () => {
 
 	const showResolveModal = (report: any) => {
 		setCurrentResolveReport(report);
+		setSelectedAction(null);
 		setIsResolveModalVisible(true);
 	};
 
@@ -148,10 +150,33 @@ const QuanLyBaoCao: React.FC = () => {
 		}
 	};
 
-	const handleProcessReport = async (report: any, actionType: 'delete' | 'ban' | 'ignore') => {
-		const actionLabel = actionType === 'delete' ? 'Xóa nội dung này' : actionType === 'ban' ? 'Khóa tài khoản' : 'Bỏ qua';
-		await handleStatusUpdate(report._id, 'RESOLVED', `Đã giải quyết: ${actionLabel}`);
+	const handleProcessReport = async (report: any, actionType: 'delete' | 'ban' | 'reject') => {
+		const actionLabel = actionType === 'delete' ? 'Xóa nội dung này' : actionType === 'ban' ? 'Khóa tài khoản' : 'Từ chối';
+		const status = actionType === 'reject' ? 'REJECTED' : 'RESOLVED';
+		await handleStatusUpdate(report._id, status, `${actionType === 'reject' ? 'Đã từ chối' : 'Đã giải quyết'}: ${actionLabel}`);
+	};
+
+	const confirmProcessReport = async () => {
+		if (!currentResolveReport) return;
+		if (!selectedAction) {
+			message.warning('Vui lòng chọn hình thức xử lý.');
+			return;
+		}
+		setIsConfirming(true);
+		try {
+			await handleProcessReport(currentResolveReport, selectedAction);
+			setIsResolveModalVisible(false);
+			setSelectedAction(null);
+			refreshData();
+		} catch (error) {
+		} finally {
+			setIsConfirming(false);
+		}
+	};
+
+	const handleCancelModal = () => {
 		setIsResolveModalVisible(false);
+		setSelectedAction(null);
 	};
 
 	const handleDeleteReport = async (id: string) => {
@@ -339,15 +364,13 @@ const QuanLyBaoCao: React.FC = () => {
 									onClick={() => openTargetContent(record)}
 								/>
 							</Tooltip>
-							{record.status === 'PENDING' && (
-								<Tooltip title='Giải quyết'>
+							<Tooltip title='Giải quyết'>
 									<Button
 										type='text'
 										icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
 										onClick={() => showResolveModal(record)}
 									/>
 								</Tooltip>
-							)}
 							<Popconfirm
 								title='Xóa báo cáo này?'
 								onConfirm={() => handleDeleteReport(record._id)}
@@ -533,14 +556,21 @@ prefix={<CheckCircleOutlined />}
 			</Card>
 
 			<Modal
-title={`Xử lý báo cáo`}
-visible={isResolveModalVisible}
-onCancel={() => setIsResolveModalVisible(false)}
-footer={null}
-width={750}
-centered
->
-<Descriptions bordered column={1} size="small">
+		title={`Xử lý báo cáo`}
+		visible={isResolveModalVisible}
+		onCancel={handleCancelModal}
+		footer={[
+			<Button key="cancel" onClick={handleCancelModal}>
+				Hủy
+			</Button>,
+			<Button key="confirm" type="primary" loading={isConfirming} disabled={!selectedAction || currentResolveReport?.status !== 'PENDING'} onClick={confirmProcessReport}>
+				OK
+			</Button>,
+		]}
+		width={750}
+		centered
+	>
+	<Descriptions bordered column={1} size="small">
 <Descriptions.Item label="Người bị báo cáo">
 {currentResolveReport?.targetId?.author?.fullName || currentResolveReport?.targetId?.author?.email || '---'}
 {currentResolveReport?.targetId?.author?.email && (
@@ -567,23 +597,43 @@ Mở nội dung vi phạm
 </Descriptions>
 
 <div style={{ marginTop: 24 }}>
-<Title level={5}>Xử lý</Title>
-{currentResolveReport?.status === 'PENDING' ? (
-<Space>
-<Button type='primary' danger onClick={() => handleProcessReport(currentResolveReport, 'delete')}>
-Xóa nội dung này
-</Button>
-<Button type='primary' onClick={() => handleProcessReport(currentResolveReport, 'ban')}>
-Khóa tài khoản
-</Button>
-<Button onClick={() => handleProcessReport(currentResolveReport, 'ignore')}>
-Bỏ qua
-</Button>
-</Space>
-) : (
-<Text type='secondary'>Báo cáo đã được xử lý, vui lòng cập nhật trạng thái nếu cần.</Text>
-)}
-</div>
+			<Title level={5}>Xử lý</Title>
+			<Space wrap size='middle'>
+				<Button
+					type={selectedAction === 'delete' ? 'primary' : 'default'}
+					danger
+					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('delete')}
+					disabled={currentResolveReport?.status !== 'PENDING'}
+				>
+					Xóa nội dung này
+				</Button>
+				<Button
+					type={selectedAction === 'ban' ? 'primary' : 'default'}
+					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('ban')}
+					disabled={currentResolveReport?.status !== 'PENDING'}
+				>
+					Khóa tài khoản
+				</Button>
+				<Button
+					type={selectedAction === 'reject' ? 'primary' : 'default'}
+					danger={selectedAction === 'reject'}
+					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('reject')}
+					disabled={currentResolveReport?.status !== 'PENDING'}
+				>
+					Từ chối
+				</Button>
+			</Space>
+			{!selectedAction && currentResolveReport?.status === 'PENDING' && (
+				<div style={{ marginTop: 16 }}>
+					<Text type='secondary'>Vui lòng chọn hình thức xử lý, sau đó bấm OK.</Text>
+				</div>
+			)}
+			{currentResolveReport?.status !== 'PENDING' && (
+				<div style={{ marginTop: 16 }}>
+					<Text type='secondary'>Báo cáo hiện tại có trạng thái: {STATUS_LABEL[currentResolveReport?.status]?.text || currentResolveReport?.status || '---'}.</Text>
+				</div>
+			)}
+		</div>
 </Modal>
 		</div>
 	);
