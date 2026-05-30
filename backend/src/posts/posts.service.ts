@@ -55,10 +55,6 @@ export class PostsService {
       filter.author = author;
     }
 
-    if (query.isResolved !== undefined) {
-      filter.isResolved = query.isResolved === 'true' || query.isResolved === true;
-    }
-
     const skip = (page - 1) * limit;
 
     // sort theo query

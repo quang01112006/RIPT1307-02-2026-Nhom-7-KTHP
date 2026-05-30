@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, MenuOutlined, PlusOutlined, SearchOutlined, TagsOutlined } from '@ant-design/icons';
 import { Button, Card, Popover, Form, Input, Modal, Popconfirm, Space, Table, Tooltip, Typography, Divider, message, Tag } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useModel } from 'umi';
 import { getTagColor } from '@/utils/utils';
 
@@ -10,7 +10,6 @@ const QuanLyTag: React.FC = () => {
 	const { danhSach, getModel, deleteModel, postModel, putModel, loading, page, limit, total, setPage, setLimit } = useModel('tags');
 	const [form] = Form.useForm();
 	const [searchText, setSearchText] = useState<string>('');
-	const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -52,19 +51,8 @@ const QuanLyTag: React.FC = () => {
 		setIsModalVisible(true);
 	};
 
-	const handleColumnSearchChange = async (value: string) => {
-		setSearchText(value);
-		setPage(1);
-		if (value) {
-			const fetchLimit = total > 0 ? total : 9999;
-			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
-		} else {
-			getModel(undefined, undefined, undefined, 1, limit);
-		}
-	};
-
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -72,7 +60,11 @@ const QuanLyTag: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						await handleColumnSearchChange(value);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
 					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -161,8 +153,8 @@ const QuanLyTag: React.FC = () => {
 	}, [danhSach, searchText]);
 
 	return (
-		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
+		<div style={{ padding: '24px' }}>
+			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 						<div>
@@ -194,7 +186,7 @@ const QuanLyTag: React.FC = () => {
 
 				<Table
 					columns={columns}
-					dataSource={filteredData}
+					dataSource={filteredData || []}
 
 					loading={loading}
 					rowKey="_id"

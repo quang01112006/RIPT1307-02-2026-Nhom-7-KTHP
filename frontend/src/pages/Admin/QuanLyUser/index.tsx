@@ -1,9 +1,13 @@
 import {
+	CheckCircleOutlined,
+	CloseCircleOutlined,
 	DeleteOutlined,
 	EditOutlined,
 	EyeOutlined,
 	MenuOutlined,
 	PlusOutlined,
+	SafetyCertificateOutlined,
+	TeamOutlined,
 	SearchOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
@@ -63,6 +67,9 @@ const QuanLyUser: React.FC = () => {
 
 	const activeCount = useMemo(() => danhSach?.filter((u: any) => u.isActive).length || 0, [danhSach]);
 	const adminCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'admin').length || 0, [danhSach]);
+	const teacherCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'teacher').length || 0, [danhSach]);
+	const studentCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'student').length || 0, [danhSach]);
+	const lockedCount = useMemo(() => danhSach?.filter((u: any) => !u.isActive).length || 0, [danhSach]);
 	const totalCount = total || 0;
 
 	useEffect(() => {
@@ -130,19 +137,8 @@ const QuanLyUser: React.FC = () => {
 		loadUserDetail(user);
 	};
 
-	const handleColumnSearchChange = async (value: string) => {
-		setSearchText(value);
-		setPage(1);
-		if (value) {
-			const fetchLimit = total > 0 ? total : 9999;
-			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
-		} else {
-			getModel(undefined, undefined, undefined, 1, limit);
-		}
-	};
-
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -150,7 +146,11 @@ const QuanLyUser: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						await handleColumnSearchChange(value);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
 					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -340,20 +340,119 @@ const QuanLyUser: React.FC = () => {
 					</div>
 				</div>
 
-				<Row gutter={16} style={{ marginBottom: 24 }}>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Tổng người dùng" value={totalCount} />
+				<Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)',
+								border: '1px solid #91d5ff',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#0050b3' }}>TỔNG USER</Text>}
+								value={totalCount}
+								valueStyle={{ color: '#0050b3', fontWeight: 'bold' }}
+								prefix={<UserOutlined />}
+							/>
 						</Card>
 					</Col>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Đang kích hoạt" value={activeCount} />
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
+								border: '1px solid #b7eb8f',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#237804' }}>HOẠT ĐỘNG</Text>}
+								value={activeCount}
+								valueStyle={{ color: '#237804', fontWeight: 'bold' }}
+								prefix={<CheckCircleOutlined />}
+							/>
 						</Card>
 					</Col>
-					<Col span={8}>
-						<Card bordered={false} style={{ borderRadius: 8, background: '#fafafa' }}>
-							<Statistic title="Admin" value={adminCount} />
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%)',
+								border: '1px solid #ffa39e',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#a8071a' }}>BỊ KHÓA</Text>}
+								value={lockedCount}
+								valueStyle={{ color: '#a8071a', fontWeight: 'bold' }}
+								prefix={<CloseCircleOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%)',
+								border: '1px solid #ffd666',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#874d00' }}>ADMIN</Text>}
+								value={adminCount}
+								valueStyle={{ color: '#874d00', fontWeight: 'bold' }}
+								prefix={<SafetyCertificateOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #f0f5ff 0%, #d6e4ff 100%)',
+								border: '1px solid #adc6ff',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#1d39c4' }}>GIẢNG VIÊN</Text>}
+								value={teacherCount}
+								valueStyle={{ color: '#1d39c4', fontWeight: 'bold' }}
+								prefix={<TeamOutlined />}
+							/>
+						</Card>
+					</Col>
+					<Col xs={24} sm={12} md={8} lg={4}>
+						<Card
+							size='small'
+							bordered={false}
+							style={{
+								borderRadius: 12,
+								background: 'linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%)',
+								border: '1px solid #87e8de',
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+							}}
+						>
+							<Statistic
+								title={<Text strong style={{ color: '#006d75' }}>SINH VIÊN</Text>}
+								value={studentCount}
+								valueStyle={{ color: '#006d75', fontWeight: 'bold' }}
+								prefix={<TeamOutlined />}
+							/>
 						</Card>
 					</Col>
 				</Row>
