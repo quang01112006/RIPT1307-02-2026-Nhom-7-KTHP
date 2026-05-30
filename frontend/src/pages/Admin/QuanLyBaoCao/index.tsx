@@ -1,18 +1,20 @@
-﻿import {
+import { removeHtmlTags } from '@/utils/utils';
+import {
 	CheckCircleOutlined,
 	ClockCircleOutlined,
 	CloseCircleOutlined,
 	CommentOutlined,
 	DeleteOutlined,
 	EyeOutlined,
+	FileTextOutlined,
 	FlagOutlined,
 	MenuOutlined,
 	SearchOutlined,
-	UserOutlined,
-	FileTextOutlined,
 	SolutionOutlined,
+	UserOutlined,
 } from '@ant-design/icons';
 import {
+	Alert,
 	Button,
 	Card,
 	Col,
@@ -20,8 +22,9 @@ import {
 	Divider,
 	Input,
 	Modal,
-	Popover,
 	Popconfirm,
+	Popover,
+	Radio,
 	Row,
 	Space,
 	Statistic,
@@ -33,7 +36,6 @@ import {
 } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useModel } from 'umi';
-import { removeHtmlTags } from '@/utils/utils';
 
 const { Title, Text } = Typography;
 
@@ -49,7 +51,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const QuanLyBaoCao: React.FC = () => {
-	const { danhSach, getModel, putModel, deleteModel, loading, page, limit, total, setPage, setLimit } = useModel('reports');
+	const { danhSach, getModel, putModel, deleteModel, loading, page, limit, total, setPage, setLimit } =
+		useModel('reports');
 	const { deleteModel: deletePostModel } = useModel('baiviet');
 	const { deleteModel: deleteCommentModel } = useModel('binhluan');
 	const { putModel: putUserModel } = useModel('users');
@@ -132,11 +135,17 @@ const QuanLyBaoCao: React.FC = () => {
 		onFilter: (value: any, record: any) => {
 			const lowerValue = String(value).toLowerCase();
 			if (dataIndex === 'reporter') {
-				return (record.reporter?.fullName || '').toLowerCase().includes(lowerValue) || (record.reporter?.email || '').toLowerCase().includes(lowerValue);
+				return (
+					(record.reporter?.fullName || '').toLowerCase().includes(lowerValue) ||
+					(record.reporter?.email || '').toLowerCase().includes(lowerValue)
+				);
 			}
 			if (dataIndex === 'reportedUser') {
 				const author = record?.targetId?.author;
-				return (author?.fullName || '').toLowerCase().includes(lowerValue) || (author?.email || '').toLowerCase().includes(lowerValue);
+				return (
+					(author?.fullName || '').toLowerCase().includes(lowerValue) ||
+					(author?.email || '').toLowerCase().includes(lowerValue)
+				);
 			}
 			return (record[dataIndex] || '').toString().toLowerCase().includes(lowerValue);
 		},
@@ -189,7 +198,15 @@ const QuanLyBaoCao: React.FC = () => {
 
 	const handleStatusUpdate = async (id: string, status: string, messageText?: string) => {
 		try {
-			await putModel(id, { status }, undefined, false, undefined, messageText || `Đã chuyển trạng thái thành ${STATUS_LABEL[status]?.text || status}`);
+			const payload = { status, adminNote: messageText };
+			await putModel(
+				id,
+				payload,
+				undefined,
+				false,
+				undefined,
+				messageText || `Đã chuyển trạng thái thành ${STATUS_LABEL[status]?.text || status}`,
+			);
 			refreshData();
 		} catch (error) {
 			throw error;
@@ -282,7 +299,7 @@ const QuanLyBaoCao: React.FC = () => {
 		const target = report?.targetId;
 		if (!target) return 'Không có dữ liệu';
 		if (typeof target === 'object') {
-			const rawText = report.targetType === 'Post' ? (target.title || target.content) : target.content;
+			const rawText = report.targetType === 'Post' ? target.title || target.content : target.content;
 			return removeHtmlTags(rawText || target._id || 'Không có nội dung');
 		}
 		return removeHtmlTags(String(target));
@@ -301,18 +318,20 @@ const QuanLyBaoCao: React.FC = () => {
 			const postTitle = target.post?.title
 				? removeHtmlTags(target.post.title)
 				: typeof target.post === 'string'
-					? target.post
-					: report.postId || '';
+				? target.post
+				: report.postId || '';
 
-			return postTitle
-				? `Bài viết: ${postTitle}\n\nBình luận: ${commentText}`
-				: `Bình luận: ${commentText}`;
+			return postTitle ? `Bài viết: ${postTitle}\n\nBình luận: ${commentText}` : `Bình luận: ${commentText}`;
 		}
 
 		return removeHtmlTags(target.title || target.content || '---');
 	};
 
 	const openTargetContent = (record: any) => {
+		if (record.status === 'RESOLVED' && record.adminNote?.toLowerCase().includes('xóa nội dung')) {
+			message.warning('Bài viết này đã bị xóa khỏi hệ thống!');
+			return;
+		}
 		const url = getTargetLink(record);
 		if (!url) {
 			message.warning('Không tìm thấy đường dẫn đối tượng.');
@@ -325,13 +344,14 @@ const QuanLyBaoCao: React.FC = () => {
 		const dataSource = danhSach || [];
 		if (!searchText) return dataSource;
 		const lowerSearch = searchText.toLowerCase();
-		return dataSource.filter((r: any) =>
-			(r.reason || '').toLowerCase().includes(lowerSearch) ||
-			(r.reporter?.fullName || '').toLowerCase().includes(lowerSearch) ||
-			(r.reporter?.email || '').toLowerCase().includes(lowerSearch) ||
-			(r.targetType || '').toLowerCase().includes(lowerSearch) ||
-			(r.targetId?.author?.fullName || '').toLowerCase().includes(lowerSearch) ||
-			(r.targetId?.author?.email || '').toLowerCase().includes(lowerSearch)
+		return dataSource.filter(
+			(r: any) =>
+				(r.reason || '').toLowerCase().includes(lowerSearch) ||
+				(r.reporter?.fullName || '').toLowerCase().includes(lowerSearch) ||
+				(r.reporter?.email || '').toLowerCase().includes(lowerSearch) ||
+				(r.targetType || '').toLowerCase().includes(lowerSearch) ||
+				(r.targetId?.author?.fullName || '').toLowerCase().includes(lowerSearch) ||
+				(r.targetId?.author?.email || '').toLowerCase().includes(lowerSearch),
 		);
 	}, [danhSach, searchText]);
 
@@ -376,7 +396,9 @@ const QuanLyBaoCao: React.FC = () => {
 			render: (_: any, record: any) => (
 				<div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 					<div>
-						<Tag color={record.targetType === 'Post' ? 'cyan' : 'geekblue'}>{TYPE_LABEL[record.targetType] || record.targetType}</Tag>
+						<Tag color={record.targetType === 'Post' ? 'cyan' : 'geekblue'}>
+							{TYPE_LABEL[record.targetType] || record.targetType}
+						</Tag>
 					</div>
 					<Text ellipsis={{ tooltip: getTargetSummary(record) }} style={{ maxWidth: 260, display: 'block' }}>
 						{getTargetSummary(record)}
@@ -434,9 +456,14 @@ const QuanLyBaoCao: React.FC = () => {
 				{ text: 'Đã từ chối', value: 'REJECTED' },
 			],
 			onFilter: (value: any, record: any) => record.status === value,
-			render: (status: string) => {
+			render: (status: string, record: any) => {
 				const label = STATUS_LABEL[status] || { text: status, color: 'default' };
-				return <Tag color={label.color} style={{ borderRadius: 4 }}>{label.text}</Tag>;
+				const tag = (
+					<Tag color={label.color} style={{ borderRadius: 4 }}>
+						{label.text}
+					</Tag>
+				);
+				return record.adminNote ? <Tooltip title={record.adminNote}>{tag}</Tooltip> : tag;
 			},
 		},
 		{
@@ -444,24 +471,34 @@ const QuanLyBaoCao: React.FC = () => {
 			key: 'action',
 			width: 170,
 			align: 'center' as const,
-			render: (_: any, record: any) => ( 
+			render: (_: any, record: any) => (
 				<Popover
 					content={
-						<Space size="middle">
+						<Space size='middle'>
 							<Tooltip title='Xem đối tượng'>
 								<Button
 									type='text'
-									icon={<EyeOutlined style={{ color: '#0074cc' }} />}
+									icon={
+										<EyeOutlined
+											style={{
+												color:
+													record.status === 'RESOLVED' && record.adminNote?.toLowerCase().includes('xóa nội dung')
+														? '#bfbfbf'
+														: '#0074cc',
+											}}
+										/>
+									}
 									onClick={() => openTargetContent(record)}
+									disabled={record.status === 'RESOLVED' && record.adminNote?.toLowerCase().includes('xóa nội dung')}
 								/>
 							</Tooltip>
 							<Tooltip title='Giải quyết'>
-									<Button
-										type='text'
+								<Button
+									type='text'
 									icon={<SolutionOutlined style={{ color: '#52c41a' }} />}
-										onClick={() => showResolveModal(record)}
-									/>
-								</Tooltip>
+									onClick={() => showResolveModal(record)}
+								/>
+							</Tooltip>
 							<Popconfirm
 								title='Xóa báo cáo này?'
 								onConfirm={() => handleDeleteReport(record._id)}
@@ -469,19 +506,15 @@ const QuanLyBaoCao: React.FC = () => {
 								cancelText='Hủy'
 							>
 								<Tooltip title='Xóa báo cáo'>
-									<Button
-										type='text'
-										danger
-										icon={<DeleteOutlined />}
-									/>
+									<Button type='text' danger icon={<DeleteOutlined />} />
 								</Tooltip>
 							</Popconfirm>
 						</Space>
 					}
-					placement="left"
-					trigger="hover"
+					placement='left'
+					trigger='hover'
 				>
-					<Button type="text" icon={<MenuOutlined />} />
+					<Button type='text' icon={<MenuOutlined />} />
 				</Popover>
 			),
 		},
@@ -490,8 +523,16 @@ const QuanLyBaoCao: React.FC = () => {
 	return (
 		<div style={{ padding: 24, minHeight: '100vh', background: '#f0f2f5' }}>
 			<Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 16px 40px rgba(0, 0, 0, 0.08)' }}>
-<div style={{ marginBottom: 20 }}>
-					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+				<div style={{ marginBottom: 20 }}>
+					<div
+						style={{
+							display: 'flex',
+							justifyContent: 'space-between',
+							alignItems: 'center',
+							flexWrap: 'wrap',
+							gap: 16,
+						}}
+					>
 						<div>
 							<Title level={3} style={{ margin: 0, fontWeight: 700, color: '#1a3353' }}>
 								<FlagOutlined style={{ color: '#1890ff', marginRight: 8 }} /> Quản lý báo cáo
@@ -499,7 +540,7 @@ const QuanLyBaoCao: React.FC = () => {
 						</div>
 						<Space size={8}>
 							<Input
-								placeholder="Tìm lý do, người báo cáo..."
+								placeholder='Tìm lý do, người báo cáo...'
 								prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 								value={searchText}
 								onChange={handleSearchTextChange}
@@ -507,7 +548,22 @@ const QuanLyBaoCao: React.FC = () => {
 								allowClear
 							/>
 							<Tooltip title='Tổng số hàng dữ liệu trong bảng'>
-								<div style={{ padding: '0 15px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f7ff', color: '#0095ff', border: '1px solid #0095ff', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>
+								<div
+									style={{
+										padding: '0 15px',
+										height: '40px',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										background: '#f0f7ff',
+										color: '#0095ff',
+										border: '1px solid #0095ff',
+										borderRadius: '8px',
+										fontWeight: 'bold',
+										fontSize: '14px',
+										whiteSpace: 'nowrap',
+									}}
+								>
 									Tổng số: {searchText ? filteredData.length : total}
 								</div>
 							</Tooltip>
@@ -525,11 +581,15 @@ const QuanLyBaoCao: React.FC = () => {
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)',
 								border: '1px solid #91d5ff',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
 							<Statistic
-								title={<Text strong style={{ color: '#0050b3' }}>TỔNG BÁO CÁO</Text>}
+								title={
+									<Text strong style={{ color: '#0050b3' }}>
+										TỔNG BÁO CÁO
+									</Text>
+								}
 								value={summary.total}
 								valueStyle={{ color: '#0050b3', fontWeight: 'bold' }}
 								prefix={<FlagOutlined />}
@@ -544,11 +604,15 @@ const QuanLyBaoCao: React.FC = () => {
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%)',
 								border: '1px solid #ffd666',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
 							<Statistic
-								title={<Text strong style={{ color: '#874d00' }}>CHƯA XỬ LÝ</Text>}
+								title={
+									<Text strong style={{ color: '#874d00' }}>
+										CHƯA XỬ LÝ
+									</Text>
+								}
 								value={summary.pending}
 								valueStyle={{ color: '#874d00', fontWeight: 'bold' }}
 								prefix={<ClockCircleOutlined />}
@@ -563,14 +627,18 @@ const QuanLyBaoCao: React.FC = () => {
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
 								border: '1px solid #b7eb8f',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
 							<Statistic
-								title={<Text strong style={{ color: '#237804' }}>ĐÃ XỬ LÝ</Text>}
+								title={
+									<Text strong style={{ color: '#237804' }}>
+										ĐÃ XỬ LÝ
+									</Text>
+								}
 								value={summary.resolved}
 								valueStyle={{ color: '#237804', fontWeight: 'bold' }}
-prefix={<CheckCircleOutlined />}
+								prefix={<CheckCircleOutlined />}
 							/>
 						</Card>
 					</Col>
@@ -582,11 +650,15 @@ prefix={<CheckCircleOutlined />}
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%)',
 								border: '1px solid #ffa39e',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
 							<Statistic
-								title={<Text strong style={{ color: '#a8071a' }}>TỪ CHỐI</Text>}
+								title={
+									<Text strong style={{ color: '#a8071a' }}>
+										TỪ CHỐI
+									</Text>
+								}
 								value={summary.rejected}
 								valueStyle={{ color: '#a8071a', fontWeight: 'bold' }}
 								prefix={<CloseCircleOutlined />}
@@ -601,10 +673,19 @@ prefix={<CheckCircleOutlined />}
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #f0f5ff 0%, #d6e4ff 100%)',
 								border: '1px solid #adc6ff',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
-							<Statistic title={<Text strong style={{ color: '#1d39c4' }}>BÁO CÁO BÀI VIẾT</Text>} value={summary.posts} valueStyle={{ color: '#1d39c4', fontWeight: 'bold' }} prefix={<FileTextOutlined />} />
+							<Statistic
+								title={
+									<Text strong style={{ color: '#1d39c4' }}>
+										BÁO CÁO BÀI VIẾT
+									</Text>
+								}
+								value={summary.posts}
+								valueStyle={{ color: '#1d39c4', fontWeight: 'bold' }}
+								prefix={<FileTextOutlined />}
+							/>
 						</Card>
 					</Col>
 					<Col xs={24} sm={12} md={8} lg={6}>
@@ -615,11 +696,15 @@ prefix={<CheckCircleOutlined />}
 								borderRadius: 12,
 								background: 'linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%)',
 								border: '1px solid #ffe58f',
-								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+								boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
 							}}
 						>
 							<Statistic
-								title={<Text strong style={{ color: '#ad8b00' }}>BÁO CÁO BÌNH LUẬN</Text>}
+								title={
+									<Text strong style={{ color: '#ad8b00' }}>
+										BÁO CÁO BÌNH LUẬN
+									</Text>
+								}
 								value={summary.comments}
 								valueStyle={{ color: '#ad8b00', fontWeight: 'bold' }}
 								prefix={<CommentOutlined />}
@@ -647,85 +732,93 @@ prefix={<CheckCircleOutlined />}
 			</Card>
 
 			<Modal
-		title={`Xử lý báo cáo`}
-		visible={isResolveModalVisible}
-		onCancel={handleCancelModal}
-		footer={[
-			<Button key="cancel" onClick={handleCancelModal}>
-				Hủy
-			</Button>,
-			<Button key="confirm" type="primary" loading={isConfirming} disabled={!selectedAction || currentResolveReport?.status !== 'PENDING'} onClick={confirmProcessReport}>
-				OK
-			</Button>,
-		]}
-		width={750}
-		centered
-	>
-	<Descriptions bordered column={1} size="small">
-<Descriptions.Item label="Người bị báo cáo">
-{currentResolveReport?.targetId?.author?.fullName || currentResolveReport?.targetId?.author?.email || '---'}
-{currentResolveReport?.targetId?.author?.email && (
-<div style={{ marginTop: 8 }}><Text type="secondary">{currentResolveReport?.targetId?.author?.email}</Text></div>
-)}
-</Descriptions.Item>
-<Descriptions.Item label="Nội dung vi phạm">
-<div style={{ whiteSpace: 'pre-line' }}>
-{getTargetViolationContent(currentResolveReport)}
-</div>
-</Descriptions.Item>
-<Descriptions.Item label="Liên kết nội dung vi phạm">
-{currentResolveReport && (
-<Button type="link" onClick={() => openTargetContent(currentResolveReport)}>
-Mở nội dung vi phạm
-</Button>
-)}
-</Descriptions.Item>
-<Descriptions.Item label="Trạng thái báo cáo">
-<Tag color={STATUS_LABEL[currentResolveReport?.status]?.color || 'default'}>
-{STATUS_LABEL[currentResolveReport?.status]?.text || currentResolveReport?.status || '---'}
-</Tag>
-</Descriptions.Item>
-</Descriptions>
+				title={`Xử lý báo cáo`}
+				visible={isResolveModalVisible}
+				onCancel={handleCancelModal}
+				footer={[
+					<Button key='cancel' onClick={handleCancelModal}>
+						Hủy
+					</Button>,
+					<Button
+						key='confirm'
+						type='primary'
+						loading={isConfirming}
+						disabled={!selectedAction || currentResolveReport?.status !== 'PENDING'}
+						onClick={confirmProcessReport}
+					>
+						OK
+					</Button>,
+				]}
+				width={750}
+				centered
+			>
+				<Descriptions bordered column={1} size='small'>
+					<Descriptions.Item label='Người bị báo cáo'>
+						{currentResolveReport?.targetId?.author?.fullName || currentResolveReport?.targetId?.author?.email || '---'}
+						{currentResolveReport?.targetId?.author?.email && (
+							<div style={{ marginTop: 8 }}>
+								<Text type='secondary'>{currentResolveReport?.targetId?.author?.email}</Text>
+							</div>
+						)}
+					</Descriptions.Item>
+					<Descriptions.Item label='Lý do báo cáo'>
+						<Text type='danger'>{currentResolveReport?.reason || '---'}</Text>
+					</Descriptions.Item>
+					<Descriptions.Item label='Nội dung vi phạm'>
+						<div style={{ whiteSpace: 'pre-line' }}>{getTargetViolationContent(currentResolveReport)}</div>
+					</Descriptions.Item>
+					<Descriptions.Item label='Liên kết nội dung vi phạm'>
+						{currentResolveReport ? (
+							currentResolveReport.status === 'RESOLVED' && currentResolveReport.adminNote?.toLowerCase().includes('xóa nội dung') ? (
+								<Text type='secondary' italic>
+									Nội dung này đã bị xóa
+								</Text>
+							) : (
+								<Button type='link' onClick={() => openTargetContent(currentResolveReport)}>
+									Mở nội dung vi phạm
+								</Button>
+							)
+						) : (
+							'---'
+						)}
+					</Descriptions.Item>
+					<Descriptions.Item label='Trạng thái báo cáo'>
+						<Tag color={STATUS_LABEL[currentResolveReport?.status]?.color || 'default'}>
+							{STATUS_LABEL[currentResolveReport?.status]?.text || currentResolveReport?.status || '---'}
+						</Tag>
+					</Descriptions.Item>
+				</Descriptions>
 
-<div style={{ marginTop: 24 }}>
-			<Title level={5}>Xử lý</Title>
-			<Space wrap size='middle'>
-				<Button
-					type={selectedAction === 'delete' ? 'primary' : 'default'}
-					danger
-					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('delete')}
-					disabled={currentResolveReport?.status !== 'PENDING'}
-				>
-					Xóa nội dung này
-				</Button>
-				<Button
-					type={selectedAction === 'ban' ? 'primary' : 'default'}
-					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('ban')}
-					disabled={currentResolveReport?.status !== 'PENDING'}
-				>
-					Khóa tài khoản
-				</Button>
-				<Button
-					type={selectedAction === 'reject' ? 'primary' : 'default'}
-					danger={selectedAction === 'reject'}
-					onClick={() => currentResolveReport?.status === 'PENDING' && setSelectedAction('reject')}
-					disabled={currentResolveReport?.status !== 'PENDING'}
-				>
-					Từ chối
-				</Button>
-			</Space>
-			{!selectedAction && currentResolveReport?.status === 'PENDING' && (
-				<div style={{ marginTop: 16 }}>
-					<Text type='secondary'>Vui lòng chọn hình thức xử lý, sau đó bấm OK.</Text>
+				<div style={{ marginTop: 24 }}>
+					<Title level={5}>Xử lý</Title>
+					<Radio.Group
+						onChange={(e) => setSelectedAction(e.target.value)}
+						value={selectedAction}
+						disabled={currentResolveReport?.status !== 'PENDING'}
+					>
+						<Space direction='vertical'>
+							<Radio value='delete'>Xóa nội dung vi phạm này (Bài viết/Bình luận sẽ bị xóa khỏi hệ thống)</Radio>
+							<Radio value='ban'>Khóa tài khoản người vi phạm (Không cho phép đăng nhập)</Radio>
+							<Radio value='reject'>Từ chối (Bỏ qua báo cáo này)</Radio>
+						</Space>
+					</Radio.Group>
+					{!selectedAction && currentResolveReport?.status === 'PENDING' && (
+						<div style={{ marginTop: 16 }}>
+							<Text type='secondary'>Vui lòng chọn hình thức xử lý.</Text>
+						</div>
+					)}
+					{currentResolveReport?.status !== 'PENDING' && (
+						<div style={{ marginTop: 16 }}>
+							<Alert
+								message='Kết quả xử lý'
+								description={currentResolveReport?.adminNote || '--'}
+								type={currentResolveReport?.status === 'RESOLVED' ? 'success' : 'warning'}
+								showIcon
+							/>
+						</div>
+					)}
 				</div>
-			)}
-			{currentResolveReport?.status !== 'PENDING' && (
-				<div style={{ marginTop: 16 }}>
-					<Text type='secondary'>Báo cáo hiện tại có trạng thái: {STATUS_LABEL[currentResolveReport?.status]?.text || currentResolveReport?.status || '---'}.</Text>
-				</div>
-			)}
-		</div>
-</Modal>
+			</Modal>
 		</div>
 	);
 };
