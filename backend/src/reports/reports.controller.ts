@@ -38,7 +38,7 @@ export class ReportsController {
     if (req.user.role !== 'admin') {
       throw new Error('Forbidden');
     }
-    return this.reportsService.updateStatus(id, body.status);
+    return this.reportsService.update(id, body);
   }
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
