@@ -37,10 +37,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('page')
-  findAll(@Request() req: RequestWithUser) {
+  findAll(@Request() req: RequestWithUser, @Query() query: any) {
     if (req.user.role !== Role.ADMIN)
       throw new ForbiddenException('Thao tác không được phép');
-    return this.usersService.findAll();
+    return this.usersService.findAll(query);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -82,11 +82,11 @@ export class UsersController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Lấy thông tin công khai của 1 user (không bao gồm admin)',
+    summary: 'Lấy thông tin công khai của 1 user',
   })
   async getPublicProfile(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);
-    if (user?.role === Role.ADMIN) {
+    if (!user) {
       throw new BadRequestException('Người dùng không tồn tại');
     }
     return user;

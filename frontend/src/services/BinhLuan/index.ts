@@ -8,3 +8,7 @@ export async function getCommentsByPost(postId: string) {
 export async function toggleVoteComment(id: string, type: 'up' | 'down') {
 	return axios.put(`${ip3}/comments/${id}/vote`, { type });
 }
+
+export async function toggleAcceptComment(id: string) {
+	return axios.put(`${ip3}/comments/${id}/accept`);
+}
