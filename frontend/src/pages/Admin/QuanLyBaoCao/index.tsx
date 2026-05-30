@@ -10,6 +10,7 @@
 	SearchOutlined,
 	UserOutlined,
 	FileTextOutlined,
+	SolutionOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -49,6 +50,9 @@ const TYPE_LABEL: Record<string, string> = {
 
 const QuanLyBaoCao: React.FC = () => {
 	const { danhSach, getModel, putModel, deleteModel, loading, page, limit, total, setPage, setLimit } = useModel('reports');
+	const { deleteModel: deletePostModel } = useModel('baiviet');
+	const { deleteModel: deleteCommentModel } = useModel('binhluan');
+	const { putModel: putUserModel } = useModel('users');
 
 	const [isResolveModalVisible, setIsResolveModalVisible] = useState<boolean>(false);
 	const [currentResolveReport, setCurrentResolveReport] = useState<any>(null);
@@ -136,6 +140,20 @@ const QuanLyBaoCao: React.FC = () => {
 		return null;
 	};
 
+	const getTargetObjectId = (report: any) => {
+		const target = report?.targetId;
+		if (!target) return null;
+		if (typeof target === 'object') return target._id?.toString() || target.toString();
+		return target?.toString();
+	};
+
+	const getReportedAuthorId = (report: any) => {
+		const author = report?.targetId?.author;
+		if (!author) return null;
+		if (typeof author === 'object') return author._id?.toString() || author.toString();
+		return author.toString();
+	};
+
 	const showResolveModal = (report: any) => {
 		setCurrentResolveReport(report);
 		setSelectedAction(null);
@@ -147,13 +165,51 @@ const QuanLyBaoCao: React.FC = () => {
 			await putModel(id, { status }, undefined, false, undefined, messageText || `Đã chuyển trạng thái thành ${STATUS_LABEL[status]?.text || status}`);
 			refreshData();
 		} catch (error) {
+			throw error;
 		}
 	};
 
+	const handleDeleteTarget = async (report: any) => {
+		const targetId = getTargetObjectId(report);
+		if (!targetId) {
+			throw new Error('Không tìm thấy nội dung vi phạm.');
+		}
+
+		if (report.targetType === 'Post') {
+			await deletePostModel(targetId, () => undefined);
+			return;
+		}
+
+		if (report.targetType === 'Comment') {
+			await deleteCommentModel(targetId, () => undefined);
+			return;
+		}
+
+		throw new Error('Loại nội dung vi phạm không hợp lệ.');
+	};
+
+	const handleBanUser = async (report: any) => {
+		const authorId = getReportedAuthorId(report);
+		if (!authorId) {
+			throw new Error('Không tìm thấy tác giả để khóa.');
+		}
+		await putUserModel(authorId, { isActive: false }, undefined, true, false, 'Đã khóa tài khoản vi phạm');
+	};
+
 	const handleProcessReport = async (report: any, actionType: 'delete' | 'ban' | 'reject') => {
-		const actionLabel = actionType === 'delete' ? 'Xóa nội dung này' : actionType === 'ban' ? 'Khóa tài khoản' : 'Từ chối';
-		const status = actionType === 'reject' ? 'REJECTED' : 'RESOLVED';
-		await handleStatusUpdate(report._id, status, `${actionType === 'reject' ? 'Đã từ chối' : 'Đã giải quyết'}: ${actionLabel}`);
+		if (actionType === 'delete') {
+			await handleDeleteTarget(report);
+			await handleStatusUpdate(report._id, 'RESOLVED', 'Đã xóa nội dung vi phạm và đánh dấu báo cáo là đã xử lý');
+			return;
+		}
+
+		if (actionType === 'ban') {
+			await handleBanUser(report);
+			await handleStatusUpdate(report._id, 'RESOLVED', 'Đã khóa tài khoản và đánh dấu báo cáo là đã xử lý');
+			return;
+		}
+
+		await handleStatusUpdate(report._id, 'REJECTED', 'Đã từ chối báo cáo');
 	};
 
 	const confirmProcessReport = async () => {
@@ -168,7 +224,8 @@ const QuanLyBaoCao: React.FC = () => {
 			setIsResolveModalVisible(false);
 			setSelectedAction(null);
 			refreshData();
-		} catch (error) {
+		} catch (error: any) {
+			message.error(error?.message || 'Xử lý báo cáo thất bại');
 		} finally {
 			setIsConfirming(false);
 		}
@@ -367,7 +424,7 @@ const QuanLyBaoCao: React.FC = () => {
 							<Tooltip title='Giải quyết'>
 									<Button
 										type='text'
-										icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+									icon={<SolutionOutlined style={{ color: '#52c41a' }} />}
 										onClick={() => showResolveModal(record)}
 									/>
 								</Tooltip>
