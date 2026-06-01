@@ -4,7 +4,6 @@ import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
 import {
   Avatar,
-  Badge,
   Button,
   Card,
   Col,
@@ -150,21 +149,18 @@ const Leaderboard: React.FC = () => {
                   >
                     <List.Item.Meta
                       avatar={
-                        <Badge.Ribbon
-                          text={`#${index + 1}`}
-                          color={index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? '#cd7f32' : 'blue'}
-                        >
-                          <Avatar size={48} style={{ backgroundColor: '#1677ff' }}>
-                            {index + 1}
-                          </Avatar>
-                        </Badge.Ribbon>
+                        <Avatar size={48} style={{ backgroundColor: '#1677ff' }}>
+                          {index + 1}
+                        </Avatar>
                       }
                       title={
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                          <Text strong style={{ fontSize: 16, maxWidth: 680, display: 'inline-block', lineHeight: 1.3 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+                          <Text strong style={{ fontSize: 16, flex: 1, lineHeight: 1.4 }}>
                             {post.title}
                           </Text>
-                          <Tag color="geekblue">{Number(post.views || 0).toLocaleString()} lượt xem</Tag>
+                          <Tag color="geekblue" style={{ height: 28, display: 'flex', alignItems: 'center', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            {Number(post.views || 0).toLocaleString()} xem
+                          </Tag>
                         </div>
                       }
                       description={
