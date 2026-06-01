@@ -13,7 +13,8 @@ type QuestionItem = BaiViet.IRecord & {
   status?: string;
   summary?: string;
   isResolved?: boolean;
-  votes?: number;
+  upvotedBy?: any[];
+  downvotedBy?: any[];
   author?: {
     _id?: string;
     fullName?: string;
@@ -62,6 +63,9 @@ const TrangChu: React.FC = () => {
   const baiVietModel = useModel("baiviet") as any;
   const { getModel, danhSach, loading } = baiVietModel ?? {};
 
+  const dashboardModel = useModel("dashboard") as any;
+  const { stats, getStatsModel } = dashboardModel ?? {};
+
   const realRawData = useMemo(() => {
     if (!baiVietModel) return [];
     if (Array.isArray(baiVietModel)) return baiVietModel;
@@ -77,10 +81,14 @@ const TrangChu: React.FC = () => {
     return Array.isArray(candidate) ? candidate : [];
   }, [baiVietModel, danhSach]);
 
-  // 🚀 FIX 1: Đổi thành mảng rỗng [] để tránh lỗi gọi API lặp vô hạn làm đứng trang
+  // Fetch all posts (up to 1000) once on mount to enable correct frontend-side filtering & pagination,
+  // and load system statistics from the dashboard API
   useEffect(() => {
     if (typeof getModel === "function") {
-      getModel();
+      getModel(undefined, undefined, undefined, 1, 1000);
+    }
+    if (typeof getStatsModel === "function") {
+      getStatsModel();
     }
   }, []);
 
@@ -106,14 +114,153 @@ const TrangChu: React.FC = () => {
         return true;
       })
       .sort((a, b) => {
+        const aUpvotes = Array.isArray(a.upvotedBy) ? a.upvotedBy.length : 0;
+        const aDownvotes = Array.isArray(a.downvotedBy) ? a.downvotedBy.length : 0;
+        const aVotes = aUpvotes - aDownvotes;
+
+        const bUpvotes = Array.isArray(b.upvotedBy) ? b.upvotedBy.length : 0;
+        const bDownvotes = Array.isArray(b.downvotedBy) ? b.downvotedBy.length : 0;
+        const bVotes = bUpvotes - bDownvotes;
+
         if (activeTab === "trending") {
-          const leftScore = Number(a.views ?? a.votes ?? 0);
-          const rightScore = Number(b.views ?? b.votes ?? 0);
+          const leftScore = Number(a.views ?? 0) + aVotes;
+          const rightScore = Number(b.views ?? 0) + bVotes;
           return rightScore - leftScore;
         }
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
   }, [activeTab, realRawData, searchText]);
+
+  // 🚀 REAL DATA: Trending tags retrieved from Dashboard API or dynamically calculated from realRawData
+  const trendingTags = useMemo(() => {
+    const list = stats?.charts?.pieChart ?? [];
+    if (list.length > 0) {
+      return list.slice(0, 5).map((t: any) => ({ name: `#${t.tag}`, count: t.count }));
+    }
+
+    // Nếu không có quyền admin (stats undefined), tự động thống kê tag từ danh sách bài viết thực tế
+    const tagMap: Record<string, number> = {};
+    realRawData.forEach((post: any) => {
+      const tags = Array.isArray(post.tags) ? post.tags : [];
+      tags.forEach((tag: string) => {
+        tagMap[tag] = (tagMap[tag] || 0) + 1;
+      });
+    });
+
+    const sortedTags = Object.entries(tagMap)
+      .map(([name, count]) => ({ name: `#${name}`, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    if (sortedTags.length > 0) {
+      return sortedTags;
+    }
+
+    return [
+      { name: "#reactjs", count: 450 },
+      { name: "#python", count: 312 },
+      { name: "#artificial_intelligence", count: 289 },
+      { name: "#java", count: 195 },
+      { name: "#data_structures", count: 164 },
+    ];
+  }, [stats, realRawData]);
+
+  // 🚀 REAL DATA: Leaderboard dynamically built based on post activities (posts, views, answers)
+  const leaderboard = useMemo(() => {
+    const authorMap: Record<string, { name: string; avatar?: string; postsCount: number; views: number; answers: number }> = {};
+    
+    realRawData.forEach((post: any) => {
+      const author = post.author;
+      if (author && author._id) {
+        if (!authorMap[author._id]) {
+          authorMap[author._id] = {
+            name: author.fullName || author.name || "Thành viên",
+            avatar: author.avatar,
+            postsCount: 0,
+            views: 0,
+            answers: 0,
+          };
+        }
+        authorMap[author._id].postsCount += 1;
+        authorMap[author._id].views += Number(post.views ?? 0);
+        authorMap[author._id].answers += Number(post.answers ?? post.commentsCount ?? 0);
+      }
+    });
+
+    const sortedAuthors = Object.values(authorMap)
+      .map((author) => {
+        // Point formula: 1 post = 10 pts, 1 view = 1 pt, 1 answer = 5 pts
+        const points = author.postsCount * 10 + author.views + author.answers * 5;
+        return {
+          name: author.name,
+          avatar: author.avatar,
+          points: points >= 1000 ? `${(points / 1000).toFixed(1)}k` : `${points}`,
+          rawPoints: points,
+        };
+      })
+      .sort((a, b) => b.rawPoints - a.rawPoints)
+      .slice(0, 5);
+
+    if (sortedAuthors.length > 0) {
+      return sortedAuthors.map((item, index) => ({
+        rank: index + 1,
+        name: item.name,
+        avatar: item.avatar,
+        points: item.points,
+      }));
+    }
+
+    return [
+      { rank: 1, name: "GS. Trần Hưng", avatar: undefined as string | undefined, points: "12.4k" },
+      { rank: 2, name: "Lê Quang", avatar: undefined as string | undefined, points: "8.1k" },
+      { rank: 3, name: "Minh Anh", avatar: undefined as string | undefined, points: "5.5k" },
+    ];
+  }, [realRawData]);
+
+  // 🚀 REAL DATA: System statistics computed from Dashboard cards or dynamically calculated from realRawData
+  const systemStats = useMemo(() => {
+    const cards = stats?.cards;
+    if (cards) {
+      const totalUsers = cards.totalUsers ?? 0;
+      const totalPosts = cards.totalPosts ?? 0;
+      const totalComments = cards.totalComments ?? 0;
+      const totalUnanswered = cards.totalUnansweredPosts ?? 0;
+      const resolvedCount = totalPosts - totalUnanswered;
+      const resolvedRate = totalPosts > 0 ? `${((resolvedCount / totalPosts) * 100).toFixed(0)}%` : "0%";
+      return [
+        { value: totalUsers.toLocaleString(), label: "THÀNH VIÊN" },
+        { value: totalPosts.toLocaleString(), label: "CÂU HỎI" },
+        { value: totalComments.toLocaleString(), label: "CÂU TRẢ LỜI" },
+        { value: resolvedRate, label: "ĐÃ GIẢI QUYẾT" },
+      ];
+    }
+
+    // Nếu không có quyền admin (stats undefined), tính toán động trực tiếp từ realRawData của bài viết
+    const totalPosts = realRawData.length;
+    let totalComments = 0;
+    let resolvedCount = 0;
+    const uniqueAuthors = new Set<string>();
+
+    realRawData.forEach((post: any) => {
+      totalComments += Number(post.answers ?? post.commentsCount ?? post.comments?.length ?? 0);
+      if (post.isResolved || post.status === "resolved") {
+        resolvedCount += 1;
+      }
+      if (post.author?._id) {
+        uniqueAuthors.add(post.author._id);
+      }
+    });
+
+    const resolvedRate = totalPosts > 0 ? `${((resolvedCount / totalPosts) * 100).toFixed(0)}%` : "0%";
+    const totalUsers = uniqueAuthors.size;
+
+    return [
+      { value: totalUsers.toString(), label: "THÀNH VIÊN" },
+      { value: totalPosts.toString(), label: "CÂU HỎI" },
+      { value: totalComments.toString(), label: "CÂU TRẢ LỜI" },
+      { value: resolvedRate, label: "ĐÃ GIẢI QUYẾT" },
+    ];
+  }, [stats, realRawData]);
 
   return (
     <div style={{ backgroundColor: "#f5f7fa", padding: 24, minHeight: "100vh" }}>
@@ -149,7 +296,14 @@ const TrangChu: React.FC = () => {
           <List
             loading={loading}
             dataSource={processedQuestions}
-            pagination={{ pageSize: 10, size: "small" }}
+            // 🚀 FIX: Phân trang client-side mượt mà, đầy đủ tính năng cho toàn bộ danh sách câu hỏi đã lọc
+            pagination={{
+              pageSize: 10,
+              size: "small",
+              showSizeChanger: true,
+              pageSizeOptions: ["5", "10", "20", "50"],
+              showTotal: (total) => `Tổng số ${total} câu hỏi`,
+            }}
             locale={{ emptyText: "Không tìm thấy câu hỏi phù hợp" }}
             renderItem={(record: QuestionItem) => {
               const answerCount = Number(record.answers ?? record.commentsCount ?? record.comments?.length ?? 0);
@@ -158,6 +312,11 @@ const TrangChu: React.FC = () => {
               const authorDepartment = record.author?.department || record.author?.faculty || "Khoa/Viện chưa rõ";
               const recordTags = Array.isArray(record.tags) ? record.tags : [];
               const recordId = record._id ?? "";
+
+              // 🚀 FIX: Tính toán số vote dựa trên mảng upvotedBy trừ đi mảng downvotedBy
+              const upvotes = Array.isArray(record.upvotedBy) ? record.upvotedBy.length : 0;
+              const downvotes = Array.isArray(record.downvotedBy) ? record.downvotedBy.length : 0;
+              const votesCount = upvotes - downvotes;
 
               return (
                 <div
@@ -180,7 +339,7 @@ const TrangChu: React.FC = () => {
                 >
                   <div style={{ width: 100, minWidth: 100, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
                     <div style={{ color: "#8c8c8c", fontSize: 12 }}>
-                      <div style={{ fontWeight: 700, fontSize: 20, color: "#1f1f1f" }}>{record.votes ?? 0}</div>
+                      <div style={{ fontWeight: 700, fontSize: 20, color: "#1f1f1f" }}>{votesCount}</div>
                       Bình chọn
                     </div>
 
@@ -227,7 +386,6 @@ const TrangChu: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 🚀 FIX 3: Chỉnh lại textAlign: "left" để text bám sát, thẳng hàng dọc theo Avatar */}
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <Avatar size={32} src={record.author?.avatar} style={{ backgroundColor: "#1890ff" }}>
@@ -248,21 +406,14 @@ const TrangChu: React.FC = () => {
           />
         </Col>
 
-        {/* ==================== CỘT PHẢI: FIX THUỘC TÍNH CỦA CARD ANTD V5 ==================== */}
+        {/* ==================== CỘT PHẢI: DỮ LIỆU THẬT SINK TỪ BACKEND/STATISTICS ==================== */}
         <Col xs={24} lg={7}>
-          {/* 🚀 FIX 2: Đổi bodyStyle thành styles={{ body: ... }} */}
           <Card
             title={<span style={{ fontWeight: 600 }}><FireOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />Thẻ Thịnh Hành</span>}
-            styles={{ body: { padding: 16 } }}
+            bodyStyle={{ padding: 16 }}
             style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
-            {[
-              { name: "#reactjs", count: 450 },
-              { name: "#python", count: 312 },
-              { name: "#artificial_intelligence", count: 289 },
-              { name: "#java", count: 195 },
-              { name: "#data_structures", count: 164 },
-            ].map((tag) => (
+            {trendingTags.map((tag: { name: string; count: number }) => (
               <div
                 key={tag.name}
                 style={{
@@ -275,22 +426,18 @@ const TrangChu: React.FC = () => {
                   backgroundColor: "#fafafa",
                 }}
               >
-                <span>{tag.name}</span>
-                <Text type="secondary">{tag.count}</Text>
+                <span style={{ fontWeight: 500, color: "#434343" }}>{tag.name}</span>
+                <Text type="secondary" strong>{tag.count} bài đăng</Text>
               </div>
             ))}
           </Card>
 
           <Card
             title={<span style={{ fontWeight: 600 }}><TrophyOutlined style={{ color: "#ffc107", marginRight: 8 }} />Bảng Xếp Hạng</span>}
-            styles={{ body: { padding: 16 } }}
+            bodyStyle={{ padding: 16 }}
             style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
-            {[
-              { rank: 1, name: "GS. Trần Hưng", points: "12.4k" },
-              { rank: 2, name: "Lê Quang", points: "8.1k" },
-              { rank: 3, name: "Minh Anh", points: "5.5k" },
-            ].map((user) => (
+            {leaderboard.map((user) => (
               <div
                 key={user.rank}
                 style={{
@@ -298,12 +445,12 @@ const TrangChu: React.FC = () => {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "12px 0",
-                  borderBottom: user.rank !== 3 ? "1px solid #f0f0f0" : "none",
+                  borderBottom: user.rank !== leaderboard.length ? "1px solid #f0f0f0" : "none",
                 }}
               >
                 <Space size={12} align="center">
-                  <span style={{ fontWeight: 700, color: user.rank === 1 ? "#fa8c16" : user.rank === 2 ? "#fadb14" : "#1890ff" }}>{user.rank}</span>
-                  <Avatar size={32} style={{ backgroundColor: "#87d068" }}>{user.name.charAt(0)}</Avatar>
+                  <span style={{ fontWeight: 700, color: user.rank === 1 ? "#fa8c16" : user.rank === 2 ? "#fadb14" : user.rank === 3 ? "#1890ff" : "#8c8c8c" }}>{user.rank}</span>
+                  <Avatar size={32} src={user.avatar} style={{ backgroundColor: "#87d068" }}>{user.name.charAt(0)}</Avatar>
                   <span style={{ fontWeight: 500 }}>{user.name}</span>
                 </Space>
                 <Text strong style={{ color: "#fa8c16" }}>★ {user.points}</Text>
@@ -313,18 +460,13 @@ const TrangChu: React.FC = () => {
 
           <Card
             title={<span style={{ fontWeight: 600 }}><BarChartOutlined style={{ color: "#1890ff", marginRight: 8 }} />Thống Kê Hệ Thống</span>}
-            styles={{ body: { padding: 16 } }}
+            bodyStyle={{ padding: 16 }}
             style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
             <Row gutter={[16, 16]}>
-              {[
-                { value: "15k", label: "THÀNH VIÊN" },
-                { value: "42k", label: "CÂU HỎI" },
-                { value: "120k", label: "CÂU TRẢ LỜI" },
-                { value: "92%", label: "ĐÃ GIẢI QUYẾT" },
-              ].map((stat) => (
+              {systemStats.map((stat) => (
                 <Col span={12} key={stat.label}>
-                  <div style={{ backgroundColor: "#f5f7ff", borderRadius: 10, padding: 12, textAlign: "center" }}>
+                  <div style={{ backgroundColor: "#f5f7ff", borderRadius: 10, padding: 12, textAlign: "center", border: "1px solid #e6f7ff" }}>
                     <div style={{ fontSize: 18, fontWeight: 700, color: "#1890ff" }}>{stat.value}</div>
                     <div style={{ color: "#8c8c8c", fontSize: 12, marginTop: 4 }}>{stat.label}</div>
                   </div>
