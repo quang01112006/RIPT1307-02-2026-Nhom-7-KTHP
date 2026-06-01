@@ -5,6 +5,7 @@ import {
 	MenuOutlined,
 	SearchOutlined,
 	TagsOutlined,
+	UserOutlined,
 } from '@ant-design/icons';
 import {
 	Button,
@@ -17,7 +18,6 @@ import {
 	Tag,
 	Tooltip,
 	Typography,
-	Divider,
 } from 'antd';
 import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -55,19 +55,8 @@ const QuanLyBaiViet: React.FC = () => {
 		return Array.from(new Set(allTags)).map(tag => ({ text: tag, value: tag }));
 	}, [danhSach]);
 
-	const handleColumnSearchChange = async (value: string) => {
-		setSearchText(value);
-		setPage(1);
-		if (value) {
-			const fetchLimit = total > 0 ? total : 9999;
-			await getModel(undefined, undefined, undefined, 1, fetchLimit).catch(() => {});
-		} else {
-			getModel(undefined, undefined, undefined, 1, limit);
-		}
-	};
-
 	const getColumnSearchProps = (dataIndex: string | string[], title: string) => ({
-		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+		filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: any) => (
 			<div style={{ padding: 12 }} onKeyDown={(e) => e.stopPropagation()}>
 				<Input
 					placeholder={`Tìm ${title}...`}
@@ -75,9 +64,13 @@ const QuanLyBaiViet: React.FC = () => {
 					onChange={async (e) => {
 						const value = e.target.value;
 						setSelectedKeys(value ? [value] : []);
-						await handleColumnSearchChange(value);
+						setPage(1);
+						confirm({ closeDropdown: false });
+						if (value && danhSach.length < total) {
+							await getModel(undefined, undefined, undefined, 1, 9999).catch(() => {});
+						}
 					}}
-					style={{ width: 320, borderRadius: '6px' }}
+					style={{ width: 280, borderRadius: '6px' }}
 					prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
 					allowClear
 				/>
@@ -123,7 +116,12 @@ const QuanLyBaiViet: React.FC = () => {
 			key: 'author',
 			...getColumnSearchProps(['author', 'fullName'], 'tác giả'),
 			sorter: (a: any, b: any) => (a.author?.fullName || '').localeCompare(b.author?.fullName || ''),
-			render: (fullName: string) => <Text style={{ color: '#0074cc' }}>{fullName || 'Ẩn danh'}</Text>,
+			render: (fullName: string) => (
+				<Space>
+					<UserOutlined style={{ color: '#6a737c' }} />
+					<Text style={{ color: '#0074cc' }}>{fullName || 'Ẩn danh'}</Text>
+				</Space>
+			),
 		},
 		{
 			title: 'Thẻ',
@@ -218,7 +216,7 @@ const QuanLyBaiViet: React.FC = () => {
 
 	return (
 		<div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-			<Card bordered={false} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(149, 157, 165, 0.1)' }}>
+			<Card bordered={false} style={{ borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
 				<div style={{ marginBottom: '20px' }}>
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 						<div>

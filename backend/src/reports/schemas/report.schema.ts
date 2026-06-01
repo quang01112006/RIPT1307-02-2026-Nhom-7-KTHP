@@ -22,6 +22,9 @@ export class Report {
 
   @Prop({ default: 'PENDING', enum: ['PENDING', 'RESOLVED', 'REJECTED'] })
   status: string;
+
+  @Prop()
+  adminNote: string;
 }
 
 export const ReportSchema = SchemaFactory.createForClass(Report);

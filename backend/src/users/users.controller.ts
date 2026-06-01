@@ -37,10 +37,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('page')
-  findAll(@Request() req: RequestWithUser, @Query() query: any) {
+  findAll(@Request() req: RequestWithUser) {
     if (req.user.role !== Role.ADMIN)
       throw new ForbiddenException('Thao tác không được phép');
-    return this.usersService.findAll(query);
+    return this.usersService.findAll();
   }
 
   @UseGuards(JwtAuthGuard)

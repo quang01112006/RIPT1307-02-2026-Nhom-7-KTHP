@@ -26,30 +26,12 @@ export class TagsService {
     }
   }
 
-  async findAll(query: any = {}) {
-    const { search, page = 1, limit = 10 } = query;
-    const filter: any = {};
-
-    if (search) {
-      filter.name = { $regex: search, $options: 'i' };
-    }
-
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const [result, total] = await Promise.all([
-      this.tagModel
-        .find(filter)
-        .sort({ name: 1 })
-        .limit(Number(limit))
-        .skip(skip)
-        .exec(),
-      this.tagModel.countDocuments(filter),
-    ]);
-
+  async findAll() {
+    const result = await this.tagModel.find().sort({ name: 1 }).exec();
     return {
       data: {
         result,
-        total,
+        total: result.length,
       },
     };
   }

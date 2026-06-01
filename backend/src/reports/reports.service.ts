@@ -45,13 +45,35 @@ export class ReportsService {
     return {
       data: {
         result: data,
-        total: total,
+        total,
       },
     };
   }
 
-  async updateStatus(id: string, status: string) {
-    return this.reportModel.findByIdAndUpdate(id, { status }, { new: true });
+  async update(id: string, updateData: any) {
+    const updatedReport = await this.reportModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true },
+    );
+
+    // tự động đóng tất cả các báo cáo PENDING khác trỏ vào cùng nội dung này
+    if (
+      updatedReport &&
+      updateData.status === 'RESOLVED' &&
+      updatedReport.targetId
+    ) {
+      await this.reportModel.updateMany(
+        {
+          targetId: updatedReport.targetId,
+          status: 'PENDING',
+          _id: { $ne: updatedReport._id },
+        },
+        updateData,
+      );
+    }
+
+    return updatedReport;
   }
 
   async remove(id: string) {

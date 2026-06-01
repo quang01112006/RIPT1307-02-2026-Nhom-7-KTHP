@@ -1,233 +1,246 @@
-import React, { useState, useMemo } from "react";
-import { Card, Input, Tag, Avatar, Space, Button, List, Row, Col, Empty } from "antd";
-import {
-  CheckCircleFilled,
-  PaperClipOutlined,
-  SearchOutlined,
-  FireOutlined,
-  TrophyOutlined,
-  BarChartOutlined,
-} from "@ant-design/icons";
-import { useModel, history } from "umi";
+import React, { useEffect, useMemo, useState } from "react";
+import { history, useModel } from "umi";
+import { Avatar, Button, Card, Input, List, Row, Col, Space, Tag, Typography, Tabs } from "antd";
+import { BarChartOutlined, CheckCircleFilled, FireOutlined, TrophyOutlined } from "@ant-design/icons";
 import "./components/style.less";
 
-const TrangChu: React.FC = () => {
-  const { dataList, data, dataSource, refresh } = useModel("baiviet") || {};
-  
-  const realRawData = dataList || data || dataSource || [];
+const { Title, Text, Paragraph } = Typography;
 
+type QuestionItem = BaiViet.IRecord & {
+  answers?: number;
+  comments?: unknown[];
+  commentsCount?: number;
+  status?: string;
+  summary?: string;
+  isResolved?: boolean;
+  votes?: number;
+  author?: {
+    _id?: string;
+    fullName?: string;
+    name?: string;
+    department?: string;
+    faculty?: string;
+    avatar?: string;
+  };
+};
+
+const tabs = [
+  { key: "newest", label: "Mới nhất" },
+  { key: "trending", label: "Xu hướng" },
+  { key: "unanswered", label: "Chưa trả lời" },
+];
+
+const formatRelativeTime = (createdAt?: string) => {
+  if (!createdAt) return "đã đăng vài phút trước";
+  const then = new Date(createdAt).getTime();
+  const now = Date.now();
+  const diff = now - then;
+
+  if (Number.isNaN(then) || diff < 0) {
+    return "đã đăng vài phút trước";
+  }
+
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "vừa xong";
+  if (minutes < 60) return `đã đăng ${minutes} phút trước`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `đã đăng ${hours} giờ trước`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `đã đăng ${days} ngày trước`;
+
+  const weeks = Math.floor(days / 7);
+  return `đã đăng ${weeks} tuần trước`;
+};
+
+const TrangChu: React.FC = () => {
   const [activeTab, setActiveTab] = useState("newest");
   const [searchText, setSearchText] = useState("");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const baiVietModel = useModel("baiviet") as any;
+  const { getModel, danhSach, loading } = baiVietModel ?? {};
+
+  const realRawData = useMemo(() => {
+    if (!baiVietModel) return [];
+    if (Array.isArray(baiVietModel)) return baiVietModel;
+
+    const candidate =
+      baiVietModel?.danhSach ??
+      baiVietModel?.result ??
+      baiVietModel?.data ??
+      baiVietModel?.data?.result ??
+      baiVietModel?.data?.data?.result ??
+      [];
+
+    return Array.isArray(candidate) ? candidate : [];
+  }, [baiVietModel, danhSach]);
+
+  // 🚀 FIX 1: Đổi thành mảng rỗng [] để tránh lỗi gọi API lặp vô hạn làm đứng trang
+  useEffect(() => {
+    if (typeof getModel === "function") {
+      getModel();
+    }
+  }, []);
 
   const processedQuestions = useMemo(() => {
-    if (!Array.isArray(realRawData)) return [];
+    const items = Array.isArray(realRawData) ? realRawData : [];
+    const query = searchText.trim().toLowerCase();
 
-    let result = [...realRawData];
-    if (searchText.trim()) {
-      const query = searchText.toLowerCase().trim();
-      result = result.filter(
-        (item) =>
-          item.title?.toLowerCase().includes(query) ||
-          item.summary?.toLowerCase().includes(query) ||
-          item.content?.toLowerCase().includes(query)
-      );
-    }
+    return items
+      .filter((item) => {
+        const title = String(item.title ?? "").toLowerCase();
+        const summary = String(item.summary ?? item.content ?? "").toLowerCase();
+        const matchesSearch = !query || title.includes(query) || summary.includes(query);
 
-    if (activeTab === "newest") {
-      result.sort((a, b) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return timeB - timeA;
-      });
-    } else if (activeTab === "trending") {
-      result.sort((a, b) => {
-        const votesA = typeof a.votes === "number" ? a.votes : (a.votes?.length || 0);
-        const votesB = typeof b.votes === "number" ? b.votes : (b.votes?.length || 0);
-        return votesB - votesA;
-      });
-    } else if (activeTab === "unanswered") {
-      result = result.filter((item) => {
-        const commentCount = item.answers ?? item.commentsCount ?? item.comments?.length ?? 0;
-        return commentCount === 0;
-      });
-    }
+        if (!matchesSearch) {
+          return false;
+        }
 
-    return result;
-  }, [realRawData, activeTab, searchText]);
+        if (activeTab === "unanswered") {
+          const answerCount = Number(item.answers ?? item.commentsCount ?? item.comments?.length ?? 0);
+          return answerCount === 0;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (activeTab === "trending") {
+          const leftScore = Number(a.views ?? a.votes ?? 0);
+          const rightScore = Number(b.views ?? b.votes ?? 0);
+          return rightScore - leftScore;
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }, [activeTab, realRawData, searchText]);
 
   return (
-    <div style={{ backgroundColor: "#f5f7fa", padding: "24px", minHeight: "100vh" }}>
-      <Row gutter={24}>
-        
-        {/* ==================== CỘT TRÁI: DANH SÁCH CÂU HỎI THẬT ==================== */}
+    <div style={{ backgroundColor: "#f5f7fa", padding: 24, minHeight: "100vh" }}>
+      <Row gutter={[24, 24]}>
         <Col xs={24} lg={17}>
-          {/* Header Bảng tin */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
             <div>
-              <h2 style={{ fontSize: 28, fontWeight: "bold", margin: 0, color: "#1f1f1f" }}>
+              <Title level={2} style={{ margin: 0, color: "#1f1f1f" }}>
                 Tất cả câu hỏi
-              </h2>
-              <span style={{ fontSize: 14, color: "#8c8c8c" }}>
-                {processedQuestions.length} câu hỏi phù hợp tiêu chí
-              </span>
+              </Title>
+              <Text type="secondary">{processedQuestions.length} câu hỏi đang chờ bạn giải đáp</Text>
             </div>
-            <Button 
-              type="primary" 
-              size="large"
-              style={{ borderRadius: 6, fontWeight: "600", backgroundColor: "#0052cc" }}
-              onClick={() => history.push("/ask")}
-            >
-              Đặt Câu Hỏi
-            </Button>
+            <Button type="primary" size="large" style={{ borderRadius: 6, fontWeight: "600", backgroundColor: "#0052cc" }} onClick={() => history.push("/ask")}>Đặt Câu Hỏi</Button>
           </div>
 
-          {/* Thanh Tabs bộ lọc & Ô tìm kiếm hoạt động trực tiếp */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottom: "1px solid #e8e8e8" }}>
-            <Space size={24}>
-              {[
-                { key: "newest", label: "Mới nhất" },
-                { key: "trending", label: "Xu hướng" },
-                { key: "unanswered", label: "Chưa trả lời" },
-              ].map((tab) => {
-                const isActive = activeTab === tab.key;
-                return (
-                  <div
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      padding: "12px 4px",
-                      cursor: "pointer",
-                      fontWeight: isActive ? "bold" : "normal",
-                      color: isActive ? "#0052cc" : "#595959",
-                      borderBottom: isActive ? "3px solid #0052cc" : "3px solid transparent",
-                      transition: "all 0.2s",
-                      fontSize: 15
-                    }}
-                  >
-                    {tab.label}
-                  </div>
-                );
-              })}
-            </Space>
+          <Tabs activeKey={activeTab} onChange={setActiveTab} tabBarGutter={32} style={{ marginBottom: 24 }}>
+            {tabs.map((tab) => (
+              <Tabs.TabPane tab={tab.label} key={tab.key} />
+            ))}
+          </Tabs>
 
-            <Input
+          <div style={{ marginBottom: 24, maxWidth: 560 }}>
+            <Input.Search
               placeholder="Tìm kiếm câu hỏi..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+              size="large"
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 300, borderRadius: 20, backgroundColor: "#fff", border: "1px solid #d9d9d9" }}
+              onChange={(event) => setSearchText(event.target.value)}
               allowClear
+              style={{ width: "100%", borderRadius: 999, border: "1px solid #d9d9d9" }}
             />
           </div>
 
-          {/* Render danh sách câu hỏi động kèm logic phòng thủ dữ liệu rỗng */}
           <List
+            loading={loading}
             dataSource={processedQuestions}
             pagination={{ pageSize: 10, size: "small" }}
-            locale={{ emptyText: <Empty description="Không tìm thấy câu hỏi nào trong hệ thống!" /> }}
-            renderItem={(record: any) => {
-              const totalVotes = typeof record.votes === "number" ? record.votes : (record.votes?.length || 0);
-              const totalAnswers = record.answers ?? record.commentsCount ?? record.comments?.length ?? 0;
-              const isResolved = record.isResolved ?? (record.status === "resolved") ?? false;
-              const displayViews = record.views ?? 0;
-
-              const authorName = record.author?.name || record.authorName || "Thành viên";
-              const authorDept = record.author?.department || record.authorDepartment || "Khoa CNTT";
-              const displayTime = record.createdAt ? new Date(record.createdAt).toLocaleDateString("vi-VN") : "Vừa xong";
+            locale={{ emptyText: "Không tìm thấy câu hỏi phù hợp" }}
+            renderItem={(record: QuestionItem) => {
+              const answerCount = Number(record.answers ?? record.commentsCount ?? record.comments?.length ?? 0);
+              const isResolved = Boolean(record.isResolved ?? record.status === "resolved");
+              const authorName = record.author?.fullName || record.author?.name || "Thành viên";
+              const authorDepartment = record.author?.department || record.author?.faculty || "Khoa/Viện chưa rõ";
+              const recordTags = Array.isArray(record.tags) ? record.tags : [];
+              const recordId = record._id ?? "";
 
               return (
                 <div
+                  onClick={() => history.push(`/question/${recordId}`)}
+                  onMouseEnter={() => setHoveredId(recordId)}
+                  onMouseLeave={() => setHoveredId(null)}
                   style={{
                     display: "flex",
+                    width: "100%",
                     backgroundColor: "#ffffff",
-                    border: "1px solid #e8e8e8",
-                    borderRadius: 8,
-                    padding: "20px",
+                    borderRadius: 14,
+                    border: `1px solid ${hoveredId === recordId ? "#0052cc" : "#e8e8e8"}`,
+                    boxShadow: hoveredId === recordId ? "0 8px 18px rgba(0, 82, 204, 0.12)" : "0 1px 4px rgba(0, 0, 0, 0.06)",
+                    padding: 20,
                     marginBottom: 16,
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    cursor: "pointer",
+                    gap: 20,
+                    transition: "all 0.2s ease-in-out",
                   }}
                 >
-                  {/* Số liệu tương tác bên trái */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 80, flexShrink: 0, marginRight: 20, gap: 10 }}>
-                    <div style={{ textAlign: "center", fontSize: 13, color: "#595959" }}>
-                      <div style={{ fontWeight: "bold", color: "#1f1f1f", fontSize: 16 }}>{totalVotes}</div>
+                  <div style={{ width: 100, minWidth: 100, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+                    <div style={{ color: "#8c8c8c", fontSize: 12 }}>
+                      <div style={{ fontWeight: 700, fontSize: 20, color: "#1f1f1f" }}>{record.votes ?? 0}</div>
                       Bình chọn
                     </div>
 
-                    <div style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 68,
-                      height: 56,
-                      borderRadius: 6,
-                      border: isResolved ? "1px solid #52c41a" : "1px solid #1890ff",
-                      backgroundColor: isResolved ? "#f6ffed" : "#e6f7ff",
-                      color: isResolved ? "#52c41a" : "#1890ff",
-                    }}>
-                      <span style={{ fontWeight: "bold", fontSize: 16 }}>{totalAnswers}</span>
-                      <span style={{ fontSize: 11 }}>Đáp án</span>
-                      {isResolved && <CheckCircleFilled style={{ fontSize: 11, marginTop: 2 }} />}
+                    <div
+                      style={{
+                        width: 72,
+                        minHeight: 60,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: 10,
+                        border: `1px solid ${isResolved ? "#52c41a" : "#1890ff"}`,
+                        backgroundColor: isResolved ? "#f6ffed" : "#e6f7ff",
+                        color: isResolved ? "#52c41a" : "#1890ff",
+                        padding: 8,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: 16 }}>{answerCount}</div>
+                      <div style={{ fontSize: 11 }}>{isResolved ? "Đã giải" : "Đáp án"}</div>
+                      {isResolved && <CheckCircleFilled style={{ fontSize: 12, marginTop: 4 }} />}
                     </div>
 
-                    <div style={{ fontSize: 12, color: "#8c8c8c", textAlign: "center" }}>
-                      {displayViews} Lượt xem
-                    </div>
+                    <div style={{ color: "#8c8c8c", fontSize: 12 }}>{Number(record.views ?? 0)} Lượt xem</div>
                   </div>
 
-                  {/* Nội dung câu hỏi bên phải */}
                   <div style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                     <div>
-                      {/* Tiêu đề - Ấn chuyển trang khớp 100% config/routes.ts */}
-                      <h3
-                        style={{ color: "#0052cc", fontWeight: "600", fontSize: 18, margin: "0 0 8px 0", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
-                        onClick={() => history.push(`/question/${record._id || record.id}`)}
+                      <div style={{ color: "#0052cc", fontWeight: 700, fontSize: 18, lineHeight: 1.4, marginBottom: 10 }}>{record.title}</div>
+
+                      <Paragraph
+                        ellipsis={{ rows: 2, expandable: false }}
+                        style={{ color: "#434343", marginBottom: 16, fontSize: 14, lineHeight: 1.6 }}
                       >
-                        {record.title}
-                        {record.hasAttachment && <PaperClipOutlined style={{ color: "#bfbfbf", fontSize: 15 }} />}
-                      </h3>
+                        {record.summary ?? record.content ?? ""}
+                      </Paragraph>
 
-                      {/* Tóm tắt nội dung */}
-                      <div style={{
-                        color: "#434343",
-                        fontSize: 14,
-                        marginBottom: 12,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        lineHeight: "1.6",
-                      }}>
-                        {record.summary || record.content}
-                      </div>
-
-                      {/* Thẻ Tags thực tế từ mảng dữ liệu */}
-                      <div style={{ marginBottom: 8 }}>
-                        {record.tags?.map((tag: any, index: number) => (
-                          <Tag key={index} style={{ backgroundColor: "#f0f2f5", border: "none", color: "#4f5e71", borderRadius: 4, padding: "4px 10px", fontWeight: "500" }}>
-                            {typeof tag === "string" ? tag : (tag.name || tag.label)}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {recordTags.map((tag) => (
+                          <Tag key={tag} color="default" style={{ borderRadius: 6, padding: "4px 10px", fontWeight: 500 }}>
+                            {tag}
                           </Tag>
                         ))}
                       </div>
                     </div>
 
-                    {/* Khối tác giả đổ data động */}
-                    <div style={{ alignSelf: "flex-end", display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                      <Avatar size={28} src={record.author?.avatar || record.authorAvatar} style={{ backgroundColor: "#1890ff" }}>
-                        {authorName.charAt(0)}
-                      </Avatar>
-                      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
-                        <span style={{ fontSize: 14, fontWeight: "600", color: "#262626" }}>
-                          {authorName}
-                        </span>
-                        <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-                          {authorDept} • đăng ngày {displayTime}
-                        </span>
+                    {/* 🚀 FIX 3: Chỉnh lại textAlign: "left" để text bám sát, thẳng hàng dọc theo Avatar */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Avatar size={32} src={record.author?.avatar} style={{ backgroundColor: "#1890ff" }}>
+                          {String(authorName).charAt(0)}
+                        </Avatar>
+                        <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
+                          <Text strong style={{ color: "#262626", fontSize: 14 }}>{authorName}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {authorDepartment} • {formatRelativeTime(record.createdAt)}
+                          </Text>
+                        </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
               );
@@ -235,82 +248,90 @@ const TrangChu: React.FC = () => {
           />
         </Col>
 
-        {/* ==================== CỘT PHẢI: SIDEBAR TIỆN ÍCH ==================== */}
+        {/* ==================== CỘT PHẢI: FIX THUỘC TÍNH CỦA CARD ANTD V5 ==================== */}
         <Col xs={24} lg={7}>
-          
-          {/* Sửa lỗi giao diện AntD v5: Đổi bodyStyle thành styles={{ body: ... }} */}
-          <Card 
-            title={<span><FireOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />Thẻ Thịnh Hành</span>}
-            styles={{ body: { padding: "16px" } }}
-            style={{ marginBottom: 16, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          {/* 🚀 FIX 2: Đổi bodyStyle thành styles={{ body: ... }} */}
+          <Card
+            title={<span style={{ fontWeight: 600 }}><FireOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />Thẻ Thịnh Hành</span>}
+            styles={{ body: { padding: 16 } }}
+            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
             {[
               { name: "#reactjs", count: 450 },
               { name: "#python", count: 312 },
-              { name: "#artificial_intelligence", count: 289, active: true },
+              { name: "#artificial_intelligence", count: 289 },
               { name: "#java", count: 195 },
               { name: "#data_structures", count: 164 },
-            ].map((tag, idx) => (
-              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", marginBottom: 6, backgroundColor: tag.active ? "#fff7e6" : "#f5f5f5", borderRadius: 4, color: tag.active ? "#d46b08" : "#595959", fontWeight: tag.active ? "bold" : "normal" }}>
+            ].map((tag) => (
+              <div
+                key={tag.name}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px 12px",
+                  marginBottom: 10,
+                  borderRadius: 10,
+                  backgroundColor: "#fafafa",
+                }}
+              >
                 <span>{tag.name}</span>
-                <span style={{ color: "#8c8c8c", fontSize: 13 }}>{tag.count}</span>
+                <Text type="secondary">{tag.count}</Text>
               </div>
             ))}
           </Card>
 
-          <Card 
-            title={<span><TrophyOutlined style={{ color: "#ffc107", marginRight: 8 }} />Bảng Xếp Hạng</span>}
-            styles={{ body: { padding: "16px" } }}
-            style={{ marginBottom: 16, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          <Card
+            title={<span style={{ fontWeight: 600 }}><TrophyOutlined style={{ color: "#ffc107", marginRight: 8 }} />Bảng Xếp Hạng</span>}
+            styles={{ body: { padding: 16 } }}
+            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
             {[
               { rank: 1, name: "GS. Trần Hưng", points: "12.4k" },
               { rank: 2, name: "Lê Quang", points: "8.1k" },
               { rank: 3, name: "Minh Anh", points: "5.5k" },
-            ].map((user, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: idx !== 2 ? "1px solid #f0f0f0" : "none" }}>
-                <Space size={12}>
-                  <span style={{ fontWeight: "bold", fontSize: 16, color: user.rank === 1 ? "#ff4d4f" : user.rank === 2 ? "#ffa940" : "#ffec3d", width: 14 }}>{user.rank}</span>
+            ].map((user) => (
+              <div
+                key={user.rank}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px 0",
+                  borderBottom: user.rank !== 3 ? "1px solid #f0f0f0" : "none",
+                }}
+              >
+                <Space size={12} align="center">
+                  <span style={{ fontWeight: 700, color: user.rank === 1 ? "#fa8c16" : user.rank === 2 ? "#fadb14" : "#1890ff" }}>{user.rank}</span>
                   <Avatar size={32} style={{ backgroundColor: "#87d068" }}>{user.name.charAt(0)}</Avatar>
-                  <span style={{ fontWeight: "500", color: "#262626" }}>{user.name}</span>
+                  <span style={{ fontWeight: 500 }}>{user.name}</span>
                 </Space>
-                <span style={{ color: "#ffa940", fontWeight: "bold" }}>★ {user.points}</span>
+                <Text strong style={{ color: "#fa8c16" }}>★ {user.points}</Text>
               </div>
             ))}
           </Card>
 
-          <Card 
-            title={<span><BarChartOutlined style={{ color: "#1890ff", marginRight: 8 }} />Thống Kê Hệ Thống</span>}
-            styles={{ body: { padding: "16px" } }}
-            style={{ marginBottom: 16, borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          <Card
+            title={<span style={{ fontWeight: 600 }}><BarChartOutlined style={{ color: "#1890ff", marginRight: 8 }} />Thống Kê Hệ Thống</span>}
+            styles={{ body: { padding: 16 } }}
+            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
           >
-            <Row gutter={[16, 16]} style={{ textAlign: "center" }}>
+            <Row gutter={[16, 16]}>
               {[
                 { value: "15k", label: "THÀNH VIÊN" },
                 { value: "42k", label: "CÂU HỎI" },
                 { value: "120k", label: "CÂU TRẢ LỜI" },
                 { value: "92%", label: "ĐÃ GIẢI QUYẾT" },
-              ].map((stat, idx) => (
-                <Col span={12} key={idx}>
-                  <div style={{ backgroundColor: "#f8fafc", padding: "12px 0", borderRadius: 6, border: "1px solid #edf2f7" }}>
-                    <div style={{ color: "#1890ff", fontSize: 20, fontWeight: "bold" }}>{stat.value}</div>
-                    <div style={{ color: "#718096", fontSize: 11, fontWeight: "600", marginTop: 2 }}>{stat.label}</div>
+              ].map((stat) => (
+                <Col span={12} key={stat.label}>
+                  <div style={{ backgroundColor: "#f5f7ff", borderRadius: 10, padding: 12, textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1890ff" }}>{stat.value}</div>
+                    <div style={{ color: "#8c8c8c", fontSize: 12, marginTop: 4 }}>{stat.label}</div>
                   </div>
                 </Col>
               ))}
             </Row>
           </Card>
-
-          <div style={{ padding: "0 8px", color: "#a0aec0", fontSize: 12, lineHeight: "2" }}>
-            <Space size={12} style={{ flexWrap: "wrap", marginBottom: 8 }}>
-              <a href="#" style={{ color: "#718096" }}>Về EduStack</a>
-              <a href="#" style={{ color: "#718096" }}>Nội quy</a>
-              <a href="#" style={{ color: "#718096" }}>Trợ giúp</a>
-              <a href="#" style={{ color: "#718096" }}>Chính sách bảo mật</a>
-            </Space>
-            <div>© 2026 EduStack Academic Hub</div>
-          </div>
-
         </Col>
       </Row>
     </div>
