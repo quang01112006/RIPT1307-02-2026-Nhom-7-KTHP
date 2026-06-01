@@ -20,10 +20,13 @@ interface PostQuery {
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 
+import { Comment, CommentDocument } from '../comments/schemas/comment.schema';
+
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     private notificationsService: NotificationsService,
     private usersService: UsersService,
   ) {}
@@ -68,17 +71,30 @@ export class PostsService {
     const [data, total] = await Promise.all([
       this.postModel
         .find(filter)
-        .populate('author', 'fullName email code role avatar')
+        .populate('author', 'fullName email code role avatar faculty department')
         .sort(sortOption)
         .limit(Number(limit))
         .skip(skip)
+        .lean()
         .exec(),
       this.postModel.countDocuments(filter),
     ]);
 
+    // Count answers for each post
+    const resultWithAnswers = await Promise.all(
+      data.map(async (post) => {
+        const answersCount = await this.commentModel.countDocuments({ post: post._id });
+        return {
+          ...post,
+          answers: answersCount,
+          commentsCount: answersCount,
+        };
+      })
+    );
+
     return {
       data: {
-        result: data,
+        result: resultWithAnswers,
         total: total,
       },
     };
