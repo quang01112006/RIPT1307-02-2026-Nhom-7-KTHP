@@ -1,6 +1,18 @@
 import { getTagColor } from '@/utils/utils';
-import { ArrowDownOutlined, ArrowUpOutlined, CommentOutlined, ShareAltOutlined, UserOutlined, BookOutlined, BookFilled } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Space, Tag, Typography, message } from 'antd';
+import {
+	ArrowDownOutlined,
+	ArrowUpOutlined,
+	CheckCircleFilled,
+	CommentOutlined,
+	DeleteOutlined,
+	EditOutlined,
+	FlagOutlined,
+	LockOutlined,
+	MoreOutlined,
+	ShareAltOutlined,
+	UserOutlined,
+} from '@ant-design/icons';
+import { Avatar, Button, Card, Divider, Dropdown, Menu, Modal, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
 import React from 'react';
 import styles from '../index.less';
@@ -16,6 +28,13 @@ interface BaiVietChinhProps {
 	onCommentClick: () => void;
 	isBookmarked?: boolean;
 	onBookmarkClick?: () => void;
+	userId?: string;
+	isAdmin?: boolean;
+	onDeletePost?: () => void;
+	onEditPost?: () => void;
+	onBanUser?: (id: string) => void;
+	onReport?: (id: string) => void;
+	isSolved?: boolean;
 }
 
 const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
@@ -26,9 +45,79 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	onVote,
 	onCommentClick,
 	isBookmarked,
-	onBookmarkClick
+	onBookmarkClick,
+	userId,
+	isAdmin,
+	onDeletePost,
+	onEditPost,
+	onBanUser,
+	onReport,
+	isSolved,
 }) => {
 	if (!post) return null;
+
+	const isAuthor = userId && post.author?._id === userId;
+	const canModify = isAuthor || isAdmin || !!userId; // Any logged in user can open menu to report
+
+	const handleDeleteClick = () => {
+		Modal.confirm({
+			title: 'Xóa bài viết',
+			content: 'Bạn có chắc chắn muốn xóa bài viết này không? Không thể hoàn tác!',
+			okText: 'Xóa',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onDeletePost) onDeletePost();
+			},
+		});
+	};
+
+	const handleBanClick = () => {
+		Modal.confirm({
+			title: 'Khóa tài khoản này',
+			content: `Bạn có chắc chắn muốn khóa tài khoản của ${post.author?.fullName || 'người dùng này'}? Họ sẽ bị văng ra khỏi hệ thống ngay lập tức!`,
+			okText: 'Khóa ngay',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onBanUser && post.author?._id) onBanUser(post.author._id);
+			},
+		});
+	};
+
+	const menu = (
+		<Menu style={{ borderRadius: '8px' }}>
+			{isAuthor && (
+				<Menu.Item key='edit' icon={<EditOutlined />} onClick={onEditPost}>
+					Sửa bài viết
+				</Menu.Item>
+			)}
+			{(isAuthor || isAdmin) && (
+				<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+					Xóa bài viết
+				</Menu.Item>
+			)}
+			{userId && !isAuthor && !isAdmin && (
+				<Menu.Item key='report' icon={<FlagOutlined />} onClick={() => onReport && post._id && onReport(post._id)}>
+					Báo cáo bài viết
+				</Menu.Item>
+			)}
+			{isAdmin && !isAuthor && (
+				<>
+					<Menu.Divider />
+					<Menu.Item key='ban' icon={<LockOutlined />} danger onClick={handleBanClick}>
+						Khóa tài khoản này
+					</Menu.Item>
+				</>
+			)}
+		</Menu>
+	);
+
+	const cardExtra = canModify ? (
+		<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
+			<Button type='text' icon={<MoreOutlined style={{ fontSize: '20px' }} />} />
+		</Dropdown>
+	) : null;
 
 	const fallbackCopyTextToClipboard = (text: string) => {
 		const textArea = document.createElement('textarea');
@@ -71,18 +160,40 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					fallbackCopyTextToClipboard(shareUrl);
 				});
 		} else {
-			// dùng cờ cổ cho http vs đt chung wifi
 			fallbackCopyTextToClipboard(shareUrl);
 		}
 	};
 
 	return (
-		<Card hoverable bordered={false} style={{ height: 'auto' }} title={<Title level={3}>{post.title}</Title>}>
+		<Card
+			hoverable
+			bordered={false}
+			style={{ height: 'auto' }}
+			title={
+				<div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px', paddingBottom: '4px' }}>
+					{isSolved && (
+						<div>
+							<Tag
+								color='success'
+								icon={<CheckCircleFilled />}
+								style={{ margin: 0, padding: '2px 10px', fontSize: '13px', borderRadius: '100px' }}
+							>
+								Đã giải quyết
+							</Tag>
+						</div>
+					)}
+					<Title level={3} style={{ margin: 0, whiteSpace: 'normal', lineHeight: 1.4 }}>
+						{post.title}
+					</Title>
+				</div>
+			}
+			extra={cardExtra}
+		>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
 				<Space split={<Divider type='vertical' style={{ borderColor: '#bfbfbf' }} />}>
 					<Space>
 						<Avatar src={post.author?.avatar} icon={<UserOutlined />} />
-						<Text type='secondary'>{post.author?.fullName || '--'}</Text>
+						<Text type='secondary'>{post.author?.fullName || 'Ẩn danh'}</Text>
 					</Space>
 					<Text type='secondary'>Đăng {moment(post.createdAt).fromNow() || '--'}</Text>
 					<Text type='secondary'>{post.views || 0} lượt xem</Text>
@@ -154,22 +265,22 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 					<Button icon={<ShareAltOutlined />} type='text' className={styles.textBtnNoBg} onClick={handleShare}>
 						Chia sẻ
 					</Button>
-					
-					<Button 
+
+					<Button
 						icon={
-							<span className="anticon" style={{ fontSize: '16px' }}>
+							<span className='anticon' style={{ fontSize: '16px' }}>
 								{isBookmarked ? (
-									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="#1890ff">
-										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
+									<svg viewBox='0 0 24 24' width='1em' height='1em' fill='#1890ff'>
+										<path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'></path>
 									</svg>
 								) : (
-									<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor">
-										<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"></path>
+									<svg viewBox='0 0 24 24' width='1em' height='1em' fill='currentColor'>
+										<path d='M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z'></path>
 									</svg>
 								)}
 							</span>
-						} 
-						type='text' 
+						}
+						type='text'
 						className={styles.textBtnNoBg}
 						onClick={onBookmarkClick}
 						style={{ color: isBookmarked ? '#1890ff' : undefined }}

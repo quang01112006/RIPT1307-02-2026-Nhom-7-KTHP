@@ -1,18 +1,21 @@
 import {
 	ArrowDownOutlined,
 	ArrowUpOutlined,
+	CheckCircleOutlined,
 	CommentOutlined,
 	DeleteOutlined,
 	EditOutlined,
+	FlagOutlined,
+	LockOutlined,
 	MoreOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Typography } from 'antd';
+import { Avatar, Button, Dropdown, Input, Menu, Modal, Space, Tag, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import React, { useState } from 'react';
-import ReplyForm from './ReplyForm';
+import { Link, useModel } from 'umi';
 import styles from '../index.less';
-import { Link } from 'umi';
+import ReplyForm from './ReplyForm';
 
 const { Text } = Typography;
 
@@ -20,6 +23,7 @@ interface BinhLuanItemProps {
 	comment: BinhLuan.IRecord;
 	userId?: string;
 	currentUserAvatar?: string;
+	postAuthorId?: string;
 	isChild?: boolean;
 	isLast?: boolean;
 	directParent?: BinhLuan.IRecord | null;
@@ -30,12 +34,16 @@ interface BinhLuanItemProps {
 	setReplyingId: (id: string | null) => void;
 	onEdit: (id: string, content: string) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
+	onAccept?: (id: string) => Promise<void>;
+	onBanUser?: (userId: string) => void;
+	onReport?: (id: string) => void;
 }
 
 const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	comment,
 	userId,
 	currentUserAvatar,
+	postAuthorId,
 	isChild = false,
 	isLast = false,
 	directParent = null,
@@ -46,7 +54,13 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	setReplyingId,
 	onEdit,
 	onDelete,
+	onAccept,
+	onBanUser,
+	onReport,
 }) => {
+	const { initialState } = useModel('@@initialState');
+	const isAdmin = initialState?.currentUser?.role === 'admin';
+
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editContent, setEditContent] = useState<string>('');
 	const [submittingEdit, setSubmittingEdit] = useState<boolean>(false);
@@ -59,9 +73,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 	const isAuthor = userId && comment.author?._id === userId;
 
 	const startEdit = () => {
-		const plainText = (comment.content || '')
-			.replace(/^<p>/i, '')
-			.replace(/<\/p>$/i, '');
+		const plainText = (comment.content || '').replace(/^<p>/i, '').replace(/<\/p>$/i, '');
 		setEditContent(plainText);
 		setIsEditing(true);
 	};
@@ -96,19 +108,63 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 		});
 	};
 
+	const handleBanClick = () => {
+		Modal.confirm({
+			title: 'Khóa tài khoản này',
+			content: `Bạn có chắc chắn muốn khóa tài khoản của ${
+				comment.author?.fullName || 'người dùng này'
+			}? Họ sẽ bị văng ra khỏi hệ thống ngay lập tức!`,
+			okText: 'Khóa ngay',
+			cancelText: 'Hủy',
+			okButtonProps: { danger: true },
+			onOk: () => {
+				if (onBanUser && comment.author?._id) {
+					onBanUser(comment.author._id);
+				}
+			},
+		});
+	};
+
 	const menu = (
 		<Menu style={{ borderRadius: '8px' }}>
-			<Menu.Item key='edit' icon={<EditOutlined />} onClick={startEdit}>
-				Sửa
-			</Menu.Item>
-			<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
-				Xóa
-			</Menu.Item>
+			{isAuthor && (
+				<Menu.Item key='edit' icon={<EditOutlined />} onClick={startEdit}>
+					Sửa bình luận
+				</Menu.Item>
+			)}
+			{(isAuthor || isAdmin) && (
+				<Menu.Item key='delete' icon={<DeleteOutlined />} danger onClick={handleDeleteClick}>
+					Xóa bình luận
+				</Menu.Item>
+			)}
+			{userId && !isAuthor && !isAdmin && (
+				<Menu.Item key='report' icon={<FlagOutlined />} onClick={() => onReport && onReport(comment._id)}>
+					Báo cáo bình luận
+				</Menu.Item>
+			)}
+			{isAdmin && !isAuthor && (
+				<>
+					<Menu.Divider />
+					<Menu.Item key='ban' icon={<LockOutlined />} danger onClick={handleBanClick}>
+						Khóa tài khoản này
+					</Menu.Item>
+				</>
+			)}
 		</Menu>
 	);
 
 	return (
-		<div style={{ position: 'relative', padding: isChild ? '8px 0 12px 0' : '4px 0' }}>
+		<div
+			id={`comment-${comment._id}`}
+			style={{
+				position: 'relative',
+				padding: isChild ? '8px 8px 12px 8px' : '8px 12px',
+				backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.06)' : undefined,
+				borderRadius: comment.isAccepted ? '8px' : '0',
+				border: comment.isAccepted ? '1px solid #b7eb8f' : '1px solid transparent',
+				transition: 'all 0.3s ease',
+			}}
+		>
 			{/* line cong l cho cmt con */}
 			{isChild && (
 				<div
@@ -164,7 +220,10 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						/>
 					</Link>
 					<Link to={`/profile/${comment.author?._id}`}>
-						<Text strong style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}>
+						<Text
+							strong
+							style={{ fontSize: isChild ? '13px' : '14px', color: isChild ? '#262626' : undefined, cursor: 'pointer' }}
+						>
 							{comment.author?.fullName || 'Ẩn danh'}
 						</Text>
 					</Link>
@@ -184,7 +243,7 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 					</Text>
 				</div>
 
-				{isAuthor && (
+				{(isAuthor || isAdmin || !!userId) && (
 					<Dropdown overlay={menu} trigger={['click']} placement='bottomRight'>
 						<Button
 							type='text'
@@ -236,17 +295,30 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 						</div>
 					</div>
 				) : (
-					<div
-						className={styles.postContent}
-						dangerouslySetInnerHTML={{ __html: comment.content || '' }}
-						style={{
-							fontSize: isChild ? '14px' : '15px',
-							lineHeight: isChild ? '1.5' : '1.6',
-							wordBreak: 'break-word',
-							color: isChild ? '#434343' : undefined,
-							whiteSpace: 'pre-wrap',
-						}}
-					/>
+					<>
+						{comment.isAccepted && (
+							<div style={{ marginBottom: 8 }}>
+								<Tag
+									color='success'
+									icon={<CheckCircleOutlined />}
+									style={{ fontSize: '13px', padding: '2px 8px', borderRadius: '4px' }}
+								>
+									Tác giả bài viết đã chọn làm câu trả lời đúng
+								</Tag>
+							</div>
+						)}
+						<div
+							className={styles.postContent}
+							dangerouslySetInnerHTML={{ __html: comment.content || '' }}
+							style={{
+								fontSize: isChild ? '14px' : '15px',
+								lineHeight: isChild ? '1.5' : '1.6',
+								wordBreak: 'break-word',
+								color: isChild ? '#434343' : undefined,
+								whiteSpace: 'pre-wrap',
+							}}
+						/>
+					</>
 				)}
 
 				<div
@@ -298,6 +370,30 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 							onClick={() => onVote(comment._id, 'down')}
 						/>
 					</Space>
+
+					{!isChild && (postAuthorId === userId || comment.isAccepted) && (
+						<Tooltip title={comment.isAccepted ? 'Câu trả lời đã được giải quyết' : 'Đánh dấu là câu trả lời đúng'}>
+							<Button
+								type='text'
+								className={styles.textBtnNoBg}
+								icon={<CheckCircleOutlined style={{ fontSize: isChild ? '12px' : '14px' }} />}
+								style={{
+									color: comment.isAccepted ? '#52c41a' : '#bfbfbf',
+									backgroundColor: comment.isAccepted ? 'rgba(82, 196, 26, 0.1)' : undefined,
+									display: 'inline-flex',
+									alignItems: 'center',
+									height: isChild ? '24px' : '28px',
+									padding: isChild ? '0 4px' : '0 6px',
+									cursor: postAuthorId !== userId ? 'default' : 'pointer',
+								}}
+								onClick={() => {
+									if (postAuthorId === userId && onAccept) {
+										onAccept(comment._id);
+									}
+								}}
+							/>
+						</Tooltip>
+					)}
 
 					<Button
 						type='text'

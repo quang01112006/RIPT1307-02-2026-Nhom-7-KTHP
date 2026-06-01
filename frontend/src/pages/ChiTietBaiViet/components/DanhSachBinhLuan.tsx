@@ -10,20 +10,28 @@ interface DanhSachBinhLuanProps {
 	comments: BinhLuan.IRecord[];
 	userId?: string;
 	currentUserAvatar?: string;
+	postAuthorId?: string;
 	onVote: (id: string, type: 'up' | 'down') => void;
 	onSubmitReply: (content: string, parentId: string) => Promise<void>;
 	onEdit: (id: string, content: string) => Promise<void>;
 	onDelete: (id: string) => Promise<void>;
+	onAccept?: (id: string) => Promise<void>;
+	onBanUser?: (userId: string) => void;
+	onReport?: (id: string) => void;
 }
 
 const DanhSachBinhLuan = ({
 	comments,
 	userId,
 	currentUserAvatar,
+	postAuthorId,
 	onVote,
 	onSubmitReply,
 	onEdit,
 	onDelete,
+	onAccept,
+	onBanUser,
+	onReport,
 }: DanhSachBinhLuanProps) => {
 	const [replyingId, setReplyingId] = useState<string | null>(null);
 	const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'votes'>('newest');
@@ -109,6 +117,7 @@ const DanhSachBinhLuan = ({
 							comment={comment}
 							userId={userId}
 							currentUserAvatar={currentUserAvatar}
+							postAuthorId={postAuthorId}
 							isChild={false}
 							isLast={childComments.length === 0}
 							onVote={onVote}
@@ -117,6 +126,9 @@ const DanhSachBinhLuan = ({
 							setReplyingId={setReplyingId}
 							onEdit={onEdit}
 							onDelete={onDelete}
+							onAccept={onAccept}
+							onBanUser={onBanUser}
+							onReport={onReport}
 						/>
 
 						{/*==== PHẦN BÌNH LUẬN CON ====*/}
@@ -139,6 +151,7 @@ const DanhSachBinhLuan = ({
 											comment={child}
 											userId={userId}
 											currentUserAvatar={currentUserAvatar}
+											postAuthorId={postAuthorId}
 											isChild={true}
 											isLast={isLast}
 											directParent={directParent}
@@ -149,6 +162,9 @@ const DanhSachBinhLuan = ({
 											setReplyingId={setReplyingId}
 											onEdit={onEdit}
 											onDelete={onDelete}
+											onAccept={onAccept}
+											onBanUser={onBanUser}
+											onReport={onReport}
 										/>
 									);
 								})}

@@ -1,13 +1,15 @@
 import ContentEditor from '@/components/ContentEditor';
-import { Button, Card, Col, Input, Row, Select, message } from 'antd';
+import { Button, Card, Col, Input, message, Modal, Row, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { history, useModel } from 'umi';
+import { history, useLocation, useModel } from 'umi';
 import SidebarPhai from './components/SidebarPhai';
 
 const DatCauHoi: React.FC = () => {
-	const { postModel: createPost } = useModel('baiviet');
+	const { postModel: createPost, putModel: editPost, getByIdModel: getPostDetail } = useModel('baiviet');
 	const { initialState } = useModel('@@initialState');
 	const { getAllModel: getAllTags, danhSach: dsTags } = useModel('tags');
+	const location = useLocation() as any;
+	const editId = location.query?.id;
 
 	const currentUser = initialState?.currentUser;
 
@@ -18,7 +20,16 @@ const DatCauHoi: React.FC = () => {
 
 	useEffect(() => {
 		getAllTags(false, undefined, undefined, undefined, 'all');
-	}, []);
+		if (editId) {
+			getPostDetail(editId, false).then((post) => {
+				if (post) {
+					setTitle(post.title || '');
+					setContent(post.content || '');
+					setSelectedTags(post.tags || []);
+				}
+			});
+		}
+	}, [editId]);
 
 	const handleSubmit = async () => {
 		if (!title.trim()) {
@@ -36,21 +47,23 @@ const DatCauHoi: React.FC = () => {
 
 		setSubmitting(true);
 		try {
-			const newPost = await createPost(
-				{
-					title: title.trim(),
-					content: content.trim(),
-					tags: selectedTags,
-				},
-				undefined,
-				false,
-				'Đăng câu hỏi thành công!',
-			);
+			const payload = {
+				title: title.trim(),
+				content: content.trim(),
+				tags: selectedTags,
+			};
 
-			if (newPost && newPost._id) {
-				history.push(`/question/${newPost._id}`);
+			if (editId) {
+				await editPost(editId, payload, undefined, true, false, 'Cập nhật câu hỏi thành công!');
+				history.push(`/question/${editId}`);
 			} else {
-				history.push('/dashboard');
+				const newPost = await createPost(payload, undefined, false, 'Đăng câu hỏi thành công!');
+
+				if (newPost && newPost._id) {
+					history.push(`/question/${newPost._id}`);
+				} else {
+					history.push('/dashboard');
+				}
 			}
 		} catch (error) {
 			console.error('Lỗi khi tạo câu hỏi:', error);
@@ -65,7 +78,7 @@ const DatCauHoi: React.FC = () => {
 			{/* Tiêu đề & Hướng dẫn */}
 			<div style={{ marginBottom: '24px' }}>
 				<h1 style={{ fontSize: '26px', fontWeight: 700, color: '#262626', marginBottom: '8px' }}>
-					Đặt một câu hỏi công khai
+					{editId ? 'Chỉnh sửa câu hỏi' : 'Đặt một câu hỏi công khai'}
 				</h1>
 				<p style={{ fontSize: '15px', color: '#595959', margin: 0 }}>
 					Bạn đang gặp khó khăn? Đặt câu hỏi để nhận sự trợ giúp từ mọi người trong cộng đồng nhé.
@@ -129,15 +142,38 @@ const DatCauHoi: React.FC = () => {
 								</span>
 							</div>
 
-							<ContentEditor
-								inputId='question-content-input'
-								value={content}
-								onChange={setContent}
-								placeholder='Nhập nội dung chi tiết của bạn tại đây. Bạn có thể sử dụng các nút định dạng ở trên để chèn code hoặc tải lên hình ảnh...'
-								minRows={8}
-								maxRows={20}
-								disabled={submitting}
-							/>
+							<div style={{ position: 'relative' }}>
+								<ContentEditor
+									inputId='question-content-input'
+									value={content}
+									onChange={setContent}
+									placeholder='Nhập nội dung chi tiết của bạn tại đây. Bạn có thể sử dụng các nút định dạng ở trên để chèn code hoặc tải lên hình ảnh...'
+									minRows={8}
+									maxRows={20}
+									disabled={submitting}
+								/>
+								{content && (
+									<div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+										<Button
+											type='text'
+											danger
+											size='small'
+											onClick={() => {
+												Modal.confirm({
+													title: 'Xóa nội dung',
+													content: 'Bạn có chắc chắn muốn xóa toàn bộ nội dung đã viết?',
+													okText: 'Xóa',
+													cancelText: 'Hủy',
+													okButtonProps: { danger: true },
+													onOk: () => setContent(''),
+												});
+											}}
+										>
+											Xóa toàn bộ nội dung
+										</Button>
+									</div>
+								)}
+							</div>
 						</Card>
 
 						{/* 3. Gắn tag */}
@@ -205,10 +241,16 @@ const DatCauHoi: React.FC = () => {
 									fontWeight: 600,
 								}}
 							>
-								Đăng câu hỏi
+								{editId ? 'Lưu thay đổi' : 'Đăng câu hỏi'}
 							</Button>
 							<Button
-								onClick={() => history.push('/dashboard')}
+								onClick={() => {
+									if (editId) {
+										history.push(`/question/${editId}`);
+									} else {
+										history.push('/dashboard');
+									}
+								}}
 								style={{
 									borderRadius: '6px',
 									height: '42px',
@@ -222,7 +264,7 @@ const DatCauHoi: React.FC = () => {
 					</div>
 				</Col>
 
-				{/* Cột bên phải: sticky, vừa khung hình */}
+				{/* Cột bên phải */}
 				<Col xs={24} lg={7}>
 					<SidebarPhai currentUser={currentUser} />
 				</Col>

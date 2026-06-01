@@ -38,6 +38,24 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 			label: 'Trang cá nhân',
 			onClick: () => history.push(`/profile/${currentUser._id}`),
 		},
+		...(currentUser?.role === 'admin'
+			? [
+					{
+						key: 'switch_context',
+						icon: <GlobalOutlined />,
+						label: history.location.pathname.startsWith('/admin')
+							? 'Quay lại diễn đàn'
+							: 'Trang quản trị',
+						onClick: () => {
+							if (history.location.pathname.startsWith('/admin')) {
+								history.push('/dashboard');
+							} else {
+								history.push('/admin/dashboard');
+							}
+						},
+					},
+			  ]
+			: []),
 		{ type: 'divider', key: 'divider' },
 		{
 			key: 'logout',

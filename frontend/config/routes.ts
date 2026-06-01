@@ -35,13 +35,11 @@ export default [
 	},
 
 	///////////////////////////////////
-	// DEFAULT MENU
 	{
 		path: '/dashboard',
 		name: 'Trang chủ',
 		component: './TrangChu',
-		icon: 'HomeOutlined',
-		access: 'isUser',
+		icon: 'FireTwoTone',
 	},
 	{
 		path: '/question/:id',
@@ -52,6 +50,7 @@ export default [
 	{
 		path: '/ask',
 		name: 'Đặt câu hỏi',
+		icon: 'EditTwoTone',
 		component: './DatCauHoi',
 	},
 	{
@@ -60,35 +59,66 @@ export default [
 		component: './UserProfile',
 		hideInMenu: true,
 	},
+	{
+		path: '/notifications',
+		name: 'Thông báo',
+		icon: 'BellTwoTone',
+		component: './Notifications',
+	},
+	{
+		path: '/tags',
+		name: 'Thẻ từ khóa',
+		icon: 'TagsTwoTone',
+		component: './Tags',
+	},
+	{
+		path: '/bookmarks',
+		name: 'Bài viết đã lưu',
+		icon: '/bookmark.svg',
+		component: './Bookmarks',
+	},
+	{
+		path: '/leaderboard',
+		name: 'Bảng xếp hạng',
+		icon: 'TrophyTwoTone',
+		component: './Leaderboard',
+	},
 
 	// route admin
 	{
 		path: '/admin/dashboard',
 		name: 'Trang chủ',
-		icon: 'DashboardOutlined',
+		icon: 'AppstoreOutlined',
 		access: 'isAdmin',
 		component: './Admin/Dashboard',
 	},
 	{
 		path: '/admin/posts',
 		name: 'Quản lý bài viết',
-		icon: '',
+		icon: 'FileTextOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyBaiViet',
 	},
 	{
 		path: '/admin/tags',
 		name: 'Quản lý Tag',
-		icon: '',
+		icon: 'TagsOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyTag',
 	},
 	{
 		path: '/admin/users',
 		name: 'Quản lý người dùng',
-		icon: 'UserOutlined',
+		icon: 'TeamOutlined',
 		access: 'isAdmin',
 		component: './Admin/QuanLyUser',
+	},
+	{
+		path: '/admin/reports',
+		name: 'Quản lý báo cáo',
+		icon: 'FlagOutlined',
+		access: 'isAdmin',
+		component: './Admin/QuanLyBaoCao',
 	},
 
 	{
