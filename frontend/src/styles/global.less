@@ -135,6 +135,26 @@ a {
 	border-color: var(--primary-color);
 }
 
+/* Auth input unified styling for login/register */
+.auth-input,
+.ant-input-affix-wrapper.auth-input {
+	background: #f3f6f9;
+	border: 1px solid #e6eef8;
+	border-radius: 12px;
+	height: 48px;
+	box-shadow: 0 6px 18px rgba(16, 42, 67, 0.04);
+}
+
+.auth-input:focus,
+.ant-input-affix-wrapper.auth-input:focus-within {
+	border-color: rgba(99,102,241,0.9);
+	box-shadow: 0 6px 24px rgba(99,102,241,0.08);
+}
+
+.auth-input::placeholder {
+	color: #8b98a8;
+}
+
 .btn-success {
 	border-color: var(--ant-success-color);
 

@@ -6,194 +6,122 @@
 	flex-direction: column;
 	min-height: 100vh;
 	overflow: hidden;
-	background-color: #f0f2f5;
+	background: radial-gradient(ellipse at top, rgba(56, 189, 248, 0.18), transparent 35%), #f5f7fb;
 }
 
-.lang {
-	width: 100%;
-	height: 40px;
-	line-height: 44px;
-	text-align: right;
-	:global(.ant-dropdown-trigger) {
-		margin-right: 24px;
-	}
-}
-
-.content {
+.canvas {
 	flex: 1;
-	padding: 32px 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 40px 16px;
 }
 
-.top {
-	text-align: center;
-	// min-height: 300px;
-}
-
-.header {
-	margin-top: 50px;
-	line-height: 60px;
-	a {
-		text-decoration: none;
-	}
-}
-
-.logo {
+.loginCard {
 	width: 100%;
-	max-width: 400px;
-	vertical-align: top;
+	max-width: 520px;
+	border-radius: 28px;
+	overflow: hidden;
+	background: #ffffff;
+	border: 1px solid #e8eff8;
+	box-shadow: 0 32px 90px rgba(15, 23, 42, 0.08);
 }
 
-.title2 {
-	position: relative;
-	top: 2px;
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 34px 32px 0;
+}
+
+.brandLogo {
+	width: 64px;
+	height: 40px;
+	border-radius: 6px;
+	object-fit: contain;
+}
+
+.brandText {
+	display: flex;
+	flex-direction: column;
+}
+
+.brandName {
+	font-size: 22px;
+	font-weight: 700;
+	color: #102a43;
+}
+
+.brandTag {
+	font-size: 14px;
+	color: #64748b;
+}
+
+.formWrapper {
+	padding: 0 32px 40px;
+}
+
+.headerBlock {
+	padding-top: 18px;
+	padding-bottom: 12px;
+}
+
+.formBadge {
+	display: inline-flex;
+	padding: 6px 14px;
+	border-radius: 999px;
+	background: rgba(59, 130, 246, 0.12);
+	color: #2563eb;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	margin-bottom: 16px;
+}
+
+.heading {
+	margin: 0;
+	font-size: 28px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.subheading {
+	margin-top: 8px;
+	margin-bottom: 28px;
+	color: #475569;
+	font-size: 15px;
+	line-height: 1.7;
+}
+
+.loginBtn {
+	border-radius: 14px;
+	box-shadow: 0 16px 36px rgba(59, 130, 246, 0.18);
+}
+
+.prefixIcon {
+	margin-right: 6px;
 	color: var(--primary-color);
-	font-weight: 600;
-	font-size: 30px;
-	font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
-}
-
-.title3 {
-	position: relative;
-	top: 2px;
-	color: var(--primary-color);
-	font-weight: 600;
-	font-size: 30px;
-	font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
-}
-
-.title1 {
-	position: relative;
-	top: 2px;
-	color: @primary-color;
-	font-weight: 600;
-	font-size: 33px;
-	font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
-}
-
-.desc {
-	margin-top: 12px;
-	margin-bottom: 40px;
-	color: @text-color-secondary;
 	font-size: @font-size-base;
 }
 
-.main {
-	position: relative;
-	z-index: 99;
-	width: 440px;
-	margin: 0 auto;
-	margin-top: 32px;
-	padding: 24px;
-	background: #fff;
-	border-radius: 4px;
-
-	box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
-
-	// &::before {
-	// 	position: absolute;
-	// 	top: -65px;
-	// 	left: -424px;
-	// 	z-index: -1;
-	// 	width: 600px;
-	// 	height: 300px;
-	// 	background-image: url('/frame1.svg');
-	// 	background-size: 100%;
-	// 	content: '';
-	// }
-
-	// &::after {
-	// 	position: absolute;
-	// 	top: -56px;
-	// 	right: -443px;
-	// 	z-index: -1;
-	// 	width: 600px;
-	// 	height: 300px;
-	// 	background-image: url('/frame2.svg');
-	// 	background-repeat: no-repeat;
-	// 	background-size: 100%;
-	// 	content: '';
-	// }
-
-	// @media screen and (max-width: @screen-sm) {
-	// 	max-width: 100%;
-	// 	&::before {
-	// 		display: none;
-	// 	}
-	// 	&::after {
-	// 		top: 300px;
-	// 		right: -66px;
-	// 	}
-	// }
-
-	:global {
-		.@{ant-prefix}-tabs-nav-list {
-			margin: auto;
-			font-size: 16px;
-		}
-	}
-
-	.icon {
-		margin-left: 16px;
-		color: rgba(0, 0, 0, 0.2);
-		font-size: 24px;
-		vertical-align: middle;
-		cursor: pointer;
-		transition: color 0.3s;
-
-		&:hover {
-			color: var(--primary-color);
-		}
-	}
-
-	.other {
-		margin-top: 24px;
-		line-height: 22px;
-		text-align: left;
-		.register {
-			float: right;
-		}
-	}
-
-	.prefixIcon {
-		margin-right: 6px;
-		color: var(--primary-color);
-		font-size: @font-size-base;
-	}
+.bottomText {
+	margin-top: 22px;
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	color: #64748b;
+	font-size: 14px;
 }
 
-@media screen and (max-width: @screen-xl) {
-	.title2 {
-		font-size: 25px;
-	}
+.loginCard::before {
+	content: '';
+	display: block;
+	height: 4px;
+	width: 100%;
+	background: linear-gradient(90deg, #6366f1, #818cf8);
 }
 
-@media screen and (max-width: @screen-lg) {
-	.title2 {
-		font-size: 20px;
-	}
-}
-
-@media screen and (max-width: 899px) {
-	.title1 {
-		font-size: 22px;
-	}
-	.title2 {
-		font-size: 18px;
-		line-height: 30px;
-	}
-	.title3 {
-		font-size: 22px;
-	}
-}
-
-@media screen and (max-width: 695px) {
-	.header {
-		margin-bottom: 30px;
-	}
-}
-
-@media screen and (max-width: 377px) {
-	.header {
-		margin-bottom: 80px;
-	}
+.bottomText a {
+	color: #2563eb;
 }

@@ -111,12 +111,24 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 			</a>
 		),
 		menuDataRender: (menuData: any[]) => {
+			const currentPath = history.location.pathname;
+			const isAdminContext = currentPath.startsWith('/admin');
+
 			return menuData.filter((item) => {
+				// Không phải admin thì ẩn các menu admin
 				if (item.access === 'isAdmin' && role !== 'admin') {
 					return false;
 				}
-				if (item.access === 'isUser' && role === 'admin') {
-					return false;
+				
+				// Nếu là admin, quyết định menu dựa trên URL hiện tại
+				if (role === 'admin') {
+					if (isAdminContext) {
+						// Đang ở trang Admin -> Chỉ hiện menu Admin
+						return item.path && item.path.startsWith('/admin');
+					} else {
+						// Đang ở trang diễn đàn -> Chỉ hiện menu diễn đàn
+						return item.path && !item.path.startsWith('/admin');
+					}
 				}
 				return true;
 			});
@@ -124,7 +136,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 		childrenRender: (dom) => <ErrorBoundary>{dom}</ErrorBoundary>,
 		menuHeaderRender: undefined,
 		onMenuHeaderClick: () => {
-			if (role === 'admin') {
+			const currentPath = history.location.pathname;
+			if (role === 'admin' && currentPath.startsWith('/admin')) {
 				history.push('/admin/dashboard');
 			} else {
 				history.push('/dashboard');
