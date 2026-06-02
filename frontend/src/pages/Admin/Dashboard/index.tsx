@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
 			key: 'fullName',
 			render: (text, record) => (
 				<Space>
-					<Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
+					<Avatar src={record.avatar} style={{ backgroundColor: '#1890ff' }} icon={!record.avatar ? <UserOutlined /> : undefined} />
 					<div>
 						<div style={{ fontWeight: 600 }}>{text}</div>
 						<div style={{ fontSize: 12, color: 'gray' }}>{record.email}</div>
@@ -114,6 +114,8 @@ const AdminDashboard: React.FC = () => {
 							yAxis={[linePosts, lineComments]}
 							yLabel={['Câu hỏi mới', 'Câu trả lời mới']}
 							height={350}
+							colors={['#1677ff', '#52c41a']}
+							formatY={(val: number) => `${val} câu`}
 						/>
 					</Card>
 				</Col>
@@ -125,6 +127,7 @@ const AdminDashboard: React.FC = () => {
 							yLabel={['Số lượng']}
 							height={350}
 							showTotal
+							formatY={(val: number) => `${val} câu`}
 						/>
 					</Card>
 				</Col>
@@ -140,8 +143,16 @@ const AdminDashboard: React.FC = () => {
 							renderItem={item => (
 								<List.Item style={{ padding: '16px 24px' }}>
 									<List.Item.Meta
-										avatar={<Avatar shape="square" size="large" icon={<QuestionCircleOutlined />} style={{ backgroundColor: '#e6f4ff', color: '#1677ff' }} />}
-										title={<a style={{ fontWeight: 600 }}>{item.title}</a>}
+										avatar={
+											<Avatar 
+												shape="square" 
+												size="large" 
+												src={item.author?.avatar} 
+												icon={!item.author?.avatar ? <QuestionCircleOutlined /> : undefined} 
+												style={{ backgroundColor: '#e6f4ff', color: '#1677ff' }} 
+											/>
+										}
+										title={<a href={`/question/${item._id}`} target="_blank" rel="noreferrer" style={{ fontWeight: 600 }}>{item.title}</a>}
 										description={`${item.author?.fullName} • ${moment(item.createdAt).fromNow()}`}
 									/>
 								</List.Item>
