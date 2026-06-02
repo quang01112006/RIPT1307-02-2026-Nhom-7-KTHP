@@ -29,7 +29,7 @@ export class PostsController {
   }
 
   @Get('page')
-  findAll(@Query() query: any) {
+  findAll(@Query() query: any): Promise<any> {
     return this.postsService.findAll(query);
   }
 
