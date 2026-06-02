@@ -49,6 +49,7 @@ const QuanLyUser: React.FC = () => {
 	const [form] = Form.useForm();
 
 	const [searchText, setSearchText] = useState<string>('');
+	const [allData, setAllData] = useState<any[]>([]);
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -65,19 +66,46 @@ const QuanLyUser: React.FC = () => {
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState<boolean>(false);
 	const [currentUserDetail, setCurrentUserDetail] = useState<any>(null);
 
-	const activeCount = useMemo(() => danhSach?.filter((u: any) => u.isActive).length || 0, [danhSach]);
-	const adminCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'admin').length || 0, [danhSach]);
-	const teacherCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'teacher').length || 0, [danhSach]);
-	const studentCount = useMemo(() => danhSach?.filter((u: any) => u.role === 'student').length || 0, [danhSach]);
-	const lockedCount = useMemo(() => danhSach?.filter((u: any) => !u.isActive).length || 0, [danhSach]);
-	const totalCount = total || 0;
+	const dataToUse = allData.length > 0 ? allData : danhSach;
+	const activeCount = useMemo(() => dataToUse?.filter((u: any) => u.isActive).length || 0, [dataToUse]);
+	const adminCount = useMemo(() => dataToUse?.filter((u: any) => u.role === 'admin').length || 0, [dataToUse]);
+	const teacherCount = useMemo(() => dataToUse?.filter((u: any) => u.role === 'teacher').length || 0, [dataToUse]);
+	const studentCount = useMemo(() => dataToUse?.filter((u: any) => u.role === 'student').length || 0, [dataToUse]);
+	const lockedCount = useMemo(() => dataToUse?.filter((u: any) => !u.isActive).length || 0, [dataToUse]);
+	const totalCount = dataToUse?.length || 0;
 
 	useEffect(() => {
 		getModel();
+		// Fetch tất cả dữ liệu để tính thống kê tổng hợp
+		const fetchAllData = async () => {
+			try {
+				await getModel(undefined, undefined, undefined, 1, 9999).then((res: any) => {
+					if (res) {
+						setAllData(res);
+					}
+				}).catch(() => {});
+			} catch (error) {
+				console.error('Lỗi khi fetch tất cả dữ liệu:', error);
+			}
+		};
+		fetchAllData();
 	}, []);
 
 	const refreshData = () => {
 		getModel();
+		// Cập nhật tất cả dữ liệu sau khi thực hiện hành động
+		const fetchAllData = async () => {
+			try {
+				await getModel(undefined, undefined, undefined, 1, 9999).then((res: any) => {
+					if (res) {
+						setAllData(res);
+					}
+				}).catch(() => {});
+			} catch (error) {
+				console.error('Lỗi khi cập nhật tất cả dữ liệu:', error);
+			}
+		};
+		fetchAllData();
 	};
 
 	const handleStatusChange = async (checked: boolean, record: any) => {

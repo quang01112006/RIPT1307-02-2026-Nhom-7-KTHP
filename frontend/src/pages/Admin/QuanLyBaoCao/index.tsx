@@ -62,6 +62,7 @@ const QuanLyBaoCao: React.FC = () => {
 	const [selectedAction, setSelectedAction] = useState<'delete' | 'ban' | 'reject' | null>(null);
 	const [isConfirming, setIsConfirming] = useState<boolean>(false);
 	const [searchText, setSearchText] = useState<string>('');
+	const [allData, setAllData] = useState<any[]>([]);
 
 	const handleSearchTextChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
@@ -77,10 +78,36 @@ const QuanLyBaoCao: React.FC = () => {
 
 	useEffect(() => {
 		getModel();
+		// Fetch tất cả dữ liệu để tính thống kê tổng hợp
+		const fetchAllData = async () => {
+			try {
+				await getModel(undefined, undefined, undefined, 1, 9999).then((res: any) => {
+					if (res) {
+						setAllData(res);
+					}
+				}).catch(() => {});
+			} catch (error) {
+				console.error('Lỗi khi fetch tất cả dữ liệu:', error);
+			}
+		};
+		fetchAllData();
 	}, []);
 
 	const refreshData = () => {
 		getModel();
+		// Cập nhật tất cả dữ liệu sau khi thực hiện hành động
+		const fetchAllData = async () => {
+			try {
+				await getModel(undefined, undefined, undefined, 1, 9999).then((res: any) => {
+					if (res) {
+						setAllData(res);
+					}
+				}).catch(() => {});
+			} catch (error) {
+				console.error('Lỗi khi cập nhật tất cả dữ liệu:', error);
+			}
+		};
+		fetchAllData();
 	};
 
 	const getColumnSearchProps = (dataIndex: string, title: string) => ({
@@ -257,6 +284,12 @@ const QuanLyBaoCao: React.FC = () => {
 		try {
 			await deleteModel(id);
 			getModel();
+			// Cập nhật tất cả dữ liệu
+			await getModel(undefined, undefined, undefined, 1, 9999).then((res: any) => {
+				if (res) {
+					setAllData(res);
+				}
+			}).catch(() => {});
 		} catch (error) {
 			message.error('Xóa báo cáo thất bại');
 		}
@@ -331,7 +364,8 @@ const QuanLyBaoCao: React.FC = () => {
 			posts: 0,
 			comments: 0,
 		};
-		danhSach?.forEach((item: any) => {
+		const dataToUse = allData.length > 0 ? allData : danhSach;
+		dataToUse?.forEach((item: any) => {
 			if (item.status === 'PENDING') counts.pending += 1;
 			if (item.status === 'RESOLVED') counts.resolved += 1;
 			if (item.status === 'REJECTED') counts.rejected += 1;
@@ -339,7 +373,7 @@ const QuanLyBaoCao: React.FC = () => {
 			if (item.targetType === 'Comment') counts.comments += 1;
 		});
 		return counts;
-	}, [danhSach, total]);
+	}, [danhSach, total, allData]);
 
 	const columns = [
 		{
