@@ -32,7 +32,7 @@ const Leaderboard: React.FC = () => {
   const [topPosts, setTopPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(12);
+  const pageSize = 12;
   const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {

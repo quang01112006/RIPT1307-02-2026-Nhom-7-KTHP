@@ -71,7 +71,7 @@ const getIconByType = (type: string) => {
 const Notifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('unread');
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(8);
+  const pageSize = 8;
   const {
     notifications,
     loading,
