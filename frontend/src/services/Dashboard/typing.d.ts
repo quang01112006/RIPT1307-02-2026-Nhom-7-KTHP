@@ -25,6 +25,7 @@ declare module Dashboard {
       _id: string;
       fullName: string;
       email: string;
+      avatar?: string;
     };
   }
 
@@ -34,6 +35,7 @@ declare module Dashboard {
     email: string;
     code: string;
     role: string;
+    avatar?: string;
     createdAt: string;
   }
 

@@ -35,10 +35,19 @@ const AdminDashboard: React.FC = () => {
 
 	const { cards, charts, recent } = data;
 
-	// Xử lý dữ liệu cho biểu đồ Line
-	const lineXAxis = charts?.lineChart?.map((item) => item.date) || [];
-	const linePosts = charts?.lineChart?.map((item) => item.posts) || [];
-	const lineComments = charts?.lineChart?.map((item) => item.comments) || [];
+	// Xử lý dữ liệu cho biểu đồ Line - chỉ lấy tháng hiện tại, nếu không có thì lấy dữ liệu gốc
+	const currentMonth = moment().month() + 1;
+	const currentYear = moment().year();
+	const filteredLineData = charts?.lineChart?.filter((item) => {
+		const itemDate = moment(item.date);
+		return itemDate.month() + 1 === currentMonth && itemDate.year() === currentYear;
+	}) || [];
+
+	const displayLineData = filteredLineData.length > 0 ? filteredLineData : (charts?.lineChart || []);
+
+	const lineXAxis = displayLineData.map((item) => item.date) || [];
+	const linePosts = displayLineData.map((item) => item.posts) || [];
+	const lineComments = displayLineData.map((item) => item.comments) || [];
 
 	// Xử lý dữ liệu cho biểu đồ Donut
 	const donutXAxis = charts?.pieChart?.map((item) => item.tag) || [];
@@ -108,7 +117,7 @@ const AdminDashboard: React.FC = () => {
 			{/* 2 Biểu đồ */}
 			<Row gutter={[16, 16]}>
 				<Col span={14}>
-					<Card title="Tương tác trong tháng">
+					<Card title="Thống kê tương tác trong 30 ngày qua">
 						<LineChart 
 							xAxis={lineXAxis}
 							yAxis={[linePosts, lineComments]}
@@ -116,6 +125,22 @@ const AdminDashboard: React.FC = () => {
 							height={350}
 							colors={['#1677ff', '#52c41a']}
 							formatY={(val: number) => `${val} câu`}
+							otherOptions={{
+								chart: {
+									toolbar: {
+										show: true,
+										tools: {
+											download: true,
+											selection: true,
+											zoom: true,
+											zoomin: true,
+											zoomout: true,
+											pan: true,
+											reset: true,
+										},
+									},
+								},
+							}}
 						/>
 					</Card>
 				</Col>

@@ -27,37 +27,41 @@ export class DashboardService {
       ]);
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-    );
+    const startDate = new Date(now);
+    startDate.setDate(now.getDate() - 29);
+    startDate.setHours(0, 0, 0, 0);
 
     const [postsByDay, commentsByDay] = await Promise.all([
       this.postModel.aggregate([
-        { $match: { createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
-        { $group: { _id: { $dayOfMonth: '$createdAt' }, count: { $sum: 1 } } },
-        { $sort: { _id: 1 } },
+        { $match: { createdAt: { $gte: startDate, $lte: now } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%d/%m', date: '$createdAt', timezone: 'Asia/Ho_Chi_Minh' } },
+            count: { $sum: 1 },
+          },
+        },
       ]),
       this.commentModel.aggregate([
-        { $match: { createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
-        { $group: { _id: { $dayOfMonth: '$createdAt' }, count: { $sum: 1 } } },
-        { $sort: { _id: 1 } },
+        { $match: { createdAt: { $gte: startDate, $lte: now } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%d/%m', date: '$createdAt', timezone: 'Asia/Ho_Chi_Minh' } },
+            count: { $sum: 1 },
+          },
+        },
       ]),
     ]);
 
-    const daysInMonth = now.getDate();
-    const lineChartData = Array.from({ length: daysInMonth }, (_, i) => {
-      const day = i + 1;
-      const postsCount = postsByDay.find((p) => p._id === day)?.count || 0;
-      const commentsCount =
-        commentsByDay.find((c) => c._id === day)?.count || 0;
+    const lineChartData = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(startDate);
+      d.setDate(startDate.getDate() + i);
+      const dateKey = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      
+      const postsCount = postsByDay.find((p) => p._id === dateKey)?.count || 0;
+      const commentsCount = commentsByDay.find((c) => c._id === dateKey)?.count || 0;
+      
       return {
-        date: `${day}/${now.getMonth() + 1}`,
+        date: `${d.getDate()}/${d.getMonth() + 1}`,
         posts: postsCount,
         comments: commentsCount,
       };
@@ -74,7 +78,7 @@ export class DashboardService {
       .find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('author', 'fullName email')
+      .populate('author', 'fullName email avatar')
       .select('title createdAt author')
       .exec();
 
@@ -82,7 +86,7 @@ export class DashboardService {
       .find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('fullName email code role createdAt')
+      .select('fullName email code role avatar createdAt')
       .exec();
 
     return {
