@@ -39,7 +39,7 @@ export class PostsService {
     return createdPost.save();
   }
 
-  async findAll(query: PostQuery) {
+  async findAll(query: PostQuery): Promise<any> {
     const { search, tag, author, page = 1, limit = 10, sort } = query;
     const filter: any = {};
 
@@ -71,7 +71,7 @@ export class PostsService {
     const [data, total] = await Promise.all([
       this.postModel
         .find(filter)
-        .populate('author', 'fullName email code role avatar faculty department')
+        .populate('author', 'fullName email code role avatar faculty department reputation')
         .sort(sortOption)
         .limit(Number(limit))
         .skip(skip)
@@ -103,7 +103,7 @@ export class PostsService {
   async findOne(id: string) {
     const post = await this.postModel
       .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-      .populate('author', 'fullName email code role avatar')
+      .populate('author', 'fullName email code role avatar faculty department reputation')
       .exec();
 
     if (!post) throw new NotFoundException('Không tìm thấy bài viết');

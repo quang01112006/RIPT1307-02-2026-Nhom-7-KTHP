@@ -17,6 +17,7 @@ export default () => {
 			await getByIdModel(id);
 		} catch (error) {
 			console.error('Lỗi khi vote:', error);
+			message.error('Không thể thực hiện bình chọn');
 		} finally {
 			setLoading(false);
 		}

@@ -133,30 +133,12 @@ const ForgotPasswordPage: React.FC = () => {
               </div>
             </div>
 
-<<<<<<< HEAD
-          <AnimatePresence>
-            {currentStep === 0 ? (
-              <motion.div
-                key="step1"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 20, opacity: 0 }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div style={s.iconBox}><Fingerprint size={40} color="#6366f1" /></div>
-                  <Title level={2} style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Quên mật khẩu?</Title>
-                  <Paragraph style={{ color: '#94a3b8', marginBottom: 32 }}>
-                    Đừng lo lắng! Nhập email học viện của bạn để bắt đầu quá trình khôi phục tài khoản.
-                  </Paragraph>
-                </div>
-=======
             <div style={{ display: 'inline-flex', padding: '8px 14px', borderRadius: '999px', background: '#eef4ff', color: '#2563eb', fontWeight: 700, fontSize: '12px', marginBottom: 16 }}>
               Quên mật khẩu
             </div>
             
             <Title style={styles.title}>{currentStep === 0 ? 'Khôi phục mật khẩu' : 'Xác thực OTP'}</Title>
             <Text style={styles.subtitle}>{currentStep === 0 ? 'Nhập email học viện của bạn để nhận mã xác thực khôi phục tài khoản.' : `Mã OTP đã được gửi đến ${email}`}</Text>
->>>>>>> 110f5f8ebd577eb0543cc09c1ce4a312f56d524f
 
               <AnimatePresence>
                 {currentStep === 0 ? (

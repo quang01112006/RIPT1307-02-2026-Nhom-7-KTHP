@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { history, useModel } from "umi";
 import { Avatar, Button, Card, Input, List, Row, Col, Space, Tag, Typography, Tabs } from "antd";
 import { BarChartOutlined, CheckCircleFilled, FireOutlined, TrophyOutlined } from "@ant-design/icons";
+import { getTagColor } from "@/utils/utils";
 import "./components/style.less";
 
 const { Title, Text, Paragraph } = Typography;
@@ -22,6 +23,7 @@ type QuestionItem = BaiViet.IRecord & {
     department?: string;
     faculty?: string;
     avatar?: string;
+    reputation?: number;
   };
 };
 
@@ -59,6 +61,7 @@ const TrangChu: React.FC = () => {
   const [activeTab, setActiveTab] = useState("newest");
   const [searchText, setSearchText] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredAuthorId, setHoveredAuthorId] = useState<string | null>(null);
 
   const baiVietModel = useModel("baiviet") as any;
   const { getModel, danhSach, loading } = baiVietModel ?? {};
@@ -81,8 +84,7 @@ const TrangChu: React.FC = () => {
     return Array.isArray(candidate) ? candidate : [];
   }, [baiVietModel, danhSach]);
 
-  // Fetch all posts (up to 1000) once on mount to enable correct frontend-side filtering & pagination,
-  // and load system statistics from the dashboard API
+
   useEffect(() => {
     if (typeof getModel === "function") {
       getModel(undefined, undefined, undefined, 1, 1000);
@@ -131,14 +133,14 @@ const TrangChu: React.FC = () => {
       });
   }, [activeTab, realRawData, searchText]);
 
-  // 🚀 REAL DATA: Trending tags retrieved from Dashboard API or dynamically calculated from realRawData
+
   const trendingTags = useMemo(() => {
     const list = stats?.charts?.pieChart ?? [];
     if (list.length > 0) {
-      return list.slice(0, 5).map((t: any) => ({ name: `#${t.tag}`, count: t.count }));
+      return list.slice(0, 5).map((t: any) => ({ name: t.tag, count: t.count }));
     }
 
-    // Nếu không có quyền admin (stats undefined), tự động thống kê tag từ danh sách bài viết thực tế
+
     const tagMap: Record<string, number> = {};
     realRawData.forEach((post: any) => {
       const tags = Array.isArray(post.tags) ? post.tags : [];
@@ -148,7 +150,7 @@ const TrangChu: React.FC = () => {
     });
 
     const sortedTags = Object.entries(tagMap)
-      .map(([name, count]) => ({ name: `#${name}`, count }))
+      .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -157,67 +159,54 @@ const TrangChu: React.FC = () => {
     }
 
     return [
-      { name: "#reactjs", count: 450 },
-      { name: "#python", count: 312 },
-      { name: "#artificial_intelligence", count: 289 },
-      { name: "#java", count: 195 },
-      { name: "#data_structures", count: 164 },
+      { name: "reactjs", count: 450 },
+      { name: "python", count: 312 },
+      { name: "artificial_intelligence", count: 289 },
+      { name: "java", count: 195 },
+      { name: "data_structures", count: 164 },
     ];
   }, [stats, realRawData]);
 
-  // 🚀 REAL DATA: Leaderboard dynamically built based on post activities (posts, views, answers)
+
   const leaderboard = useMemo(() => {
-    const authorMap: Record<string, { name: string; avatar?: string; postsCount: number; views: number; answers: number }> = {};
+    const authorMap: Record<string, { id: string; name: string; avatar?: string; reputation: number }> = {};
     
     realRawData.forEach((post: any) => {
       const author = post.author;
       if (author && author._id) {
         if (!authorMap[author._id]) {
           authorMap[author._id] = {
+            id: author._id,
             name: author.fullName || author.name || "Thành viên",
             avatar: author.avatar,
-            postsCount: 0,
-            views: 0,
-            answers: 0,
+            reputation: Number(author.reputation ?? 0),
           };
         }
-        authorMap[author._id].postsCount += 1;
-        authorMap[author._id].views += Number(post.views ?? 0);
-        authorMap[author._id].answers += Number(post.answers ?? post.commentsCount ?? 0);
       }
     });
 
     const sortedAuthors = Object.values(authorMap)
-      .map((author) => {
-        // Point formula: 1 post = 10 pts, 1 view = 1 pt, 1 answer = 5 pts
-        const points = author.postsCount * 10 + author.views + author.answers * 5;
-        return {
-          name: author.name,
-          avatar: author.avatar,
-          points: points >= 1000 ? `${(points / 1000).toFixed(1)}k` : `${points}`,
-          rawPoints: points,
-        };
-      })
-      .sort((a, b) => b.rawPoints - a.rawPoints)
+      .sort((a, b) => b.reputation - a.reputation)
       .slice(0, 5);
 
     if (sortedAuthors.length > 0) {
       return sortedAuthors.map((item, index) => ({
         rank: index + 1,
+        id: item.id,
         name: item.name,
         avatar: item.avatar,
-        points: item.points,
+        points: item.reputation >= 1000 ? `${(item.reputation / 1000).toFixed(1)}k` : `${item.reputation}`,
       }));
     }
 
     return [
-      { rank: 1, name: "GS. Trần Hưng", avatar: undefined as string | undefined, points: "12.4k" },
-      { rank: 2, name: "Lê Quang", avatar: undefined as string | undefined, points: "8.1k" },
-      { rank: 3, name: "Minh Anh", avatar: undefined as string | undefined, points: "5.5k" },
+      { rank: 1, id: "", name: "GS. Trần Hưng", avatar: undefined as string | undefined, points: "12.4k" },
+      { rank: 2, id: "", name: "Lê Quang", avatar: undefined as string | undefined, points: "8.1k" },
+      { rank: 3, id: "", name: "Minh Anh", avatar: undefined as string | undefined, points: "5.5k" },
     ];
   }, [realRawData]);
 
-  // 🚀 REAL DATA: System statistics computed from Dashboard cards or dynamically calculated from realRawData
+
   const systemStats = useMemo(() => {
     const cards = stats?.cards;
     if (cards) {
@@ -235,7 +224,7 @@ const TrangChu: React.FC = () => {
       ];
     }
 
-    // Nếu không có quyền admin (stats undefined), tính toán động trực tiếp từ realRawData của bài viết
+
     const totalPosts = realRawData.length;
     let totalComments = 0;
     let resolvedCount = 0;
@@ -296,13 +285,16 @@ const TrangChu: React.FC = () => {
           <List
             loading={loading}
             dataSource={processedQuestions}
-            // 🚀 FIX: Phân trang client-side mượt mà, đầy đủ tính năng cho toàn bộ danh sách câu hỏi đã lọc
+
             pagination={{
               pageSize: 10,
               size: "small",
               showSizeChanger: true,
               pageSizeOptions: ["5", "10", "20", "50"],
               showTotal: (total) => `Tổng số ${total} câu hỏi`,
+              onChange: () => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              },
             }}
             locale={{ emptyText: "Không tìm thấy câu hỏi phù hợp" }}
             renderItem={(record: QuestionItem) => {
@@ -313,7 +305,7 @@ const TrangChu: React.FC = () => {
               const recordTags = Array.isArray(record.tags) ? record.tags : [];
               const recordId = record._id ?? "";
 
-              // 🚀 FIX: Tính toán số vote dựa trên mảng upvotedBy trừ đi mảng downvotedBy
+
               const upvotes = Array.isArray(record.upvotedBy) ? record.upvotedBy.length : 0;
               const downvotes = Array.isArray(record.downvotedBy) ? record.downvotedBy.length : 0;
               const votesCount = upvotes - downvotes;
@@ -352,9 +344,9 @@ const TrangChu: React.FC = () => {
                         justifyContent: "center",
                         alignItems: "center",
                         borderRadius: 10,
-                        border: `1px solid ${isResolved ? "#52c41a" : "#1890ff"}`,
-                        backgroundColor: isResolved ? "#f6ffed" : "#e6f7ff",
-                        color: isResolved ? "#52c41a" : "#1890ff",
+                        border: `1px solid ${isResolved ? "#52c41a" : answerCount > 0 ? "#1890ff" : "transparent"}`,
+                        backgroundColor: isResolved ? "#f6ffed" : answerCount > 0 ? "#e6f7ff" : "transparent",
+                        color: isResolved ? "#52c41a" : answerCount > 0 ? "#1890ff" : "#8c8c8c",
                         padding: 8,
                       }}
                     >
@@ -374,12 +366,12 @@ const TrangChu: React.FC = () => {
                         ellipsis={{ rows: 2, expandable: false }}
                         style={{ color: "#434343", marginBottom: 16, fontSize: 14, lineHeight: 1.6 }}
                       >
-                        {record.summary ?? record.content ?? ""}
+                        {String(record.summary ?? record.content ?? "").replace(/<[^>]*>?/gm, '')}
                       </Paragraph>
 
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {recordTags.map((tag) => (
-                          <Tag key={tag} color="default" style={{ borderRadius: 6, padding: "4px 10px", fontWeight: 500 }}>
+                          <Tag key={tag} color={getTagColor(tag)} style={{ borderRadius: 6, padding: "4px 10px", fontWeight: 500 }}>
                             {tag}
                           </Tag>
                         ))}
@@ -387,12 +379,33 @@ const TrangChu: React.FC = () => {
                     </div>
 
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+
+                      <div
+                        style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+                        onMouseEnter={() => setHoveredAuthorId(recordId)}
+                        onMouseLeave={() => setHoveredAuthorId(null)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (record.author?._id) {
+                            history.push(`/profile/${record.author._id}`);
+                          }
+                        }}
+                      >
                         <Avatar size={32} src={record.author?.avatar} style={{ backgroundColor: "#1890ff" }}>
                           {String(authorName).charAt(0)}
                         </Avatar>
                         <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-                          <Text strong style={{ color: "#262626", fontSize: 14 }}>{authorName}</Text>
+                          <Text
+                            strong
+                            style={{
+                              color: hoveredAuthorId === recordId ? "#0052cc" : "#262626",
+                              fontSize: 14,
+                              textDecoration: hoveredAuthorId === recordId ? "underline" : "none",
+                              transition: "color 0.2s ease"
+                            }}
+                          >
+                            {authorName}
+                          </Text>
                           <Text type="secondary" style={{ fontSize: 12 }}>
                             {authorDepartment} • {formatRelativeTime(record.createdAt)}
                           </Text>
@@ -406,74 +419,86 @@ const TrangChu: React.FC = () => {
           />
         </Col>
 
-        {/* ==================== CỘT PHẢI: DỮ LIỆU THẬT SINK TỪ BACKEND/STATISTICS ==================== */}
+
         <Col xs={24} lg={7}>
-          <Card
-            title={<span style={{ fontWeight: 600 }}><FireOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />Thẻ Thịnh Hành</span>}
-            bodyStyle={{ padding: 16 }}
-            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
-          >
-            {trendingTags.map((tag: { name: string; count: number }) => (
-              <div
-                key={tag.name}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "10px 12px",
-                  marginBottom: 10,
-                  borderRadius: 10,
-                  backgroundColor: "#fafafa",
-                }}
-              >
-                <span style={{ fontWeight: 500, color: "#434343" }}>{tag.name}</span>
-                <Text type="secondary" strong>{tag.count} bài đăng</Text>
-              </div>
-            ))}
-          </Card>
-
-          <Card
-            title={<span style={{ fontWeight: 600 }}><TrophyOutlined style={{ color: "#ffc107", marginRight: 8 }} />Bảng Xếp Hạng</span>}
-            bodyStyle={{ padding: 16 }}
-            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
-          >
-            {leaderboard.map((user) => (
-              <div
-                key={user.rank}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "12px 0",
-                  borderBottom: user.rank !== leaderboard.length ? "1px solid #f0f0f0" : "none",
-                }}
-              >
-                <Space size={12} align="center">
-                  <span style={{ fontWeight: 700, color: user.rank === 1 ? "#fa8c16" : user.rank === 2 ? "#fadb14" : user.rank === 3 ? "#1890ff" : "#8c8c8c" }}>{user.rank}</span>
-                  <Avatar size={32} src={user.avatar} style={{ backgroundColor: "#87d068" }}>{user.name.charAt(0)}</Avatar>
-                  <span style={{ fontWeight: 500 }}>{user.name}</span>
-                </Space>
-                <Text strong style={{ color: "#fa8c16" }}>★ {user.points}</Text>
-              </div>
-            ))}
-          </Card>
-
-          <Card
-            title={<span style={{ fontWeight: 600 }}><BarChartOutlined style={{ color: "#1890ff", marginRight: 8 }} />Thống Kê Hệ Thống</span>}
-            bodyStyle={{ padding: 16 }}
-            style={{ marginBottom: 16, borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
-          >
-            <Row gutter={[16, 16]}>
-              {systemStats.map((stat) => (
-                <Col span={12} key={stat.label}>
-                  <div style={{ backgroundColor: "#f5f7ff", borderRadius: 10, padding: 12, textAlign: "center", border: "1px solid #e6f7ff" }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#1890ff" }}>{stat.value}</div>
-                    <div style={{ color: "#8c8c8c", fontSize: 12, marginTop: 4 }}>{stat.label}</div>
-                  </div>
-                </Col>
+          <div style={{ position: "sticky", top: 24, display: "flex", flexDirection: "column", gap: "16px" }}>
+            <Card
+              title={<span style={{ fontWeight: 600 }}><FireOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />Thẻ Thịnh Hành</span>}
+              bodyStyle={{ padding: 16 }}
+              style={{ borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
+            >
+              {trendingTags.map((tag: { name: string; count: number }) => (
+                <Tag
+                  key={tag.name}
+                  color={getTagColor(tag.name)}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    marginBottom: 10,
+                    borderRadius: 10,
+                    marginRight: 0,
+                  }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{tag.name}</span>
+                  <span style={{ fontWeight: 500, fontSize: 13, opacity: 0.85 }}>{tag.count} bài đăng</span>
+                </Tag>
               ))}
-            </Row>
-          </Card>
+            </Card>
+
+            <Card
+              title={<span style={{ fontWeight: 600 }}><TrophyOutlined style={{ color: "#ffc107", marginRight: 8 }} />Bảng Xếp Hạng</span>}
+              bodyStyle={{ padding: 16 }}
+              style={{ borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
+            >
+              {leaderboard.map((user) => (
+                <div
+                  key={user.rank}
+
+                  onClick={() => {
+                    if (user.id) {
+                      history.push(`/profile/${user.id}`);
+                    }
+                  }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 0",
+                    borderBottom: user.rank !== leaderboard.length ? "1px solid #f0f0f0" : "none",
+                    cursor: user.id ? "pointer" : "default",
+                  }}
+                >
+                  <Space size={12} align="center">
+                    <span style={{ fontWeight: 700, color: user.rank === 1 ? "#fa8c16" : user.rank === 2 ? "#fadb14" : user.rank === 3 ? "#1890ff" : "#8c8c8c" }}>{user.rank}</span>
+                    <Avatar size={32} src={user.avatar} style={{ backgroundColor: "#87d068" }}>{user.name.charAt(0)}</Avatar>
+                    <span style={{ fontWeight: 500 }} className="leaderboard-name">{user.name}</span>
+                  </Space>
+                  <Text strong style={{ color: "#fa8c16" }}>★ {user.points}</Text>
+                </div>
+              ))}
+            </Card>
+
+            <Card
+              title={<span style={{ fontWeight: 600 }}><BarChartOutlined style={{ color: "#1890ff", marginRight: 8 }} />Thống Kê Hệ Thống</span>}
+              bodyStyle={{ padding: 16 }}
+              style={{ borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
+            >
+              <Row gutter={[16, 16]}>
+                {systemStats.map((stat) => (
+                  <Col span={12} key={stat.label}>
+                    <div style={{ backgroundColor: "#f5f7ff", borderRadius: 10, padding: 12, textAlign: "center", border: "1px solid #e6f7ff" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "#1890ff" }}>{stat.value}</div>
+                      <div style={{ color: "#8c8c8c", fontSize: 12, marginTop: 4 }}>{stat.label}</div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+
+
+          </div>
         </Col>
       </Row>
     </div>
