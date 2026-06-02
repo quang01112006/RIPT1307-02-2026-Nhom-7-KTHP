@@ -31,16 +31,21 @@ const getTimeAgo = (value?: string | number) => {
 const Leaderboard: React.FC = () => {
   const [topPosts, setTopPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(12);
+  const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
     const fetchTopPosts = async () => {
       setLoading(true);
       try {
         const response = await axios.get(`${ip3}/posts/page`, {
-          params: { sort: 'views', limit: 12 },
+          params: { page, sort: 'views', limit: pageSize },
         });
         const result = response?.data?.data?.result || response?.data?.result || [];
+        const totalResult = response?.data?.data?.total ?? response?.data?.total ?? 0;
         setTopPosts(result);
+        setTotal(totalResult);
       } catch (error) {
         console.error('Lỗi khi lấy bảng xếp hạng:', error);
       } finally {
@@ -49,7 +54,7 @@ const Leaderboard: React.FC = () => {
     };
 
     fetchTopPosts();
-  }, []);
+  }, [page, pageSize]);
 
   const topAuthors = useMemo(() => {
     const map = new Map<string, any>();
@@ -136,6 +141,20 @@ const Leaderboard: React.FC = () => {
                 loading={loading}
                 dataSource={topPosts}
                 locale={{ emptyText: <Empty description="Chưa có dữ liệu bảng xếp hạng" /> }}
+                pagination={
+                  total > pageSize
+                    ? {
+                        current: page,
+                        pageSize,
+                        total,
+                        showQuickJumper: true,
+                        onChange: (nextPage) => {
+                          setPage(nextPage);
+                        },
+                        locale: { jump_to: 'Đến trang', page: '' },
+                      }
+                    : false
+                }
                 renderItem={(post: any, index) => (
                   <List.Item
                     style={{

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { history, useModel } from 'umi';
 import {
   Avatar,
@@ -9,6 +9,7 @@ import {
   Dropdown,
   Empty,
   Menu,
+  Pagination,
   Space,
   Tag,
   Typography,
@@ -69,6 +70,8 @@ const getIconByType = (type: string) => {
 
 const Notifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('unread');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(8);
   const {
     notifications,
     loading,
@@ -87,6 +90,19 @@ const Notifications: React.FC = () => {
         : notifications,
     [activeTab, notifications],
   );
+
+  const paginatedNotifications = useMemo(
+    () =>
+      filteredNotifications.slice((page - 1) * pageSize, page * pageSize),
+    [filteredNotifications, page, pageSize],
+  );
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredNotifications.length / pageSize));
+    if (page > maxPage) {
+      setPage(1);
+    }
+  }, [filteredNotifications, pageSize, page]);
 
   const openNotification = (item: any) => {
     if (!item.isRead) {
@@ -223,7 +239,7 @@ const Notifications: React.FC = () => {
                   <Text type="secondary">Đang tải...</Text>
                 </div>
               ) : (
-                filteredNotifications.map((item: any) => {
+                paginatedNotifications.map((item: any) => {
                   const typeInfo = typeMap[item.type] || typeMap.SYSTEM;
                   return (
                     <div
@@ -394,6 +410,20 @@ const Notifications: React.FC = () => {
                     </div>
                   );
                 })
+              )}
+              {filteredNotifications.length > pageSize && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 0' }}>
+                  <Pagination
+                    current={page}
+                    pageSize={pageSize}
+                    total={filteredNotifications.length}
+                    showQuickJumper
+                    onChange={(nextPage) => {
+                      setPage(nextPage);
+                    }}
+                    locale={{ jump_to: 'Đến trang', page: '' }}
+                  />
+                </div>
               )}
             </div>
           )}
