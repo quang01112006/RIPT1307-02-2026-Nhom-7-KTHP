@@ -27,38 +27,35 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 			</span>
 		);
 
-	const fullName = initialState.currentUser?.family_name
-		? `${initialState.currentUser.family_name} ${initialState.currentUser?.given_name ?? ''}`
-		: initialState.currentUser?.name ?? (initialState.currentUser?.preferred_username || '');
-	const lastNameChar = fullName.split(' ')?.at(-1)?.[0]?.toUpperCase();
+	const currentUser = initialState.currentUser;
+	const fullName = currentUser?.fullName || 'Người dùng';
+	const lastNameChar = fullName.split(' ')?.at(-1)?.[0]?.toUpperCase() || 'U';
 
 	const items: ItemType[] = [
 		{
-			key: 'name',
+			key: 'profile',
 			icon: <UserOutlined />,
-			label: fullName,
+			label: 'Trang cá nhân',
+			onClick: () => history.push(`/profile/${currentUser._id}`),
 		},
-		// {
-		// 	key: 'password',
-		// 	icon: <SwapOutlined />,
-		// 	label: 'Đổi mật khẩu',
-		// 	onClick: () => {
-		// 		const redirect = window.location.href;
-		// 		window.location.href = `${keycloakAuthEndpoint}?client_id=${AppModules[currentRole].clientId}&redirect_uri=${redirect}&response_type=code&scope=openid&kc_action=UPDATE_PASSWORD`;
-		// 	},
-		// },
-		{
-			key: 'office',
-			icon: <FileWordOutlined />,
-			label: 'Office 365',
-			onClick: () => window.open('https://office.com/'),
-		},
-		{
-			key: 'portal',
-			icon: <GlobalOutlined />,
-			label: APP_CONFIG_TITLE_LANDING ?? 'Cổng thông tin',
-			onClick: () => window.open(landingUrl),
-		},
+		...(currentUser?.role === 'admin'
+			? [
+					{
+						key: 'switch_context',
+						icon: <GlobalOutlined />,
+						label: history.location.pathname.startsWith('/admin')
+							? 'Quay lại diễn đàn'
+							: 'Trang quản trị',
+						onClick: () => {
+							if (history.location.pathname.startsWith('/admin')) {
+								history.push('/dashboard');
+							} else {
+								history.push('/admin/dashboard');
+							}
+						},
+					},
+			  ]
+			: []),
 		{ type: 'divider', key: 'divider' },
 		{
 			key: 'logout',
@@ -69,23 +66,14 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 		},
 	];
 
-	if (menu && !initialState.currentUser.realm_access?.roles?.includes('QUAN_TRI_VIEN')) {
-		// items.splice(1, 0, {
-		//   key: 'center',
-		//   icon: <UserOutlined />,
-		//   label: 'Trang cá nhân',
-		//   onClick: () => history.push('/account/center'),
-		// });
-	}
-
 	return (
 		<>
 			<HeaderDropdown overlay={<Menu className={styles.menu} items={items} />}>
 				<span className={`${styles.action} ${styles.account}`}>
 					<Avatar
 						className={styles.avatar}
-						src={initialState.currentUser?.picture ? <img src={initialState.currentUser?.picture} /> : undefined}
-						icon={!initialState.currentUser?.picture ? lastNameChar ?? <UserOutlined /> : undefined}
+						src={currentUser?.avatar}
+						icon={!currentUser?.avatar ? lastNameChar : undefined}
 						alt='avatar'
 					/>
 					<span className={`${styles.name}`}>{fullName}</span>

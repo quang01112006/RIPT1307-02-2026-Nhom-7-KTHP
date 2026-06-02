@@ -29,6 +29,11 @@ export class CommentsController {
     return this.commentsService.findByPost(postId);
   }
 
+  @Get('author/:authorId/page')
+  findAllByAuthor(@Param('authorId') authorId: string) {
+    return this.commentsService.findByAuthor(authorId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: any) {
@@ -55,5 +60,14 @@ export class CommentsController {
     @Request() req: any,
   ) {
     return this.commentsService.toggleVote(id, req.user._id as string, type);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/accept')
+  toggleAccept(
+    @Param('id') id: string,
+    @Request() req: any,
+  ) {
+    return this.commentsService.toggleAccept(id, req.user._id as string);
   }
 }

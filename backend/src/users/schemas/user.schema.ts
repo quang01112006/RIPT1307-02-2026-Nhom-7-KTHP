@@ -37,5 +37,23 @@ export class User {
 
   @Prop()
   avatar: string;
+
+  @Prop({ default: '' })
+  bio: string;
+
+  @Prop({ type: Object, default: {} })
+  socials: Record<string, string>;
+
+  @Prop({ type: [String], default: [] })
+  skills: string[];
+
+  @Prop({ type: [{ type: String, ref: 'Post' }], default: [] })
+  bookmarks: string[];
+
+  @Prop()
+  otpCode?: string;
+
+  @Prop()
+  otpExpires?: Date;
 }
 export const UserSchema = SchemaFactory.createForClass(User);

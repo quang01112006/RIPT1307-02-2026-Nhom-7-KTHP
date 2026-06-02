@@ -36,6 +36,11 @@ export class TagsService {
     };
   }
 
+  async findAllTags() {
+    const data = await this.tagModel.find().sort({ name: 1 }).exec();
+    return { data };
+  }
+
   async findOne(id: string) {
     const tag = await this.tagModel.findById(id).exec();
     if (!tag) throw new NotFoundException('Không tìm thấy Tag');

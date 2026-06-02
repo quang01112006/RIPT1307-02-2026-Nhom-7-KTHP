@@ -12,6 +12,7 @@ declare module BaiViet {
 		files?: any[];
 		upvotedBy: string[];
 		downvotedBy: string[];
+		views?: number;
 		createdAt: string;
 		updatedAt: string;
 	}

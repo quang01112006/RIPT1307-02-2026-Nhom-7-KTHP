@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,10 +16,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 
+import { Role } from './schemas/user.schema';
+
 interface RequestWithUser extends Request {
   user: {
     _id: string;
-    role: string;
+    role: Role;
     email: string;
   };
 }
@@ -35,7 +38,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('page')
   findAll(@Request() req: RequestWithUser) {
-    if (req.user.role !== 'admin')
+    if (req.user.role !== Role.ADMIN)
       throw new ForbiddenException('Thao tác không được phép');
     return this.usersService.findAll();
   }
@@ -43,7 +46,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Put(':id/toggle-active')
   toggleActive(@Param('id') id: string, @Request() req: RequestWithUser) {
-    if (req.user.role !== 'admin')
+    if (req.user.role !== Role.ADMIN)
       throw new ForbiddenException('Thao tác không được phép');
     return this.usersService.toggleActive(id);
   }
@@ -51,7 +54,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: RequestWithUser) {
-    if (req.user.role !== 'admin' && req.user._id !== id)
+    if (req.user.role !== Role.ADMIN && req.user._id !== id)
       throw new ForbiddenException('Thao tác không được phép');
     return this.usersService.remove(id);
   }
@@ -63,7 +66,7 @@ export class UsersController {
     @Body() updateUserDto: any,
     @Request() req: RequestWithUser,
   ) {
-    if (req.user.role !== 'admin' && req.user._id !== id) {
+    if (req.user.role !== Role.ADMIN && req.user._id !== id) {
       throw new ForbiddenException(
         'Bạn không có quyền sửa thông tin người này',
       );
@@ -75,5 +78,39 @@ export class UsersController {
   @Get('me')
   getProfile(@Request() req: RequestWithUser) {
     return this.usersService.findOne(req.user._id);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy thông tin công khai của 1 user',
+  })
+  async getPublicProfile(@Param('id') id: string) {
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new BadRequestException('Người dùng không tồn tại');
+    }
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/bookmarks/:postId')
+  @ApiOperation({ summary: 'Lưu hoặc bỏ lưu bài viết' })
+  toggleBookmark(
+    @Param('id') id: string,
+    @Param('postId') postId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    if (req.user._id !== id)
+      throw new ForbiddenException('Thao tác không được phép');
+    return this.usersService.toggleBookmark(id, postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/bookmarks')
+  @ApiOperation({ summary: 'Lấy danh sách bài viết đã lưu' })
+  getBookmarks(@Param('id') id: string, @Request() req: RequestWithUser) {
+    if (req.user._id !== id)
+      throw new ForbiddenException('Thao tác không được phép');
+    return this.usersService.getBookmarks(id);
   }
 }
