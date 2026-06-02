@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { history, useModel } from "umi";
 import { Avatar, Button, Card, Input, List, Row, Col, Space, Tag, Typography, Tabs } from "antd";
 import { BarChartOutlined, CheckCircleFilled, FireOutlined, TrophyOutlined } from "@ant-design/icons";
+import { getTagColor } from "@/utils/utils";
 import "./components/style.less";
 
 const { Title, Text, Paragraph } = Typography;
@@ -140,7 +141,7 @@ const TrangChu: React.FC = () => {
   const trendingTags = useMemo(() => {
     const list = stats?.charts?.pieChart ?? [];
     if (list.length > 0) {
-      return list.slice(0, 5).map((t: any) => ({ name: `#${t.tag}`, count: t.count }));
+      return list.slice(0, 5).map((t: any) => ({ name: t.tag, count: t.count }));
     }
 
     // Nếu không có quyền admin (stats undefined), tự động thống kê tag từ danh sách bài viết thực tế
@@ -153,7 +154,7 @@ const TrangChu: React.FC = () => {
     });
 
     const sortedTags = Object.entries(tagMap)
-      .map(([name, count]) => ({ name: `#${name}`, count }))
+      .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -162,11 +163,11 @@ const TrangChu: React.FC = () => {
     }
 
     return [
-      { name: "#reactjs", count: 450 },
-      { name: "#python", count: 312 },
-      { name: "#artificial_intelligence", count: 289 },
-      { name: "#java", count: 195 },
-      { name: "#data_structures", count: 164 },
+      { name: "reactjs", count: 450 },
+      { name: "python", count: 312 },
+      { name: "artificial_intelligence", count: 289 },
+      { name: "java", count: 195 },
+      { name: "data_structures", count: 164 },
     ];
   }, [stats, realRawData]);
 
@@ -288,13 +289,16 @@ const TrangChu: React.FC = () => {
           <List
             loading={loading}
             dataSource={processedQuestions}
-            // Phân trang client-side mượt mà, đầy đủ tính năng cho toàn bộ danh sách câu hỏi đã lọc
+            // Phân trang client-side mượt mà, đồng bộ với admin
             pagination={{
               pageSize: 10,
               size: "small",
               showSizeChanger: false,
               showQuickJumper: true,
               locale: { jump_to: "Đến trang", page: "" },
+              onChange: () => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              },
             }}
             locale={{ emptyText: "Không tìm thấy câu hỏi phù hợp" }}
             renderItem={(record: QuestionItem) => {
@@ -344,9 +348,9 @@ const TrangChu: React.FC = () => {
                         justifyContent: "center",
                         alignItems: "center",
                         borderRadius: 10,
-                        border: `1px solid ${isResolved ? "#52c41a" : "#1890ff"}`,
-                        backgroundColor: isResolved ? "#f6ffed" : "#e6f7ff",
-                        color: isResolved ? "#52c41a" : "#1890ff",
+                        border: `1px solid ${isResolved ? "#52c41a" : answerCount > 0 ? "#1890ff" : "transparent"}`,
+                        backgroundColor: isResolved ? "#f6ffed" : answerCount > 0 ? "#e6f7ff" : "transparent",
+                        color: isResolved ? "#52c41a" : answerCount > 0 ? "#1890ff" : "#8c8c8c",
                         padding: 8,
                       }}
                     >
@@ -366,12 +370,12 @@ const TrangChu: React.FC = () => {
                         ellipsis={{ rows: 2, expandable: false }}
                         style={{ color: "#434343", marginBottom: 16, fontSize: 14, lineHeight: 1.6 }}
                       >
-                        {record.summary ?? record.content ?? ""}
+                        {String(record.summary ?? record.content ?? "").replace(/<[^>]*>?/gm, '')}
                       </Paragraph>
 
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {recordTags.map((tag) => (
-                          <Tag key={tag} color="default" style={{ borderRadius: 6, padding: "4px 10px", fontWeight: 500 }}>
+                          <Tag key={tag} color={getTagColor(tag)} style={{ borderRadius: 6, padding: "4px 10px", fontWeight: 500 }}>
                             {tag}
                           </Tag>
                         ))}
@@ -428,8 +432,9 @@ const TrangChu: React.FC = () => {
               style={{ borderRadius: 12, boxShadow: "0 1px 4px rgba(0, 0, 0, 0.04)" }}
             >
               {trendingTags.map((tag: { name: string; count: number }) => (
-                <div
+                <Tag
                   key={tag.name}
+                  color={getTagColor(tag.name)}
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
@@ -437,12 +442,12 @@ const TrangChu: React.FC = () => {
                     padding: "10px 12px",
                     marginBottom: 10,
                     borderRadius: 10,
-                    backgroundColor: "#fafafa",
+                    marginRight: 0,
                   }}
                 >
-                  <span style={{ fontWeight: 500, color: "#434343" }}>{tag.name}</span>
-                  <Text type="secondary" strong>{tag.count} bài đăng</Text>
-                </div>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{tag.name}</span>
+                  <span style={{ fontWeight: 500, fontSize: 13, opacity: 0.85 }}>{tag.count} bài đăng</span>
+                </Tag>
               ))}
             </Card>
 
