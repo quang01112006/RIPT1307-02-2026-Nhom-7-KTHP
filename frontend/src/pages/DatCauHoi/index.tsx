@@ -1,4 +1,4 @@
-import ContentEditor from '@/components/ContentEditor';
+import TinyEditor from '@/components/TinyEditor';
 import { Button, Card, Col, Input, message, Modal, Row, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { history, useLocation, useModel } from 'umi';
@@ -78,7 +78,7 @@ const DatCauHoi: React.FC = () => {
 			{/* Tiêu đề & Hướng dẫn */}
 			<div style={{ marginBottom: '24px' }}>
 				<h1 style={{ fontSize: '26px', fontWeight: 700, color: '#262626', marginBottom: '8px' }}>
-					{editId ? 'Chỉnh sửa câu hỏi' : 'Đặt một câu hỏi công khai'}
+					{editId ? 'Chỉnh sửa câu hỏi' : 'Đặt câu hỏi'}
 				</h1>
 				<p style={{ fontSize: '15px', color: '#595959', margin: 0 }}>
 					Bạn đang gặp khó khăn? Đặt câu hỏi để nhận sự trợ giúp từ mọi người trong cộng đồng nhé.
@@ -142,16 +142,18 @@ const DatCauHoi: React.FC = () => {
 								</span>
 							</div>
 
-							<div style={{ position: 'relative' }}>
-								<ContentEditor
-									inputId='question-content-input'
+							<div
+								style={{ position: 'relative', border: '1px solid #d9d9d9', borderRadius: '8px', overflow: 'hidden' }}
+							>
+								<TinyEditor
 									value={content}
 									onChange={setContent}
-									placeholder='Nhập nội dung chi tiết của bạn tại đây. Bạn có thể sử dụng các nút định dạng ở trên để chèn code hoặc tải lên hình ảnh...'
-									minRows={8}
-									maxRows={20}
 									disabled={submitting}
+									minHeight={250}
+									hideMenubar={true}
+									stickyToolbar={false}
 								/>
+
 								{content && (
 									<div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
 										<Button

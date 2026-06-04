@@ -1,6 +1,5 @@
 import { BulbOutlined } from '@ant-design/icons';
 import { Card } from 'antd';
-import React from 'react';
 
 interface SidebarPhaiProps {
 	currentUser?: any;
@@ -42,8 +41,8 @@ const SidebarPhai = ({ currentUser }: SidebarPhaiProps) => {
 						},
 						{
 							n: 3,
-							title: 'Chèn Code/Log:',
-							desc: 'Hãy dùng toolbar để chèn code giúp mọi người dễ copy.',
+							title: 'Toolbar:',
+							desc: 'Gửi ảnh, định dạng nội dung giúp mọi người dễ đọc và giúp đỡ bạn.',
 						},
 						{
 							n: 4,

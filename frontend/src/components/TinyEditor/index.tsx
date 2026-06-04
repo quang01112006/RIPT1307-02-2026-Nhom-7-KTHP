@@ -1,4 +1,3 @@
-import { EFileScope, uploadFile } from '@/services/uploadFile';
 import { Editor } from '@tinymce/tinymce-react';
 import './style.less';
 
@@ -38,29 +37,29 @@ const TinyEditor = (props: {
 		}
 	};
 
-	const imageHandler = (callback: any) => {
+	const imageHandler = (callback: any, value: any, meta: any) => {
+		if (meta?.filetype !== 'image') return;
+
 		const input = document.createElement('input');
-		// Tạo input file và click luôn
 		input.setAttribute('type', 'file');
 		input.setAttribute('accept', 'image/*');
 		input.click();
-		// eslint-disable-next-line func-names
-		input.onchange = async function () {
-			const file = input.files?.[0] ?? '';
 
-			// Up ảnh lên và lấy url
-			const response = await uploadFile({
-				file,
-				scope: EFileScope.PUBLIC,
-			});
-			// Chèn ảnh vào dưới dạng url
-			callback(response?.data?.data?.url ?? '', {
-				alt: 'image',
-				uid: response?.data?.data,
-				name: response?.data?.data?.file?.name,
-				status: 'done',
-				// response?.data?.data,
-			});
+		input.onchange = async function () {
+			const file = input.files?.[0];
+			if (!file) return;
+
+			try {
+				const { uploadToCloudinary } = await import('@/services/cloudinaryService');
+				const imageUrl = await uploadToCloudinary(file);
+				if (typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+					callback(imageUrl, { alt: file.name || 'image' });
+				} else {
+					console.error('URL ảnh không hợp lệ:', imageUrl);
+				}
+			} catch (err) {
+				console.error('Lỗi tải ảnh:', err);
+			}
 		};
 	};
 
@@ -123,7 +122,7 @@ const TinyEditor = (props: {
 						: tinyToolbar
 						? 'undo redo | bold italic | forecolor backcolor | emoticons'
 						: miniToolbar
-						? 'undo redo | fontfamily fontsize | bold italic underline | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | numlist bullist | emoticons'
+						? 'undo redo | fontfamily fontsize | bold italic underline | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | numlist bullist | image media link | emoticons'
 						: // Full toolbar
 						  'undo redo | styles fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | table image media link | charmap emoticons | fullscreen preview print',
 					toolbar_sticky: stickyToolbar,
@@ -137,7 +136,25 @@ const TinyEditor = (props: {
 					noneditable_noneditable_class: 'mceNonEditable',
 					toolbar_mode: 'sliding',
 					contextmenu: tinyToolbar ? '' : 'link image imagetools table',
+					file_picker_types: 'image',
 					file_picker_callback: imageHandler,
+					images_upload_handler: async function (blobInfo: any, success?: any, failure?: any) {
+						try {
+							const { uploadToCloudinary } = await import('@/services/cloudinaryService');
+							const file = blobInfo.blob();
+							const imageUrl = await uploadToCloudinary(file);
+							if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+								if (typeof success === 'function') success(imageUrl);
+								return imageUrl;
+							} else {
+								if (typeof failure === 'function') failure('Lỗi khi tải ảnh lên');
+								return Promise.reject('Lỗi khi tải ảnh lên');
+							}
+						} catch (err) {
+							if (typeof failure === 'function') failure('Lỗi kết nối khi tải ảnh');
+							return Promise.reject('Lỗi kết nối khi tải ảnh');
+						}
+					},
 					paste_data_images: !tinyToolbar,
 					smart_paste: true,
 					content_style: `
