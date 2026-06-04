@@ -12,9 +12,9 @@ import {
 	ShareAltOutlined,
 	UserOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Card, Divider, Dropdown, Menu, Modal, Space, Tag, Typography, message } from 'antd';
+import { Avatar, Button, Card, Divider, Dropdown, Image, Menu, Modal, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
-import React from 'react';
+import React, { useState } from 'react';
 import { history } from 'umi';
 import styles from '../index.less';
 
@@ -55,6 +55,7 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 	onReport,
 	isSolved,
 }) => {
+	const [previewImage, setPreviewImage] = useState<string | null>(null);
 	if (!post) return null;
 
 	const isAuthor = userId && post.author?._id === userId;
@@ -205,12 +206,12 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 						<Tag
 							key={t}
 							color={getTagColor(t)}
+							className="hoverable-tag"
 							style={{
 								borderRadius: '100px',
 								padding: '2px 12px',
 								fontSize: '13px',
 								fontWeight: 500,
-								cursor: 'pointer',
 							}}
 							onClick={() => history.push(`/tags/${encodeURIComponent(t)}`)}
 						>
@@ -221,10 +222,30 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 			</div>
 
 			<div
-				className={styles.postContent}
+				className={styles.postContent + ' custom-quill-content'}
 				dangerouslySetInnerHTML={{ __html: post.content || '' }}
-				style={{ wordBreak: 'break-word' }}
+				style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+				onClick={(e) => {
+					const target = e.target as HTMLElement;
+					if (target.tagName.toLowerCase() === 'img') {
+						const src = (target as HTMLImageElement).src;
+						setPreviewImage(src);
+					}
+				}}
 			/>
+
+			<div style={{ display: 'none' }}>
+				<Image
+					src={previewImage || ''}
+					preview={{
+						visible: !!previewImage,
+						src: previewImage || '',
+						onVisibleChange: (value) => {
+							if (!value) setPreviewImage(null);
+						},
+					}}
+				/>
+			</div>
 
 			<div
 				style={{

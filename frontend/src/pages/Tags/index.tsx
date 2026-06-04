@@ -68,7 +68,7 @@ const Tags: React.FC = () => {
 				</Card>
 
 				{/* Tags Grid */}
-				<Spin spinning={loading}>
+				<Spin spinning={loading && tags.length === 0}>
 					{tags.length > 0 ? (
 						<div>
 							<Row gutter={[16, 16]}>

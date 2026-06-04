@@ -126,7 +126,7 @@ const TagDetail: React.FC = () => {
 					/>
 				</div>
 
-				<Spin spinning={loading}>
+				<Spin spinning={loading && filteredPosts.length === 0}>
 					{filteredPosts.length > 0 ? (
 						<Space direction='vertical' size='large' style={{ width: '100%' }}>
 							<List
@@ -142,6 +142,12 @@ const TagDetail: React.FC = () => {
 									const upvotes = Array.isArray(record.upvotedBy) ? record.upvotedBy.length : 0;
 									const downvotes = Array.isArray(record.downvotedBy) ? record.downvotedBy.length : 0;
 									const votesCount = upvotes - downvotes;
+									
+									const decodeHtml = (html: string) => {
+										const txt = document.createElement("textarea");
+										txt.innerHTML = String(html).replace(/<[^>]*>?/gm, '');
+										return txt.value;
+									};
 
 									return (
 										<div
@@ -229,7 +235,7 @@ const TagDetail: React.FC = () => {
 														ellipsis={{ rows: 2, expandable: false }}
 														style={{ color: '#434343', marginBottom: 16, fontSize: 14, lineHeight: 1.6 }}
 													>
-														{String(record.summary ?? record.content ?? '').replace(/<[^>]*>?/gm, '')}
+														{decodeHtml(record.summary ?? record.content ?? '')}
 													</Paragraph>
 
 													<div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -237,7 +243,12 @@ const TagDetail: React.FC = () => {
 															<AntTag
 																key={tag}
 																color={getTagColor(tag)}
+																className="hoverable-tag"
 																style={{ borderRadius: 6, padding: '4px 10px', fontWeight: 500 }}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	history.push(`/tags/${encodeURIComponent(tag)}`);
+																}}
 															>
 																{tag}
 															</AntTag>

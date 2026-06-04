@@ -3,7 +3,7 @@ import { toggleAcceptComment } from '@/services/BinhLuan';
 import { createReport } from '@/services/base/api';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
-import { Col, Form, Input, message, Modal, Row, Select } from 'antd';
+import { Col, Form, Input, message, Modal, Row, Select, Skeleton, Card } from 'antd';
 import { useEffect, useState } from 'react';
 import { history, useModel, useParams } from 'umi';
 import AnswerForm from './components/AnswerForm';
@@ -15,12 +15,14 @@ const ChiTietBaiViet = () => {
 	const requireAuth = useRequireAuth();
 	const {
 		record: post,
+		setRecord: setPost,
 		getByIdModel: getPostDetail,
 		voteBaiVietModel,
 		deleteModel: deletePostModel,
 	} = useModel('baiviet');
 	const {
 		danhSach: dsComments,
+		setDanhSach: setDsComments,
 		getCommentsByPostModel: getComments,
 		voteCommentModel,
 		postModel,
@@ -41,6 +43,8 @@ const ChiTietBaiViet = () => {
 
 	useEffect(() => {
 		if (id) {
+			if (typeof setPost === 'function') setPost(undefined);
+			if (typeof setDsComments === 'function') setDsComments([]);
 			getPostDetail(id);
 			getComments(id);
 		}
@@ -298,23 +302,29 @@ const ChiTietBaiViet = () => {
 			<Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
 				{/* bên trái */}
 				<Col xs={24} lg={18}>
-					<BaiVietChinh
-						post={post}
-						isSolved={dsComments.some((c) => c.isAccepted)}
-						postScore={postScore}
-						hasUpvoted={hasUpvoted}
-						hasDownvoted={hasDownvoted}
-						onVote={handleVotePost}
-						onCommentClick={handleScrollToAnswerForm}
-						isBookmarked={isBookmarked}
-						onBookmarkClick={handleBookmarkClick}
-						userId={userId}
-						isAdmin={isAdmin}
-						onDeletePost={handleDeletePost}
-						onEditPost={handleEditPost}
-						onBanUser={handleBanUser}
-						onReport={(targetId) => handleReportClick('Post', targetId)}
-					/>
+					{!post ? (
+						<Card style={{ marginBottom: 24, borderRadius: 8, minHeight: '60vh' }}>
+							<Skeleton active avatar={{ size: 48, shape: 'circle' }} title={{ width: '60%' }} paragraph={{ rows: 6, width: ['100%', '100%', '90%', '90%', '80%', '60%'] }} />
+						</Card>
+					) : (
+						<BaiVietChinh
+							post={post}
+							isSolved={dsComments.some((c) => c.isAccepted)}
+							postScore={postScore}
+							hasUpvoted={hasUpvoted}
+							hasDownvoted={hasDownvoted}
+							onVote={handleVotePost}
+							onCommentClick={handleScrollToAnswerForm}
+							isBookmarked={isBookmarked}
+							onBookmarkClick={handleBookmarkClick}
+							userId={userId}
+							isAdmin={isAdmin}
+							onDeletePost={handleDeletePost}
+							onEditPost={handleEditPost}
+							onBanUser={handleBanUser}
+							onReport={(targetId) => handleReportClick('Post', targetId)}
+						/>
+					)}
 
 					<DanhSachBinhLuan
 						comments={dsComments}
