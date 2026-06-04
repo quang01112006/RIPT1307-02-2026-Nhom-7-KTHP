@@ -86,8 +86,7 @@ export class TagsService {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('author', 'fullName email avatar')
-      .select('title content tags author views createdAt')
+      .populate('author', 'fullName email code role avatar faculty department reputation')
       .exec();
 
     const total = await this.postModel.countDocuments({ tags: tagName }).exec();

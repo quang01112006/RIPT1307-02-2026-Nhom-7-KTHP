@@ -144,7 +144,13 @@ export class UsersService {
   async getBookmarks(userId: string) {
     const user = await this.userModel
       .findById(userId)
-      .populate('bookmarks')
+      .populate({
+        path: 'bookmarks',
+        populate: {
+          path: 'author',
+          select: 'fullName email code role avatar faculty department reputation'
+        }
+      })
       .exec();
     if (!user) throw new BadRequestException('Người dùng không tồn tại');
 
