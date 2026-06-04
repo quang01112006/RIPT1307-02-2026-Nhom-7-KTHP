@@ -36,16 +36,8 @@ const AdminDashboard: React.FC = () => {
 
 	const { cards, charts, recent } = data;
 
-	// Xử lý dữ liệu cho biểu đồ Line - chỉ lấy tháng hiện tại, nếu không có thì lấy dữ liệu gốc
-	const currentMonth = moment().month() + 1;
-	const currentYear = moment().year();
-	const filteredLineData =
-		charts?.lineChart?.filter((item) => {
-			const itemDate = moment(item.date);
-			return itemDate.month() + 1 === currentMonth && itemDate.year() === currentYear;
-		}) || [];
-
-	const displayLineData = filteredLineData.length > 0 ? filteredLineData : charts?.lineChart || [];
+	// Xử lý dữ liệu cho biểu đồ Line (Backend đã trả chuẩn 30 ngày)
+	const displayLineData = charts?.lineChart || [];
 
 	const lineXAxis = displayLineData.map((item) => item.date) || [];
 	const linePosts = displayLineData.map((item) => item.posts) || [];
@@ -148,7 +140,7 @@ const AdminDashboard: React.FC = () => {
 			{/* 2 Biểu đồ */}
 			<Row gutter={[16, 16]}>
 				<Col xs={24} xl={14}>
-					<Card title={`Thống kê tương tác tháng ${currentMonth}/${currentYear}`} style={{ height: '100%' }}>
+					<Card title='Thống kê tương tác trong 30 ngày qua' style={{ height: '100%' }}>
 						<LineChart
 							title=''
 							xAxis={lineXAxis}
