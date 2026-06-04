@@ -67,6 +67,17 @@ a {
 	margin-right: 0 !important;
 }
 
+.hoverable-tag {
+	cursor: pointer;
+	transition: all 0.2s ease-in-out !important;
+	display: inline-block;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+}
+
 .ant-form {
 	.ant-tag-checkable {
 		padding: 2px 7px;

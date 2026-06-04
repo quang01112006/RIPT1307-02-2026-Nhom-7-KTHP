@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { history } from 'umi';
 import axios from '@/utils/axios';
 import { ip3 } from '@/utils/ip';
+import { getTagColor } from '@/utils/utils';
 import {
   Avatar,
   Button,
@@ -28,19 +29,22 @@ const getTimeAgo = (value?: string | number) => {
   return `${Math.floor(diff / 86400)} ngày trước`;
 };
 
+let cachedTopPosts: any[] | null = null;
+
 const Leaderboard: React.FC = () => {
-  const [topPosts, setTopPosts] = useState<any[]>([]);
+  const [topPosts, setTopPosts] = useState<any[]>(cachedTopPosts || []);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchTopPosts = async () => {
-      setLoading(true);
+      if (!cachedTopPosts) setLoading(true);
       try {
         const response = await axios.get(`${ip3}/posts/page`, {
           params: { sort: 'views', limit: 12 },
         });
         const result = response?.data?.data?.result || response?.data?.result || [];
         setTopPosts(result);
+        cachedTopPosts = result;
       } catch (error) {
         console.error('Lỗi khi lấy bảng xếp hạng:', error);
       } finally {
@@ -133,7 +137,7 @@ const Leaderboard: React.FC = () => {
               </div>
 
               <List
-                loading={loading}
+                loading={loading && topPosts.length === 0}
                 dataSource={topPosts}
                 locale={{ emptyText: <Empty description="Chưa có dữ liệu bảng xếp hạng" /> }}
                 renderItem={(post: any, index) => (
@@ -149,9 +153,35 @@ const Leaderboard: React.FC = () => {
                   >
                     <List.Item.Meta
                       avatar={
-                        <Avatar size={48} style={{ backgroundColor: '#1677ff' }}>
-                          {index + 1}
-                        </Avatar>
+                        <div style={{ position: 'relative' }}>
+                          <Avatar 
+                            size={48} 
+                            src={post.author?.avatar}
+                            style={{ backgroundColor: '#1677ff' }}
+                          >
+                            {!post.author?.avatar && (post.author?.fullName?.charAt(0) || post.author?.email?.charAt(0) || 'U')}
+                          </Avatar>
+                          <div style={{
+                            position: 'absolute',
+                            top: -6,
+                            left: -6,
+                            backgroundColor: index === 0 ? '#faad14' : index === 1 ? '#a0d911' : index === 2 ? '#13c2c2' : '#8c8c8c',
+                            color: '#fff',
+                            borderRadius: '50%',
+                            width: 22,
+                            height: 22,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: 12,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                            zIndex: 1,
+                            border: '2px solid #fff'
+                          }}>
+                            {index + 1}
+                          </div>
+                        </div>
                       }
                       title={
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
@@ -165,15 +195,30 @@ const Leaderboard: React.FC = () => {
                       }
                       description={
                         <div>
-                          <Space wrap>
-                            <Tag color="cyan">{post.author?.fullName || post.author?.email || 'Người dùng ẩn'}</Tag>
-                            <Text type="secondary">{post.author?.role || 'Người dùng'}</Text>
+                          <Space wrap split={<Text type="secondary" style={{ opacity: 0.5 }}>•</Text>} style={{ fontSize: 13 }}>
+                            <Text strong style={{ color: '#434343' }}>
+                              {post.author?.fullName || post.author?.email || 'Người dùng ẩn'}
+                            </Text>
+                            <Text type="secondary">
+                              {post.author?.role === 'teacher' ? 'Giảng viên' : 
+                               post.author?.role === 'admin' ? 'Quản trị viên' : 
+                               post.author?.role === 'student' ? 'Sinh viên' : 
+                               post.author?.role || 'Người dùng'}
+                            </Text>
                             <Text type="secondary">{getTimeAgo(post.createdAt)}</Text>
                           </Space>
                           <div style={{ marginTop: 8 }}>
                             {Array.isArray(post.tags)
                               ? post.tags.slice(0, 4).map((tag: string) => (
-                                  <Tag key={tag} color="default">
+                                  <Tag 
+                                    key={tag} 
+                                    color={getTagColor(tag)}
+                                    className="hoverable-tag"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      history.push(`/tags/${encodeURIComponent(tag)}`);
+                                    }}
+                                  >
                                     {tag}
                                   </Tag>
                                 ))
@@ -216,8 +261,11 @@ const Leaderboard: React.FC = () => {
                     >
                       <List.Item.Meta
                         avatar={
-                          <Avatar style={{ backgroundColor: '#52c41a' }}>
-                            {author.fullName?.charAt(0) || 'U'}
+                          <Avatar 
+                            src={author.avatar}
+                            style={{ backgroundColor: '#52c41a' }}
+                          >
+                            {!author.avatar && (author.fullName?.charAt(0) || author.email?.charAt(0) || 'U')}
                           </Avatar>
                         }
                         title={
@@ -253,7 +301,12 @@ const Leaderboard: React.FC = () => {
               <Space wrap>
                 {trendingTags.length ? (
                   trendingTags.map(([tag, count]) => (
-                    <Tag key={tag} color="geekblue">
+                    <Tag 
+                      key={tag} 
+                      color={getTagColor(tag)} 
+                      className="hoverable-tag"
+                      onClick={() => history.push(`/tags/${encodeURIComponent(tag)}`)}
+                    >
                       {tag} · {count}
                     </Tag>
                   ))

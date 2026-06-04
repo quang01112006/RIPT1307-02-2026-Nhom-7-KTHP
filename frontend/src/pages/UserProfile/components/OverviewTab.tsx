@@ -2,7 +2,7 @@ import { CheckCircleOutlined, FacebookOutlined, FireOutlined, GithubOutlined, Li
 import { Card, Col, Row, Segmented, Space, Statistic, Tag, Tooltip, Typography, List, Spin } from 'antd';
 import { useEffect, useState } from 'react';
 import moment from 'moment';
-import { Link, useModel } from 'umi';
+import { Link, useModel, history } from 'umi';
 import { getTagColor } from '@/utils/utils';
 
 const { Title, Text } = Typography;
@@ -167,7 +167,7 @@ const OverviewTab = ({ user }: Props) => {
                         />
                     </div>
                     
-                    <Spin spinning={activityType === 'questions' ? loadingPosts : loadingComments}>
+                    <Spin spinning={activityType === 'questions' ? (loadingPosts && (!userPosts || userPosts.length === 0)) : (loadingComments && (!userComments || userComments.length === 0))}>
                         {activityType === 'questions' ? (
                             <List
                                 itemLayout='vertical'
@@ -182,7 +182,17 @@ const OverviewTab = ({ user }: Props) => {
                                         </div>
                                         <Space size='middle' style={{ marginBottom: 8 }}>
                                             {item.tags?.map((tag: string) => (
-                                                <Tag key={tag} color={getTagColor(tag)}>{tag}</Tag>
+                                                <Tag 
+                                                    key={tag} 
+                                                    color={getTagColor(tag)}
+                                                    className="hoverable-tag"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        history.push(`/tags/${encodeURIComponent(tag)}`);
+                                                    }}
+                                                >
+                                                    {tag}
+                                                </Tag>
                                             ))}
                                         </Space>
                                         <div>

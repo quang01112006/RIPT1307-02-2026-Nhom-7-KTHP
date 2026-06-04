@@ -2,8 +2,9 @@ import { FileTextOutlined, MessageOutlined } from '@ant-design/icons';
 import { List, Segmented, Spin, Typography, Card, Space, Tag } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { Link } from 'umi';
+import { Link, history } from 'umi';
 import { getUserPosts, getUserComments } from '@/services/base/api';
+import { getTagColor } from '@/utils/utils';
 
 const { Text, Title } = Typography;
 
@@ -11,20 +12,27 @@ interface Props {
 	user: any;
 }
 
+const cachedActivity: Record<string, any[]> = {};
+
 const ActivityTab = ({ user }: Props) => {
 	const [type, setType] = useState<string | number>('posts');
+	const cacheKey = `${user?._id}_${type}`;
 	const [loading, setLoading] = useState(false);
-	const [data, setData] = useState<any[]>([]);
+	const [data, setData] = useState<any[]>(cachedActivity[cacheKey] || []);
 
 	const fetchData = async () => {
-		setLoading(true);
+		if (!cachedActivity[cacheKey]) setLoading(true);
 		try {
 			if (type === 'posts') {
 				const res = await getUserPosts(user._id);
-				setData(res.data?.data?.result || []);
+				const fetchedData = res.data?.data?.result || [];
+				setData(fetchedData);
+				cachedActivity[cacheKey] = fetchedData;
 			} else {
 				const res = await getUserComments(user._id);
-				setData(res.data?.data?.result || []);
+				const fetchedData = res.data?.data?.result || [];
+				setData(fetchedData);
+				cachedActivity[cacheKey] = fetchedData;
 			}
 		} catch (error) {
 			console.error(error);
@@ -35,6 +43,9 @@ const ActivityTab = ({ user }: Props) => {
 
 	useEffect(() => {
 		if (user?._id) {
+			if (cachedActivity[cacheKey]) {
+				setData(cachedActivity[cacheKey]);
+			}
 			fetchData();
 		}
 	}, [user?._id, type]);
@@ -69,7 +80,7 @@ const ActivityTab = ({ user }: Props) => {
 				/>
 			</div>
 
-			<Spin spinning={loading}>
+			<Spin spinning={loading && data.length === 0}>
 				{type === 'posts' ? (
 					<List
 						itemLayout='vertical'
@@ -84,7 +95,17 @@ const ActivityTab = ({ user }: Props) => {
 								</div>
 								<Space size='middle' style={{ marginBottom: 8 }}>
 									{item.tags?.map((tag: string) => (
-										<Tag key={tag}>{tag}</Tag>
+										<Tag 
+											key={tag} 
+											color={getTagColor(tag)}
+											className="hoverable-tag"
+											onClick={(e) => {
+												e.stopPropagation();
+												history.push(`/tags/${encodeURIComponent(tag)}`);
+											}}
+										>
+											{tag}
+										</Tag>
 									))}
 								</Space>
 								<div>

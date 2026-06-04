@@ -12,18 +12,22 @@ interface Props {
 	user: any;
 }
 
+const cachedBookmarks: Record<string, any[]> = {};
+
 const BookmarksTab = ({ user }: Props) => {
 	const [loading, setLoading] = useState(false);
-	const [data, setData] = useState<any[]>([]);
+	const [data, setData] = useState<any[]>(cachedBookmarks[user._id] || []);
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
 	const [hoveredAuthorId, setHoveredAuthorId] = useState<string | null>(null);
 	const history = useHistory();
 
 	const fetchData = async () => {
-		setLoading(true);
+		if (!cachedBookmarks[user._id]) setLoading(true);
 		try {
 			const res = await getUserBookmarks(user._id);
-			setData(res.data?.data?.result || []);
+			const fetchedData = res.data?.data?.result || [];
+			setData(fetchedData);
+			cachedBookmarks[user._id] = fetchedData;
 		} catch (error) {
 			console.error(error);
 		} finally {
@@ -50,7 +54,7 @@ const BookmarksTab = ({ user }: Props) => {
 
 	return (
 		<div>
-			<Spin spinning={loading}>
+			<Spin spinning={loading && data.length === 0}>
 				<List
 					dataSource={data}
 					pagination={{
@@ -70,6 +74,12 @@ const BookmarksTab = ({ user }: Props) => {
 						const upvotes = Array.isArray(post.upvotedBy) ? post.upvotedBy.length : 0;
 						const downvotes = Array.isArray(post.downvotedBy) ? post.downvotedBy.length : 0;
 						const votesCount = upvotes - downvotes;
+
+						const decodeHtml = (html: string) => {
+							const txt = document.createElement("textarea");
+							txt.innerHTML = String(html).replace(/<[^>]*>?/gm, '');
+							return txt.value;
+						};
 
 						return (
 							<div
@@ -184,7 +194,7 @@ const BookmarksTab = ({ user }: Props) => {
 											ellipsis={{ rows: 2, expandable: false }}
 											style={{ color: '#434343', marginBottom: 16, fontSize: 14, lineHeight: 1.6 }}
 										>
-											{String(post.summary ?? post.content ?? '').replace(/<[^>]*>?/gm, '')}
+											{decodeHtml(post.summary ?? post.content ?? '')}
 										</Paragraph>
 
 										<div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -192,7 +202,12 @@ const BookmarksTab = ({ user }: Props) => {
 												<Tag
 													key={tag}
 													color={getTagColor(tag)}
+													className="hoverable-tag"
 													style={{ borderRadius: 6, padding: '4px 10px', fontWeight: 500 }}
+													onClick={(e) => {
+														e.stopPropagation();
+														history.push(`/tags/${encodeURIComponent(tag)}`);
+													}}
 												>
 													{tag}
 												</Tag>

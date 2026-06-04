@@ -1,7 +1,7 @@
+import TinyEditor from '@/components/TinyEditor';
 import { UserOutlined } from '@ant-design/icons';
 import { Avatar, Button } from 'antd';
 import React, { useState } from 'react';
-import ContentEditor from '@/components/ContentEditor';
 
 interface AnswerFormProps {
 	currentUserAvatar?: string;
@@ -26,7 +26,7 @@ const AnswerForm = ({ currentUserAvatar, onSubmit }: AnswerFormProps) => {
 	};
 
 	return (
-		<div style={{ marginTop: '32px', borderTop: '1px solid #f0f0f0', paddingTop: '24px' }}>
+		<div id="main-answer-input" style={{ marginTop: '32px', borderTop: '1px solid #f0f0f0', paddingTop: '24px' }}>
 			<div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '16px' }}>
 				<Avatar
 					src={currentUserAvatar}
@@ -37,16 +37,17 @@ const AnswerForm = ({ currentUserAvatar, onSubmit }: AnswerFormProps) => {
 					<span style={{ fontSize: '15px', fontWeight: 500, color: '#262626', display: 'block', marginBottom: '12px' }}>
 						Viết câu trả lời của bạn
 					</span>
-
-					<ContentEditor
-						inputId="main-answer-input"
-						value={answerContent}
-						onChange={setAnswerContent}
-						placeholder="Chia sẻ câu trả lời của bạn, nhớ viết chi tiết và rõ ràng nhé..."
-						minRows={6}
-						maxRows={12}
-						disabled={submitting}
-					/>
+					<div style={{ position: 'relative', border: '1px solid #d9d9d9', borderRadius: '8px', overflow: 'hidden' }}>
+						<TinyEditor
+							value={answerContent}
+							onChange={setAnswerContent}
+							disabled={submitting}
+							minHeight={150}
+							hideMenubar={true}
+							stickyToolbar={false}
+							miniToolbar={true}
+						/>
+					</div>
 
 					<div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
 						<Button
