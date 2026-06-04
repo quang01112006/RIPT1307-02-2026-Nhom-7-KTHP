@@ -39,7 +39,7 @@ export default [
 		path: '/dashboard',
 		name: 'Trang chủ',
 		component: './TrangChu',
-		icon: 'FireTwoTone',
+		icon: 'HomeTwoTone',
 	},
 	{
 		path: '/question/:id',
@@ -72,6 +72,12 @@ export default [
 		component: './Tags',
 	},
 	{
+		path: '/tags/:name',
+		name: 'Chi tiết thẻ',
+		component: './Tags/TagDetail',
+		hideInMenu: true,
+	},
+	{
 		path: '/bookmarks',
 		name: 'Bài viết đã lưu',
 		icon: '/bookmark.svg',
@@ -88,7 +94,7 @@ export default [
 	{
 		path: '/admin/dashboard',
 		name: 'Trang chủ',
-		icon: 'AppstoreOutlined',
+		icon: 'HomeOutlined',
 		access: 'isAdmin',
 		component: './Admin/Dashboard',
 	},

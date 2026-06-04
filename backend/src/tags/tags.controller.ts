@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
@@ -26,8 +27,20 @@ export class TagsController {
   }
 
   @Get('page')
-  findAll() {
-    return this.tagsService.findAll();
+  findAll(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '12',
+  ) {
+    return this.tagsService.findAll(parseInt(page), parseInt(limit));
+  }
+
+  @Get('posts-by-tag')
+  getPostsByTag(
+    @Query('tagName') tagName: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.tagsService.getPostsByTag(tagName, parseInt(page), parseInt(limit));
   }
 
   @Get(':id')
