@@ -15,6 +15,7 @@ import {
 import { Avatar, Button, Card, Divider, Dropdown, Menu, Modal, Space, Tag, Typography, message } from 'antd';
 import moment from 'moment';
 import React from 'react';
+import { history } from 'umi';
 import styles from '../index.less';
 
 const { Text, Title } = Typography;
@@ -209,7 +210,9 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 								padding: '2px 12px',
 								fontSize: '13px',
 								fontWeight: 500,
+								cursor: 'pointer',
 							}}
+							onClick={() => history.push(`/tags/${encodeURIComponent(t)}`)}
 						>
 							{t}
 						</Tag>

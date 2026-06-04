@@ -2,7 +2,7 @@ import { getTagColor } from '@/utils/utils';
 import { FireOutlined, LinkOutlined, TagsOutlined } from '@ant-design/icons';
 import { Card, Space, Tag } from 'antd';
 import moment from 'moment';
-import { Link } from 'umi';
+import { Link, history } from 'umi';
 
 interface SidebarPhaiProps {
 	popularTags: string[];
@@ -45,6 +45,7 @@ const SidebarPhai = ({ popularTags, hotPosts, relatedPosts }: SidebarPhaiProps) 
 								}}
 								onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
 								onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+								onClick={() => history.push(`/tags/${encodeURIComponent(tag)}`)}
 							>
 								{tag}
 							</Tag>
