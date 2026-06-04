@@ -1,6 +1,9 @@
 import { io } from 'socket.io-client';
 
-const url = process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:3000';
+declare const APP_CONFIG_BACKEND_URL: string;
+const url = typeof APP_CONFIG_BACKEND_URL !== 'undefined' && APP_CONFIG_BACKEND_URL 
+  ? APP_CONFIG_BACKEND_URL 
+  : 'http://localhost:3000';
 
 const socket = io(url, {
 	transports: ['websocket'],
