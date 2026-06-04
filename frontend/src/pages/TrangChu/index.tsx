@@ -56,8 +56,10 @@ const formatRelativeTime = (createdAt?: string) => {
 	const weeks = Math.floor(days / 7);
 	return `đã đăng ${weeks} tuần trước`;
 };
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 const TrangChu: React.FC = () => {
+	const requireAuth = useRequireAuth();
 	const [activeTab, setActiveTab] = useState('newest');
 	const [searchText, setSearchText] = useState('');
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -90,7 +92,7 @@ const TrangChu: React.FC = () => {
 		if (typeof getModel === 'function') {
 			getModel(undefined, undefined, undefined, 1, 1000);
 		}
-		if (typeof getStatsModel === 'function' && currentUser?.role === 'Admin') {
+		if (typeof getStatsModel === 'function' && currentUser?.role === 'admin') {
 			getStatsModel();
 		}
 	}, [currentUser?.role]);
@@ -270,7 +272,7 @@ const TrangChu: React.FC = () => {
 							type='primary'
 							size='large'
 							style={{ borderRadius: 6, fontWeight: '600', backgroundColor: '#0052cc' }}
-							onClick={() => history.push('/ask')}
+							onClick={() => requireAuth(() => history.push('/ask'))}
 						>
 							Đặt Câu Hỏi
 						</Button>
@@ -472,7 +474,9 @@ const TrangChu: React.FC = () => {
 										marginBottom: 10,
 										borderRadius: 10,
 										marginRight: 0,
+										cursor: 'pointer',
 									}}
+									onClick={() => history.push(`/tags/${encodeURIComponent(tag.name)}`)}
 								>
 									<span style={{ fontWeight: 600, fontSize: 14 }}>{tag.name}</span>
 									<span style={{ fontWeight: 500, fontSize: 13, opacity: 0.85 }}>{tag.count} bài đăng</span>
