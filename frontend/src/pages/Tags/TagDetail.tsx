@@ -13,6 +13,17 @@ type QuestionItem = BaiViet.IRecord & {
 	comments?: any[];
 	isResolved?: boolean;
 	status?: string;
+	summary?: string;
+	upvotedBy?: any[];
+	downvotedBy?: any[];
+	author?: {
+		_id?: string;
+		fullName?: string;
+		name?: string;
+		department?: string;
+		faculty?: string;
+		avatar?: string;
+	};
 };
 
 const TagDetail: React.FC = () => {
@@ -21,17 +32,21 @@ const TagDetail: React.FC = () => {
 	const [hoveredAuthorId, setHoveredAuthorId] = useState<string | null>(null);
 	const [filterType, setFilterType] = useState<'newest' | 'trending' | 'unanswered'>('newest');
 
-	const { name } = useParams<{ name: string }>();
+	const { name: encodedName } = useParams<{ name: string }>();
+	const name = decodeURIComponent(encodedName || '');
 	const history = useHistory();
 
-	const { danhSach: allTags, getAllTagsModel, loading, getPostsByTagModel, tagPosts } = useModel('tags') as any;
+	const { danhSach: allTags, getAllTagsModel, loading } = useModel('tags') as any;
+	const baiVietModel = useModel('baiviet') as any;
 
 	useEffect(() => {
 		if (name) {
 			if (!allTags || allTags.length === 0) {
 				getAllTagsModel?.();
 			}
-			getPostsByTagModel?.(name, 1, 1000);
+			if (typeof baiVietModel?.getModel === 'function') {
+				baiVietModel.getModel(undefined, undefined, undefined, 1, 1000);
+			}
 		}
 	}, [name]);
 
@@ -40,7 +55,11 @@ const TagDetail: React.FC = () => {
 		return allTags.find((t: Tags.IRecord) => t.name.toLowerCase() === name.toLowerCase()) || null;
 	}, [allTags, name]);
 
-	const posts = (tagPosts || []) as QuestionItem[];
+	const posts = useMemo(() => {
+		if (!name || !baiVietModel?.danhSach) return [];
+		const candidate = Array.isArray(baiVietModel.danhSach) ? baiVietModel.danhSach : [];
+		return candidate.filter((p: any) => Array.isArray(p.tags) && p.tags.includes(name)) as QuestionItem[];
+	}, [baiVietModel?.danhSach, name]);
 
 	const filteredPosts = useMemo(() => {
 		let result = [...posts];

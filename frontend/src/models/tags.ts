@@ -1,12 +1,12 @@
 import useInitModel from '@/hooks/useInitModel';
-import { getPostsByTag, getAllTags } from '@/services/Tags';
+import { getAllTags, getPostsByTag } from '@/services/Tags';
 import { ip3 } from '@/utils/ip';
 import { useState } from 'react';
 
 export default () => {
 	const objInit = useInitModel<Tags.IRecord>('tags', undefined, undefined, ip3);
 	const { setLoading, danhSach, setDanhSach } = objInit;
-	
+
 	const [tagPosts, setTagPosts] = useState<any[]>([]);
 
 	const getAllTagsModel = async () => {
@@ -18,6 +18,29 @@ export default () => {
 		} catch (error) {
 			console.error('Lỗi khi tải danh sách tags:', error);
 			setDanhSach([]);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const getModel = async (
+		paramCondition?: Partial<Tags.IRecord>,
+		filterParams?: any[],
+		sortParam?: any,
+		paramPage?: number,
+		paramLimit?: number,
+	) => {
+		setLoading(true);
+		try {
+			// Gọi thẳng API getAllTags vì API page có thể trả về array hoặc không chuẩn
+			const res = await getAllTags();
+			const data = res?.data?.data || [];
+			objInit.setDanhSach(data);
+			objInit.setTotal(data.length);
+		} catch (error) {
+			console.error('Lỗi khi tải tags cho bảng:', error);
+			objInit.setDanhSach([]);
+			objInit.setTotal(0);
 		} finally {
 			setLoading(false);
 		}
@@ -45,6 +68,7 @@ export default () => {
 
 	return {
 		...objInit,
+		getModel,
 		tagPosts,
 		getPostsByTagModel,
 		getAllTagsModel,
