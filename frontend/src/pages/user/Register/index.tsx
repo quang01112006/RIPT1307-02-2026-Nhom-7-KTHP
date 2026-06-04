@@ -113,7 +113,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div style={styles.page}>
-      <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+      <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} style={{ width: '100%', maxWidth: '560px' }}>
         <Card style={styles.card} bodyStyle={styles.cardBody} bordered={false}>
           <div style={styles.header}>
             <img src="/logo.png" alt="logo" style={styles.logo} />

@@ -13,6 +13,16 @@ body,
 	-moz-osx-font-smoothing: grayscale;
 }
 
+.ant-layout {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh !important;
+}
+
+.ant-layout-content {
+	flex: 1 1 auto !important;
+}
+
 a {
 	position: relative;
 	word-break: break-word;
@@ -138,17 +148,17 @@ a {
 /* Auth input unified styling for login/register */
 .auth-input,
 .ant-input-affix-wrapper.auth-input {
+	height: 48px;
 	background: #f3f6f9;
 	border: 1px solid #e6eef8;
 	border-radius: 12px;
-	height: 48px;
 	box-shadow: 0 6px 18px rgba(16, 42, 67, 0.04);
 }
 
 .auth-input:focus,
 .ant-input-affix-wrapper.auth-input:focus-within {
-	border-color: rgba(99,102,241,0.9);
-	box-shadow: 0 6px 24px rgba(99,102,241,0.08);
+	border-color: rgba(99, 102, 241, 0.9);
+	box-shadow: 0 6px 24px rgba(99, 102, 241, 0.08);
 }
 
 .auth-input::placeholder {
@@ -241,10 +251,10 @@ canvas {
 		height: 100vh;
 		overflow: hidden;
 
-		>.ant-modal-content {
+		> .ant-modal-content {
 			border-radius: 0;
 
-			>.ant-modal-body {
+			> .ant-modal-body {
 				height: 100vh;
 			}
 		}
@@ -255,18 +265,18 @@ canvas {
 	font-weight: 600;
 }
 
-.ant-tabs-card.ant-tabs-top>.ant-tabs-nav .ant-tabs-nav-list,
-.ant-tabs-card.ant-tabs-top>div>.ant-tabs-nav .ant-tabs-nav-list {
+.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-nav-list,
+.ant-tabs-card.ant-tabs-top > div > .ant-tabs-nav .ant-tabs-nav-list {
 	display: block;
 }
 
-.ant-tabs-card.ant-tabs-top>.ant-tabs-nav .ant-tabs-nav-wrap,
-.ant-tabs-card.ant-tabs-top>div>.ant-tabs-nav .ant-tabs-nav-wrap {
+.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-nav-wrap,
+.ant-tabs-card.ant-tabs-top > div > .ant-tabs-nav .ant-tabs-nav-wrap {
 	white-space: inherit;
 }
 
-.ant-tabs-card.ant-tabs-top>.ant-tabs-nav .ant-tabs-tab,
-.ant-tabs-card.ant-tabs-top>div>.ant-tabs-nav .ant-tabs-tab {
+.ant-tabs-card.ant-tabs-top > .ant-tabs-nav .ant-tabs-tab,
+.ant-tabs-card.ant-tabs-top > div > .ant-tabs-nav .ant-tabs-tab {
 	margin-bottom: 4px;
 	font-weight: 600;
 	border-radius: 4px 4px 0 0;
@@ -284,7 +294,7 @@ canvas {
 	padding: 13px 20px !important;
 }
 
-.ant-form-item-label>label {
+.ant-form-item-label > label {
 	height: auto;
 	margin: 4px 0 !important;
 }
@@ -349,13 +359,13 @@ canvas {
 .ant-modal .ant-card-body,
 .ant-drawer .ant-card-body {
 	@media (min-width: @screen-xl) {
-		.ant-tabs-left>.ant-tabs-nav {
-			.ant-tabs-tab+.ant-tabs-tab {
+		.ant-tabs-left > .ant-tabs-nav {
+			.ant-tabs-tab + .ant-tabs-tab {
 				margin: 10px 0 0 0;
 			}
 		}
 
-		.ant-tabs-left>.ant-tabs-content-holder>.ant-tabs-content>.ant-tabs-tabpane {
+		.ant-tabs-left > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
 			padding-left: 18px;
 		}
 	}
@@ -499,18 +509,18 @@ canvas {
 		}
 
 		button {
-			padding: 4px 15px;
-			border-radius: @border-radius;
-			font-size: 14px;
 			height: 32px;
-
-			box-shadow: 0 2px 0 rgba(0, 0, 0, .015);
-			cursor: pointer;
-			transition: all .3s cubic-bezier(.645, .045, .355, 1);
-			color: rgba(0, 0, 0, .85);
-			border: 1px solid #d9d9d9;
+			padding: 4px 15px;
+			color: rgba(0, 0, 0, 0.85);
+			font-size: 14px;
 
 			line-height: 1.5715;
+			border: 1px solid #d9d9d9;
+			border-radius: @border-radius;
+
+			box-shadow: 0 2px 0 rgba(0, 0, 0, 0.015);
+			cursor: pointer;
+			transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 		}
 	}
 }
@@ -528,14 +538,12 @@ canvas {
 		width: 100%;
 		overflow-x: auto;
 
-		&-thead>tr,
-		&-tbody>tr {
-
-			>th,
-			>td {
-
+		&-thead > tr,
+		&-tbody > tr {
+			> th,
+			> td {
 				// white-space: pre;
-				>span {
+				> span {
 					display: block;
 				}
 			}
@@ -543,14 +551,14 @@ canvas {
 	}
 }
 
-.ant-card-small>.ant-card-head>.ant-card-head-wrapper>.ant-card-extra {
+.ant-card-small > .ant-card-head > .ant-card-head-wrapper > .ant-card-extra {
 	padding: 3px 0 !important;
 }
 
 .card-highlight {
 	.ant-card-head {
-		background-color: var(--primary-color);
 		color: white;
+		background-color: var(--primary-color);
 
 		.ant-btn-link,
 		a {
@@ -561,7 +569,12 @@ canvas {
 
 .ant-collapse-item-active {
 	.ant-collapse-header-text {
-		font-weight: 600;
 		color: var(--primary-color);
+		font-weight: 600;
 	}
+}
+
+.rounded-modal .ant-modal-content {
+	overflow: hidden;
+	border-radius: 16px !important;
 }
