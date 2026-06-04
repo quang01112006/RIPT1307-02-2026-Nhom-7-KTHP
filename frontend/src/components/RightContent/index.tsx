@@ -34,7 +34,16 @@ const GlobalHeaderRight: React.FC = () => {
 	const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
 
 	if (!initialState || !initialState.currentUser) {
-		return null;
+		return (
+			<div className={styles.right}>
+				<Button type='primary' onClick={() => history.push('/user/login')} style={{ marginRight: 8, borderRadius: 8 }}>
+					Đăng nhập
+				</Button>
+				<Button onClick={() => history.push('/user/register')} style={{ borderRadius: 8 }}>
+					Đăng ký
+				</Button>
+			</div>
+		);
 	}
 
 	const getIconByType = (type: string) => {
@@ -173,10 +182,28 @@ const GlobalHeaderRight: React.FC = () => {
 								}
 								description={
 									<div>
-										<Text style={{ fontSize: '13.5px', color: item.isRead ? '#8c8c8c' : '#595959', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+										<Text
+											style={{
+												fontSize: '13.5px',
+												color: item.isRead ? '#8c8c8c' : '#595959',
+												display: '-webkit-box',
+												WebkitLineClamp: 3,
+												WebkitBoxOrient: 'vertical',
+												overflow: 'hidden',
+											}}
+										>
 											{item.message}
 										</Text>
-										<Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: 4, fontWeight: item.isRead ? 400 : 500, color: item.isRead ? '#8c8c8c' : '#1890ff' }}>
+										<Text
+											type='secondary'
+											style={{
+												fontSize: '12px',
+												display: 'block',
+												marginTop: 4,
+												fontWeight: item.isRead ? 400 : 500,
+												color: item.isRead ? '#8c8c8c' : '#1890ff',
+											}}
+										>
 											{moment(item.createdAt).fromNow()}
 										</Text>
 									</div>

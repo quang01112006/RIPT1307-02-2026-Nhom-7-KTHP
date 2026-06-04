@@ -1,3 +1,4 @@
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { toggleAcceptComment } from '@/services/BinhLuan';
 import { createReport } from '@/services/base/api';
 import axios from '@/utils/axios';
@@ -11,6 +12,7 @@ import DanhSachBinhLuan from './components/DanhSachBinhLuan';
 import SidebarPhai from './components/SidebarPhai';
 
 const ChiTietBaiViet = () => {
+	const requireAuth = useRequireAuth();
 	const {
 		record: post,
 		getByIdModel: getPostDetail,
@@ -72,27 +74,27 @@ const ChiTietBaiViet = () => {
 		}
 	}, [initialState?.currentUser, id]);
 
-	const handleBookmarkClick = async () => {
-		if (!initialState?.currentUser) {
-			message.warning('Vui lòng đăng nhập để lưu bài viết!');
-			return;
-		}
-		const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
-		if (success) {
-			setIsBookmarked(!isBookmarked);
+	const handleBookmarkClick = () => {
+		requireAuth(async () => {
+			if (!initialState?.currentUser?._id) return;
+			const success = await toggleBookmarkModel(initialState.currentUser._id, id as string, isBookmarked);
+			if (success) {
+				setIsBookmarked(!isBookmarked);
 
-			// Cập nhật lại danh sách bookmarks trong initialState toàn cục
-			const currentBookmarks = initialState.currentUser.bookmarks || [];
-			const newBookmarks = isBookmarked ? currentBookmarks.filter((b: string) => b !== id) : [...currentBookmarks, id];
+				const currentBookmarks = initialState.currentUser.bookmarks || [];
+				const newBookmarks = isBookmarked
+					? currentBookmarks.filter((b: string) => b !== id)
+					: [...currentBookmarks, id];
 
-			setInitialState({
-				...initialState,
-				currentUser: {
-					...initialState.currentUser,
-					bookmarks: newBookmarks,
-				},
-			});
-		}
+				setInitialState({
+					...initialState,
+					currentUser: {
+						...initialState.currentUser,
+						bookmarks: newBookmarks,
+					},
+				});
+			}
+		});
 	};
 
 	useEffect(() => {
@@ -151,54 +153,64 @@ const ChiTietBaiViet = () => {
 	const postScore = (post?.upvotedBy?.length || 0) - (post?.downvotedBy?.length || 0);
 
 	const handleVotePost = (type: 'up' | 'down') => {
-		if (id) {
-			voteBaiVietModel(id, type);
-		}
+		requireAuth(() => {
+			if (id) {
+				voteBaiVietModel(id, type);
+			}
+		});
 	};
 
 	const handleVoteComment = (commentId: string, type: 'up' | 'down') => {
-		if (id) {
-			voteCommentModel(commentId, type, id);
-		}
+		requireAuth(() => {
+			if (id) {
+				voteCommentModel(commentId, type, id);
+			}
+		});
 	};
 
 	const handleSubmitReply = async (content: string, parentId: string) => {
-		if (id) {
-			await postModel(
-				{
-					content: `<p>${content}</p>`,
-					post: id as any,
-					parent: parentId as any,
-					type: 'COMMENT' as any,
-				},
-				() => getComments(id),
-				false,
-				'Thao tác thành công',
-			);
-		}
+		requireAuth(async () => {
+			if (id) {
+				await postModel(
+					{
+						content: `<p>${content}</p>`,
+						post: id as any,
+						parent: parentId as any,
+						type: 'COMMENT' as any,
+					},
+					() => getComments(id),
+					false,
+					'Thao tác thành công',
+				);
+			}
+		});
 	};
 
 	const handleMainAnswerSubmit = async (content: string) => {
-		if (id) {
-			await postModel(
-				{
-					content: `<p>${content}</p>`,
-					post: id,
-					type: 'ANSWER',
-				},
-				() => getComments(id),
-				false,
-				'Đã đăng câu trả lời!',
-			);
-		}
+		requireAuth(async () => {
+			if (id) {
+				await postModel(
+					{
+						content: `<p>${content}</p>`,
+						post: id,
+						type: 'ANSWER',
+					},
+					() => getComments(id),
+					false,
+					'Đã đăng câu trả lời!',
+				);
+			}
+		});
 	};
 
 	const handleScrollToAnswerForm = () => {
-		const element = document.getElementById('main-answer-input');
-		if (element) {
-			element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			element.focus();
-		}
+		requireAuth(() => {
+			const element = document.getElementById('main-answer-input');
+			if (element) {
+				element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				element.focus();
+			}
+		});
 	};
 
 	const handleEditComment = async (commentId: string, content: string) => {
@@ -256,12 +268,10 @@ const ChiTietBaiViet = () => {
 	};
 
 	const handleReportClick = (type: 'Post' | 'Comment', targetId: string) => {
-		if (!initialState?.currentUser) {
-			message.warning('Vui lòng đăng nhập để sử dụng tính năng này!');
-			return;
-		}
-		setReportTarget({ type, id: targetId });
-		setReportVisible(true);
+		requireAuth(() => {
+			setReportTarget({ type, id: targetId });
+			setReportVisible(true);
+		});
 	};
 
 	const handleReportSubmit = async () => {
