@@ -24,8 +24,7 @@ const TagDetail: React.FC = () => {
 	const { name } = useParams<{ name: string }>();
 	const history = useHistory();
 
-	const tagsModel = useModel('tags') as any;
-	const { danhSach: allTags, getAllTagsModel, loading, getPostsByTagModel, tagPosts } = tagsModel ?? {};
+	const { danhSach: allTags, getAllTagsModel, loading, getPostsByTagModel, tagPosts } = useModel('tags') as any;
 
 	useEffect(() => {
 		if (name) {

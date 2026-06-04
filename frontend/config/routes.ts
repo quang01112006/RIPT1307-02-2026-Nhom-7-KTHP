@@ -36,7 +36,7 @@ export default [
 
 	///////////////////////////////////
 	{
-		path: '/dashboard',
+		path: '/',
 		name: 'Trang chủ',
 		component: './TrangChu',
 		icon: 'HomeTwoTone',
@@ -127,10 +127,7 @@ export default [
 		component: './Admin/QuanLyBaoCao',
 	},
 
-	{
-		path: '/',
-		redirect: 'dashboard',
-	},
+
 	{
 		path: '/403',
 		component: './exception/403/403Page',

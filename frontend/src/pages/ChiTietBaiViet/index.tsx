@@ -235,7 +235,7 @@ const ChiTietBaiViet = () => {
 	const handleDeletePost = async () => {
 		if (id) {
 			await deletePostModel(id, () => {
-				history.push('/dashboard');
+				history.push('/');
 			});
 		}
 	};

@@ -1,5 +1,5 @@
-import { landingUrl } from '@/services/base/constant';
-import { FileWordOutlined, GlobalOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { ERole } from '@/services/base/constant';
+import { GlobalOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Menu, Spin } from 'antd';
 import { type ItemType } from 'antd/lib/menu/hooks/useItems';
 import React from 'react';
@@ -38,17 +38,15 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 			label: 'Trang cá nhân',
 			onClick: () => history.push(`/profile/${currentUser._id}`),
 		},
-		...(currentUser?.role === 'admin'
+		...(currentUser?.role === ERole.ADMIN
 			? [
 					{
 						key: 'switch_context',
 						icon: <GlobalOutlined />,
-						label: history.location.pathname.startsWith('/admin')
-							? 'Quay lại diễn đàn'
-							: 'Trang quản trị',
+						label: history.location.pathname.startsWith('/admin') ? 'Quay lại diễn đàn' : 'Trang quản trị',
 						onClick: () => {
 							if (history.location.pathname.startsWith('/admin')) {
-								history.push('/dashboard');
+								history.push('/');
 							} else {
 								history.push('/admin/dashboard');
 							}

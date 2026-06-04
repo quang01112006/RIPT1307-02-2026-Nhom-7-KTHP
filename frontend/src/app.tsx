@@ -11,6 +11,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import TechnicalSupportBounder from './components/TechnicalSupportBounder';
 import NotAccessible from './pages/exception/403';
 import NotFoundContent from './pages/exception/404';
+import { ERole } from '@/services/base/constant';
 import type { IInitialState } from './services/base/typing';
 import './styles/global.less';
 
@@ -20,7 +21,7 @@ export const initialStateConfig = {
 
 export async function getInitialState(): Promise<IInitialState> {
 	const token = localStorage.getItem('token');
-	const guestWhiteList = ['/user/login', '/user/register', '/dashboard', '/explore'];
+	const guestWhiteList = ['/user/login', '/user/register', '/', '/explore'];
 	const { pathname } = history.location;
 
 	if (!token) {
@@ -90,11 +91,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 		disableContentMargin: false,
 		footerRender: () => <Footer />,
 		onPageChange: () => {
-			const { location } = history;
-			if (location.pathname === '/') {
-				if (role === 'admin') history.replace('/admin/dashboard');
-				else history.replace('/dashboard');
-			}
+			// (Đã xóa redirect / vì / giờ là trang diễn đàn)
 		},
 		layout: 'mix',
 		menuItemRender: (item: any, dom: any) => (
@@ -115,19 +112,23 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 			const isAdminContext = currentPath.startsWith('/admin');
 
 			return menuData.filter((item) => {
-				// Không phải admin thì ẩn các menu admin
-				if (item.access === 'isAdmin' && role !== 'admin') {
+				if (item.path === '/index.html') return false;
+
+				const isAdminRoute = item.path && item.path.startsWith('/admin');
+				
+				// Không phải admin thì ẩn các menu admin (vì Umi có thể strip access property)
+				if (isAdminRoute && role !== ERole.ADMIN) {
 					return false;
 				}
 				
 				// Nếu là admin, quyết định menu dựa trên URL hiện tại
-				if (role === 'admin') {
+				if (role === ERole.ADMIN) {
 					if (isAdminContext) {
 						// Đang ở trang Admin -> Chỉ hiện menu Admin
-						return item.path && item.path.startsWith('/admin');
+						return isAdminRoute;
 					} else {
 						// Đang ở trang diễn đàn -> Chỉ hiện menu diễn đàn
-						return item.path && !item.path.startsWith('/admin');
+						return !isAdminRoute;
 					}
 				}
 				return true;
@@ -137,10 +138,10 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 		menuHeaderRender: undefined,
 		onMenuHeaderClick: () => {
 			const currentPath = history.location.pathname;
-			if (role === 'admin' && currentPath.startsWith('/admin')) {
+			if (role === ERole.ADMIN && currentPath.startsWith('/admin')) {
 				history.push('/admin/dashboard');
 			} else {
-				history.push('/dashboard');
+				history.push('/');
 			}
 		},
 		...initialState?.settings,

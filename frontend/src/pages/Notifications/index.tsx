@@ -21,6 +21,7 @@ import {
   LikeOutlined,
   MessageOutlined,
   MoreOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import moment from 'moment';
 
@@ -111,20 +112,9 @@ const Notifications: React.FC = () => {
         <div>
           <Title style={{ margin: 0 }} level={2}>Thông báo cộng đồng</Title>
           <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-            Xem tất cả thông báo của bạn: lượt thích, trả lời, chấp nhận và tin hệ thống
+            Tất cả thông báo của bạn sẽ được hiển thị tại đây
           </Text>
         </div>
-        <Space wrap>
-          <Button type="default" style={headerButtonStyle} onClick={() => fetchNotifications()}>
-            Làm mới
-          </Button>
-          <Button type="primary" style={headerButtonStyle} onClick={markAllAsReadModel} disabled={!notifications.length}>
-            Đánh dấu tất cả đã đọc
-          </Button>
-          <Button danger style={headerButtonStyle} onClick={deleteAllModel} disabled={!notifications.length}>
-            Xóa tất cả
-          </Button>
-        </Space>
       </div>
 
       <Card
@@ -146,32 +136,41 @@ const Notifications: React.FC = () => {
               Thông báo
             </Text>
           </div>
-          <Dropdown
-            overlay={
-              <Menu>
-                <Menu.Item
-                  key="readAll"
-                  icon={<CheckOutlined />}
-                  onClick={markAllAsReadModel}
-                  disabled={!notifications.length}
-                >
-                  Đánh dấu tất cả đã đọc
-                </Menu.Item>
-                <Menu.Item
-                  key="deleteAll"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={deleteAllModel}
-                  disabled={!notifications.length}
-                >
-                  Xóa tất cả thông báo
-                </Menu.Item>
-              </Menu>
-            }
-            trigger={['click']}
-          >
-            <Button type="text" shape="circle" icon={<MoreOutlined style={{ fontSize: 20 }} />} />
-          </Dropdown>
+          <Space size="small">
+            <Button 
+              type="text" 
+              shape="circle" 
+              icon={<SyncOutlined style={{ fontSize: 18 }} spin={loading} />} 
+              onClick={() => fetchNotifications()} 
+              title="Làm mới"
+            />
+            <Dropdown
+              overlay={
+                <Menu>
+                  <Menu.Item
+                    key="readAll"
+                    icon={<CheckOutlined />}
+                    onClick={markAllAsReadModel}
+                    disabled={!notifications.length}
+                  >
+                    Đánh dấu tất cả đã đọc
+                  </Menu.Item>
+                  <Menu.Item
+                    key="deleteAll"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={deleteAllModel}
+                    disabled={!notifications.length}
+                  >
+                    Xóa tất cả thông báo
+                  </Menu.Item>
+                </Menu>
+              }
+              trigger={['click']}
+            >
+              <Button type="text" shape="circle" icon={<MoreOutlined style={{ fontSize: 20 }} />} />
+            </Dropdown>
+          </Space>
         </div>
 
         <div style={{ padding: '12px 16px', display: 'flex', gap: '8px' }}>

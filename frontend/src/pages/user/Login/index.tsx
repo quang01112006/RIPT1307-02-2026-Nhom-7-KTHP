@@ -33,7 +33,7 @@ const Login: React.FC = () => {
 				if (role === 'admin') {
 					history.push('/admin/dashboard');
 				} else {
-					history.push('/dashboard');
+					history.push('/');
 				}
 			}
 		} catch (error: any) {

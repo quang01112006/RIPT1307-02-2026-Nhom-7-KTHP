@@ -62,7 +62,7 @@ const DatCauHoi: React.FC = () => {
 				if (newPost && newPost._id) {
 					history.push(`/question/${newPost._id}`);
 				} else {
-					history.push('/dashboard');
+					history.push('/');
 				}
 			}
 		} catch (error) {
@@ -248,7 +248,7 @@ const DatCauHoi: React.FC = () => {
 									if (editId) {
 										history.push(`/question/${editId}`);
 									} else {
-										history.push('/dashboard');
+										history.push('/');
 									}
 								}}
 								style={{
