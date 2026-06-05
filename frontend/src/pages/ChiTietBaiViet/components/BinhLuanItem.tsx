@@ -239,7 +239,9 @@ const BinhLuanItem: React.FC<BinhLuanItemProps> = ({
 					)}
 
 					<Text type='secondary' style={{ fontSize: isChild ? '12px' : '14px' }}>
-						{isChild ? `• ${moment(comment.createdAt).fromNow()}` : moment(comment.createdAt).fromNow()}
+						{isChild 
+							? `• ${moment(comment.createdAt).isAfter(moment()) ? 'vừa xong' : moment(comment.createdAt).fromNow()}` 
+							: (moment(comment.createdAt).isAfter(moment()) ? 'vừa xong' : moment(comment.createdAt).fromNow())}
 					</Text>
 				</div>
 

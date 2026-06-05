@@ -104,7 +104,7 @@ const TinyEditor = (props: {
 						'directionality',
 						// 'visualchars',
 						// 'template',
-						// 'codesample',
+						'codesample',
 						// 'hr',
 						// 'pagebreak',
 						'nonbreaking',
@@ -122,12 +122,12 @@ const TinyEditor = (props: {
 						: tinyToolbar
 						? 'undo redo | bold italic | forecolor backcolor | emoticons'
 						: miniToolbar
-						? 'undo redo | fontfamily fontsize | bold italic underline | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | numlist bullist | image media link | emoticons'
+						? 'undo redo | fontfamily fontsize | bold italic underline | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | numlist bullist | image media link codesample | emoticons'
 						: // Full toolbar
-						  'undo redo | styles fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | table image media link | charmap emoticons | fullscreen preview print',
+						  'undo redo | styles fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor removeformat | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | table image media link codesample | charmap emoticons | fullscreen preview print',
 					toolbar_sticky: stickyToolbar,
 					autosave_ask_before_unload: true,
-					image_advtab: true,
+					image_advtab: false,
 					image_caption: true,
 					quickbars_selection_toolbar: tinyToolbar
 						? ''

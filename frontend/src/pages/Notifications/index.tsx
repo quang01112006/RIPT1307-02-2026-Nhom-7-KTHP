@@ -352,7 +352,7 @@ const Notifications: React.FC = () => {
                               color: item.isRead ? '#8c8c8c' : '#1890ff',
                             }}
                           >
-                            {moment(item.createdAt).fromNow()}
+                            {moment(item.createdAt).isAfter(moment()) ? 'vừa xong' : moment(item.createdAt).fromNow()}
                           </Text>
                         </div>
 

@@ -98,7 +98,7 @@ const NoticeList: React.FC<NoticeIconTabProps> = ({
 										description={
 											<>
 												<div className={styles.description}>{item.description}</div>
-												<div className={styles.datetime}>{moment(item.createdAt).fromNow()}</div>
+												<div className={styles.datetime}>{moment(item.createdAt).isAfter(moment()) ? 'vừa xong' : moment(item.createdAt).fromNow()}</div>
 											</>
 										}
 									/>

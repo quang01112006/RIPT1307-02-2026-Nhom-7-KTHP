@@ -197,7 +197,7 @@ const BaiVietChinh: React.FC<BaiVietChinhProps> = ({
 						<Avatar src={post.author?.avatar} icon={<UserOutlined />} />
 						<Text type='secondary'>{post.author?.fullName || 'Ẩn danh'}</Text>
 					</Space>
-					<Text type='secondary'>Đăng {moment(post.createdAt).fromNow() || '--'}</Text>
+					<Text type='secondary'>Đăng {moment(post.createdAt).isAfter(moment()) ? 'vừa xong' : moment(post.createdAt).fromNow()}</Text>
 					<Text type='secondary'>{post.views || 0} lượt xem</Text>
 				</Space>
 
