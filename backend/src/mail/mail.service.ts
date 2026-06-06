@@ -16,8 +16,10 @@ export class MailService {
         pass: (process.env.MAIL_PASS || 'yourpassword').replace(/\s+/g, ''), // Xóa dấu cách nếu có
       },
       tls: {
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+      },
+
+      family: 4,
     });
   }
 
