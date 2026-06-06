@@ -18,9 +18,8 @@ export class MailService {
       tls: {
         rejectUnauthorized: false,
       },
-
       family: 4,
-    });
+    } as any);
   }
 
   async sendMail(to: string, subject: string, html: string) {

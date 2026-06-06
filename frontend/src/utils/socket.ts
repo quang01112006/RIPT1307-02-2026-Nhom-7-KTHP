@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 declare const APP_CONFIG_BACKEND_URL: string;
-const url = typeof APP_CONFIG_BACKEND_URL !== 'undefined' && APP_CONFIG_BACKEND_URL 
+const url = typeof APP_CONFIG_BACKEND_URL !== 'undefined' && APP_CONFIG_BACKEND_URL && APP_CONFIG_BACKEND_URL !== '/api'
   ? APP_CONFIG_BACKEND_URL 
   : 'http://localhost:3000';
 
