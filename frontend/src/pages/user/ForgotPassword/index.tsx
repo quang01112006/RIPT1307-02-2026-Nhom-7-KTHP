@@ -120,6 +120,19 @@ const ForgotPasswordPage: React.FC = () => {
     });
   };
 
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      await forgotPasswordApi(email);
+      setCountdown(60);
+      message.success('Mã xác thực đã được gửi lại vào email của bạn!');
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Có lỗi xảy ra khi gửi lại mã!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={styles.page}>
       <motion.div initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -174,7 +187,7 @@ const ForgotPasswordPage: React.FC = () => {
                       {countdown > 0 ? (
                         <Text style={{ color: '#64748b' }}><Timer size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> Gửi lại mã sau <b>{countdown}s</b></Text>
                       ) : (
-                        <Button type="link" icon={<RefreshCcw size={14} />} onClick={() => setCountdown(60)} style={{ color: '#2563eb', fontWeight: 600 }}>Gửi lại mã</Button>
+                        <Button type="link" icon={<RefreshCcw size={14} />} onClick={handleResendCode} style={{ color: '#2563eb', fontWeight: 600 }}>Gửi lại mã</Button>
                       )}
                     </div>
                   </motion.div>

@@ -68,7 +68,10 @@ export class AuthService {
     expires.setMinutes(expires.getMinutes() + 5);
 
     await this.usersService.updateOtp(user._id.toString(), otp, expires);
-    await this.mailService.sendOtpEmail(email, otp);
+    const isSent = await this.mailService.sendOtpEmail(email, otp);
+    if (!isSent) {
+      throw new BadRequestException('Không thể gửi email OTP, vui lòng thử lại sau.');
+    }
 
     return { message: 'Đã gửi mã OTP đến email của bạn' };
   }

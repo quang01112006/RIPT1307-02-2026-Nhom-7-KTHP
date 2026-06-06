@@ -8,11 +8,16 @@ export class MailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail', // Mặc định dùng Gmail
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.MAIL_USER || 'youremail@gmail.com', // Cấu hình trong .env
-        pass: process.env.MAIL_PASS || 'yourpassword',
+        user: process.env.MAIL_USER || 'youremail@gmail.com',
+        pass: (process.env.MAIL_PASS || 'yourpassword').replace(/\s+/g, ''), // Xóa dấu cách nếu có
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
   }
 
